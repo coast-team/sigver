@@ -1,6 +1,7 @@
 {
   "name": "sigver",
   "description": "webRTC signaling server",
+  "version": "0.0.0-sementically-released",
   "main": "server.js",
   "scripts": {
     "test": "node test.js",
@@ -19,12 +20,13 @@
     "url": "https://github.com/coast-team/sigver.git"
   },
   "dependencies": {
+    "portfinder": "^0.4.0",
     "ws": "^1.0.1"
   },
   "devDependencies": {
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^1.1.5",
-    "portfinder": "0.4.0",
+    "ghooks": "1.0.3",
     "semantic-release": "^4.3.5",
     "standard": "^5.4.1"
   },
@@ -35,6 +37,5 @@
     "commitizen": {
       "path": "node_modules/cz-conventional-changelog"
     }
-  },
-  "version": "1.0.0"
+  }
 }
