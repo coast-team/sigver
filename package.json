@@ -24,6 +24,7 @@
   "devDependencies": {
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^1.1.5",
+    "portfinder": "0.4.0",
     "semantic-release": "^4.3.5",
     "standard": "^5.4.1"
   },

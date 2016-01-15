@@ -1,49 +1,85 @@
-var WebSocketServer = require('ws').Server
-var wss = new WebSocketServer({ port: 8080 }, function () {
-  console.log('Server run on: ws://localhost:8080')
-})
+'use strict'
 
-wss.on('connection', function connection (ws) {
-  ws.on('message', function incoming (message) {
-    var msg = JSON.parse(message)
-    if (msg.hasOwnProperty('type')) {
-      if (msg.type === 'icecandidate' || msg.type === 'offer') {
-        if (msg.hasOwnProperty('index')) {
-          ws.peers[msg.index].send(message)
-        } else {
-          ws.peer.send(message)
-        }
+let WebSocketServer = require('ws').Server
+let portfinder = require('portfinder')
+
+module.exports.start = () => {
+  return new Promise((resolve, reject) => {
+    let wss
+    // portfinder looks for open port for WebSocket server
+    portfinder.getPort((err, port) => {
+      if (err) {
+        console.log(err)
         return
-      } else if (msg.type === 'open') {
-        return _open(ws, msg.id)
-      } else if (msg.type === 'join') {
-        return _join(ws, msg.id)
       }
-    }
-    ws.close()
-  })
-})
+      wss = new WebSocketServer({port}, function () {
+        console.log('Server run on: ws://localhost:' + port)
+        resolve(wss)
+      })
 
-function _open (ws, id) {
-  for (var i in wss.clients) {
-    if (wss.clients[i].roomId === id) {
+      wss.on('connection', (ws) => {
+        ws.on('message', (message) => {
+          let obj = JSON.parse(message)
+
+          // Check income message format
+          if (obj.hasOwnProperty('type')) {
+            if (obj.type === 'icecandidate' || obj.type === 'offer') {
+              // If 'index' property exists then this message comes from the peer
+              // who triggered connection
+              if (obj.hasOwnProperty('index')) {
+                ws.peers[obj.index].send(message)
+              } else {
+                // Otherwise it comes from one of peers wishing to connect
+                ws.peer.send(message)
+              }
+              return
+            } else if (obj.type === 'open') {
+              return _open(ws, obj.id)
+            } else if (obj.type === 'join') {
+              return _join(ws, obj.id)
+            }
+          }
+
+          // Close web socket if income message format is unknown
+          ws.close()
+        })
+      })
+    })
+
+    /**
+     * Handles 'open' request from a client.
+     *
+     * @param  {WebSocket} ws web socket of a peer who triggered connection
+     * @param  {string} id identifier sent by him
+     * @return {void}
+     */
+    function _open (ws, id) {
+      for (let i in wss.clients) {
+        if (wss.clients[i].roomId === id) {
+          ws.close()
+        }
+      }
+      ws.roomId = id
+      ws.peers = []
+    }
+
+    /**
+     * Handles 'join' request from a client.
+     *
+     * @param  {WebScoket} ws web socket of a peer wishing to connect
+     * @param  {string} id identifier of connection
+     * @return {void}
+     */
+    function _join (ws, id) {
+      for (let i in wss.clients) {
+        if (wss.clients[i].roomId === id) {
+          ws.peer = wss.clients[i]
+          wss.clients[i].peers.push(ws)
+          wss.clients[i].send('{"type":"join"}')
+          return
+        }
+      }
       ws.close()
     }
-  }
-  ws.roomId = id
-  ws.peers = []
+  })
 }
-
-function _join (ws, id) {
-  for (var i in wss.clients) {
-    if (wss.clients[i].roomId === id) {
-      ws.peer = wss.clients[i]
-      wss.clients[i].peers.push(ws)
-      wss.clients[i].send('{"type":"join"}')
-      return
-    }
-  }
-  ws.close()
-}
-
-module.exports = wss
