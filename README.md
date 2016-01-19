@@ -11,14 +11,8 @@
 Very simple signaling server based on WebSocket to test WebRTC.
 
 ## How to use
-```javascript
-require('sigver')
-  .start()
-  .then(function(webSocketServer) {
-    // Your code here
-    // For example to get server port
-    var port = webSocketServer.options.port
-  })
+```
+node server.js
 ```
 
 ## Message protocol

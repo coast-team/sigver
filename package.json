@@ -20,7 +20,6 @@
     "url": "https://github.com/coast-team/sigver.git"
   },
   "dependencies": {
-    "portfinder": "^0.4.0",
     "ws": "^1.0.1"
   },
   "devDependencies": {
