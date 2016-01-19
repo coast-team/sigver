@@ -23,9 +23,9 @@ wss.on('connection', (ws) => {
         }
         return
       } else if (obj.type === 'open') {
-        return _open(ws, obj.id)
+        return _open(ws, obj.key)
       } else if (obj.type === 'join') {
-        return _join(ws, obj.id)
+        return _join(ws, obj.key)
       }
     }
 
@@ -38,16 +38,16 @@ wss.on('connection', (ws) => {
  * Handles 'open' request from a client.
  *
  * @param  {WebSocket} ws web socket of a peer who triggered connection
- * @param  {string} id identifier sent by him
+ * @param  {string} key identifier sent by him
  * @return {void}
  */
-function _open (ws, id) {
+function _open (ws, key) {
   for (let i in wss.clients) {
-    if (wss.clients[i].roomId === id) {
+    if (wss.clients[i].key === key) {
       ws.close()
     }
   }
-  ws.roomId = id
+  ws.key = key
   ws.peers = []
 }
 
@@ -55,12 +55,12 @@ function _open (ws, id) {
  * Handles 'join' request from a client.
  *
  * @param  {WebScoket} ws web socket of a peer wishing to connect
- * @param  {string} id identifier of connection
+ * @param  {string} key identifier of connection
  * @return {void}
  */
-function _join (ws, id) {
+function _join (ws, key) {
   for (let i in wss.clients) {
-    if (wss.clients[i].roomId === id) {
+    if (wss.clients[i].key === key) {
       ws.peer = wss.clients[i]
       wss.clients[i].peers.push(ws)
       wss.clients[i].send('{"type":"join"}')

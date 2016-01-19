@@ -16,37 +16,33 @@ node server.js
 ```
 
 ## Message protocol
-Message is a JSON string.
+Message is a JSON string. When the `type` value is `icecandidate` or `offer` then the server forwards all additional attributes provided by a peer (usually it is some offer and/or icecandidate data).
 
 ### Income messages
 #### From peer who triggered connection
 ```json
 {"type": "open",
- "id": "[identifier of a peer who triggered connection]"}
+ "key": "[some key]"}
 ```
 ```json
 {"type": "icecandidate",
- "index": "[identifier of a peer who triggered connection]",
- "data": "[SDP]"}
+ "index": "[index of the recipient peer]"}
 ```
 ```json
 {"type": "offer",
- "index": "[index of the recipient peer]",
- "data": "[SDP]"}
+ "index": "[index of the recipient peer]"}
 ```
 
 #### From peer wishing to connect
 ```json
 {"type": "join",
- "id": "[identifier of a peer who triggered connection]"}
+ "key": "[key provided by the peer who triggered connection]"}
 ```
 ```json
-{"type": "icecandidate",
- "data": "[SDP]"}
+{"type": "icecandidate"}
 ```
 ```json
-{"type": "offer",
- "data": "[SDP]"}
+{"type": "offer"}
 ```
 
 ### Outcome messages
@@ -56,21 +52,17 @@ Message is a JSON string.
 ```
 ```json
 {"type": "icecandidate",
- "index": "[index of a connecting peer]",
- "data": "[SDP]"}
+ "index": "[index of a connecting peer]"}
 ```
 ```json
 {"type": "offer",
- "index": "[index of a connecting peer]",
- "data": "[SDP]"}
+ "index": "[index of a connecting peer]"}
 ```
 
 #### To peer wishing to connect
 ```json
-{"type": "icecandidate",
- "data": "[SDP]"}
+{"type": "icecandidate"}
 ```
 ```json
-{"type": "offer",
- "data": "[SDP]"}
+{"type": "offer"}
 ```

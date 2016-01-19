@@ -27,7 +27,7 @@ wsTrigger.on('open', function open () {
       wss.close()
     }
   })
-  wsTrigger.send(JSON.stringify({type: 'open', id: '11111'}), function () {
+  wsTrigger.send(JSON.stringify({type: 'open', key: '11111'}), function () {
     console.log('TRIGGER: open sent')
     wsJoining = new WebSocket('ws://localhost:' + wss.options.port + '/111111')
     wsJoining.on('close', function open () {
@@ -48,7 +48,7 @@ wsTrigger.on('open', function open () {
           })
         }
       })
-      wsJoining.send(JSON.stringify({type: 'join', id: '11111'}), function () {
+      wsJoining.send(JSON.stringify({type: 'join', key: '11111'}), function () {
         console.log('JOINING: join sent')
       })
     })
