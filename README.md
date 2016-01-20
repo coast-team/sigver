@@ -16,53 +16,36 @@ node server.js
 ```
 
 ## Message protocol
-Message is a JSON string. When the `type` value is `icecandidate` or `offer` then the server forwards all additional attributes provided by a peer (usually it is some offer and/or icecandidate data).
+Message is a JSON string. For each initiated connection (`"type": "open"`) it is possible that severals peers can be joining at the same time. That is why `index` exists.
 
 ### Income messages
 #### From peer who triggered connection
+When you wants someone to connect to you.
 ```json
 {"type": "open",
  "key": "[some key]"}
 ```
+When you sends some data (additional attributes not presented below) to the peer with `index` as identifier.
 ```json
-{"type": "icecandidate",
- "index": "[index of the recipient peer]"}
-```
-```json
-{"type": "offer",
- "index": "[index of the recipient peer]"}
+{"index": "[index of the recipient peer]"}
 ```
 
 #### From peer wishing to connect
+When you wants to connect to the person who gave you the `key`.
 ```json
 {"type": "join",
  "key": "[key provided by the peer who triggered connection]"}
 ```
-```json
-{"type": "icecandidate"}
-```
-```json
-{"type": "offer"}
-```
 
 ### Outcome messages
 #### To peer who triggered connection
+Server notifies that someone wants establish a connection with you.
 ```json
 {"type": "join"}
 ```
+Server forwards some date to you from a peer with `index` as identifier.
 ```json
-{"type": "icecandidate",
- "index": "[index of a connecting peer]"}
+{"index": "[index of a connecting peer]"}
 ```
-```json
-{"type": "offer",
- "index": "[index of a connecting peer]"}
-```
-
 #### To peer wishing to connect
-```json
-{"type": "icecandidate"}
-```
-```json
-{"type": "offer"}
-```
+Server just forwards data.
