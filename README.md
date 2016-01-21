@@ -16,36 +16,43 @@ node server.js
 ```
 
 ## Message protocol
-Message is a JSON string. For each initiated connection (`"type": "open"`) it is possible that severals peers can be joining at the same time. That is why `index` exists.
+Message is a JSON string.
 
 ### Income messages
 #### From peer who triggered connection
-When you wants someone to connect to you.
+- When you wants to establish a connection with someone (you need to provide him this `key`).
 ```json
-{"type": "open",
- "key": "[some key]"}
+ {"key": "[some unique key]"}
 ```
-When you sends some data (additional attributes not presented below) to the peer with `index` as identifier.
+- When you wants to send the `answer` to the previously received `offer`.
 ```json
-{"index": "[index of the recipient peer]"}
+ {"answer": "[some WebRTC data]"}
 ```
 
+
 #### From peer wishing to connect
-When you wants to connect to the person who gave you the `key`.
+- When you wants to connect to the person who gave you the `key`.
 ```json
-{"type": "join",
- "key": "[key provided by the peer who triggered connection]"}
+{"joinkey": "[key provided by the peer who triggered connection]"}
+```
+- When you wants to send the `offer` in order to establish a connection.
+```json
+ {"offer": "[some WebRTC data]"}
 ```
 
 ### Outcome messages
 #### To peer who triggered connection
-Server notifies that someone wants establish a connection with you.
+- Server forwards the `offer` (there is no data check) from someone who has the `key`.
 ```json
-{"type": "join"}
+ {"offer": "[some WebRTC data]"}
 ```
-Server forwards some date to you from a peer with `index` as identifier.
-```json
-{"index": "[index of a connecting peer]"}
-```
+
 #### To peer wishing to connect
-Server just forwards data.
+- Server sends this message to you if the provided `key` is available, otherwise it closes the connection with `POLICY_VIOLATION` close event code.
+```json
+{"reachable": "true"}
+```
+- Server forwardsthe `answer` (there is no data check) to the previously sent `offer`.
+```json
+ {"answer": "[some WebRTC data]"}
+```
