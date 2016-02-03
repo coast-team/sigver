@@ -24,35 +24,34 @@ Message is a JSON string.
 ```json
  {"key": "[some unique key]"}
 ```
-- When you wants to send the `answer` to the previously received `offer`.
+- When you wants to forward `data` to the peer identified by `id`.
 ```json
- {"answer": "[some WebRTC data]"}
+{"id": "[identifier]",
+   "data": "[any data]"}
 ```
 
 
 #### From peer wishing to connect
-- When you wants to connect to the person who gave you the `key`.
+- When you wants to connect to the person who gave you the `key` (if `data` attribute is present, it will be forwarded).
 ```json
-{"joinkey": "[key provided by the peer who triggered connection]"}
+{"join": "[key provided by the peer who triggered connection]",
+   "data": "[any data]"}
 ```
-- When you wants to send the `offer` in order to establish a connection.
+- When you wants to forward `data` to the peer.
 ```json
- {"offer": "[some WebRTC data]"}
+ {"data": "[any data]"}
 ```
 
 ### Outcome messages
 #### To peer who triggered connection
-- Server forwards the `offer` (there is no data check) from someone who has the `key`.
+- Server forwards `data` from a peer identified by `id`.
 ```json
- {"offer": "[some WebRTC data]"}
+ {"id": "[identifier of the peer wishing to join]",
+   "data": "[some data]"}
 ```
 
 #### To peer wishing to connect
-- Server sends this message to you if the provided `key` is available, otherwise it closes the connection with `POLICY_VIOLATION` close event code.
+- Server forwards `data`.
 ```json
-{"reachable": "true"}
-```
-- Server forwardsthe `answer` (there is no data check) to the previously sent `offer`.
-```json
- {"answer": "[some WebRTC data]"}
+ {"data": "[some data]"}
 ```

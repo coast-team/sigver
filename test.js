@@ -3,44 +3,47 @@
 let wss = require('./server')
 let WebSocket = require('ws')
 
-let wsTrigger, wsJoining
-wsTrigger = new WebSocket('ws://localhost:' + wss.options.port)
+let master = new WebSocket('ws://localhost:' + wss.options.port)
 
-wsTrigger.on('close', () => {
-  console.log('TRIGGER: web socket closed')
+master.on('close', () => {
+  console.log('    8) MASTER: web socket closed')
 })
-wsTrigger.on('open', () => {
-  wsTrigger.on('message', (message, flags) => {
-    let msg = JSON.parse(message)
-    if (msg.hasOwnProperty('offer')) {
-      console.log('TRIGGER: offer received')
-      wsTrigger.send(JSON.stringify({answer: 'SDP answer'}), () => {
-        console.log('TRIGGER: answer sent')
-      })
+master.on('open', () => {
+  let msgNb = 1
+  master.on('message', (data, flags) => {
+    let msg = JSON.parse(data)
+    if (msg.hasOwnProperty('id') && msg.hasOwnProperty('data')) {
+      console.log('3 & 7) MASTER: data received')
+      if (msgNb > 0) {
+        msgNb--
+        master.send(JSON.stringify({id: msg.id, data: 'some data from master'}), () => {
+          console.log('    4) MASTER: data sent')
+        })
+      } else {
+        master.close()
+        wss.close()
+      }
     }
   })
-  wsTrigger.send(JSON.stringify({key: '11111'}), () => {
-    console.log('TRIGGER: key sent')
+  master.send(JSON.stringify({key: '11111'}), () => {
+    console.log('    1) MASTER: key sent')
 
-    wsJoining = new WebSocket('ws://localhost:' + wss.options.port + '/111111')
-    wsJoining.on('close', () => {
-      console.log('JOINING: web socket closed')
+    let client = new WebSocket('ws://localhost:' + wss.options.port + '/111111')
+    client.on('close', () => {
+      console.log('    9) CLIENT: web socket closed')
     })
-    wsJoining.on('open', () => {
-      wsJoining.on('message', (data, flags) => {
+    client.on('open', () => {
+      client.on('message', (data, flags) => {
         let msg = JSON.parse(data)
-        if (msg.hasOwnProperty('reachable')) {
-          console.log('JOINING: key exists')
-          wsJoining.send(JSON.stringify({offer: 'SDP offer'}), () => {
-            console.log('JOINING: offer sent')
+        if (msg.hasOwnProperty('data')) {
+          console.log('    5) CLIENT: data received')
+          client.send(JSON.stringify({data: 'some data from client'}), () => {
+            console.log('    6) CLIENT: data sent')
           })
-        } else if (msg.hasOwnProperty('answer')) {
-          console.log('JOINING: answer received')
-          wss.close()
         }
       })
-      wsJoining.send(JSON.stringify({joinkey: '11111'}), () => {
-        console.log('JOINING: join sent')
+      client.send(JSON.stringify({join: '11111', data: 'some data from client'}), () => {
+        console.log('    2) CLIENT: join with data sent')
       })
     })
   })
