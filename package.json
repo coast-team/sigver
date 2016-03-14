@@ -27,7 +27,7 @@
     "cz-conventional-changelog": "^1.1.5",
     "ghooks": "1.0.3",
     "semantic-release": "^4.3.5",
-    "standard": "^5.4.1"
+    "standard": "^6.0.8"
   },
   "config": {
     "ghooks": {
