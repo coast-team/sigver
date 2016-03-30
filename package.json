@@ -4,7 +4,7 @@
   "version": "0.0.0-sementically-released",
   "main": "server.es5.js",
   "scripts": {
-    "post-install": "npm run build",
+    "start": "node server.es5.js",
     "build": "./node_modules/.bin/babel --presets es2015 -o server.es5.js server.js",
     "test": "node test.js",
     "commit": "git-cz",

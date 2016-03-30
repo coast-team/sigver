@@ -14,7 +14,7 @@ For Node 4 and above:
 ```
 node server.js
 ```
-For the previous versions of node:
+For the previous versions of node (this by default for `npm start`):
 ```
 node server.es5.js
 ```
