@@ -10,8 +10,13 @@
 Very simple signaling server based on WebSocket to test WebRTC.
 
 ## How to use
+For Node 4 and above:
 ```
 node server.js
+```
+For the previous versions of node:
+```
+node server.es5.js
 ```
 
 ## Message protocol
@@ -47,6 +52,11 @@ Message is a JSON string.
 ```json
  {"id": "[identifier of the peer wishing to join]",
    "data": "[some data]"}
+```
+- Server notify that the peer with `id` is no longer available.
+```json
+ {"id": "[identifier of the unavailable peer]",
+   "unavailable": "true"}
 ```
 
 #### To peer wishing to connect
