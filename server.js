@@ -44,7 +44,6 @@ server.on('connection', (socket) => {
       } else if (msg.hasOwnProperty('join')) {
         for (let master of server.clients) {
           if (master.key === msg.join) {
-            console.log('master found')
             socket.master = master
             master.joiningClients.push(socket)
             let id = master.joiningClients.length - 1
@@ -58,9 +57,11 @@ server.on('connection', (socket) => {
         if (socket.master.readyState === WebSocket.OPEN) {
           socket.master.send(JSON.stringify({id, data: msg.data}))
         }
-      } else {
-        error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
       }
+      // } else {
+      //   console.log('data: ', msg)
+      //   error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
+      // }
     } catch (event) {
       error(socket, DATA_SYNTAX_ERROR, 'erver accepts only JSON')
     }

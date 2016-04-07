@@ -74,7 +74,6 @@ server.on('connection', function (socket) {
             var _master = _step2.value;
 
             if (_master.key === msg.join) {
-              console.log('master found');
               socket.master = _master;
               _master.joiningClients.push(socket);
               var id = _master.joiningClients.length - 1;
@@ -103,9 +102,11 @@ server.on('connection', function (socket) {
         if (socket.master.readyState === WebSocket.OPEN) {
           socket.master.send(JSON.stringify({ id: _id, data: msg.data }));
         }
-      } else {
-        error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format');
       }
+      // } else {
+      //   console.log('data: ', msg)
+      //   error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
+      // }
     } catch (event) {
       error(socket, DATA_SYNTAX_ERROR, 'erver accepts only JSON');
     }
