@@ -10,14 +10,19 @@
 Very simple signaling server based on WebSocket to test WebRTC.
 
 ## How to use
-For Node 4 and above:
+For Node 6 and above:
 ```
-node server.js
+node server.js [OPTIONS]
 ```
 For the previous versions of node (this by default for `npm start`):
 ```
-node server.es5.js
+node server.es5.js [OPTIONS]
 ```
+-h, --host
+ - Specify host for the server. `localhost` by default.
+
+-p, --port
+ - Specify port for the server. `8000` by default.
 
 ## Message protocol
 Message is a JSON string.
