@@ -1,0 +1,19 @@
+{
+  "name": "SigVer Chrome Extension",
+  "description": "Runs a simple signaling server for initiating WebRTC connection in NetFlux.",
+  "version": "0.0.1",
+  "manifest_version": 2,
+
+  "sockets": {
+    "tcpServer": {
+      "listen": "*"
+    }
+  },
+
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  }
+
+}
