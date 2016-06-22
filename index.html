@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="css/materials_icons.css">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+
+    <!--Css to have a scroll bar if needed-->
+    <link type="text/css" rel="stylesheet" href="css/index.css">
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col s12">
+          <h3 class="center-align">SigVer Interface Prototype</h3>
+        </div>
+      </div>
+      <div class="row center-align">
+        <!-- <button id="hide-window">Hide Window</button> -->
+        <a id="hide-window2" class="waves-effect waves-light btn">Hide Window</a>
+      </div>
+      <div class="row">
+        <div class="col s6 center-align">
+          <h4>Server</h4>
+          <div class="switch">
+            <label>
+                Off
+                <input type="checkbox" id="switch-server">
+                <span class="lever"></span>
+                On
+            </label>
+          </div>
+        </div>
+        <div class="col s6 center-align">
+          <h4>Addresses</h4>
+          <div id="address">
+            An address
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s8 offset-s2 center-align">
+          <h4>Connections</h4>
+          <table class="bordered centered responsive-table">
+            <thead>
+              <tr>
+                <th data-field="connection-number">Number</th>
+                <th data-field="connection-time">Type</th>
+                <th data-field="connection-type">Time</th>
+                <th data-field="connection-close">Close</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="row center-align">
+        <!-- <button id="clear-connections">Clear Connections</button> -->
+        <a id="clear-connections2" class="waves-effect waves-light btn">Clear Connections</a>
+      </div>
+      <div class="row">
+        <div class="col s8 offset-s2 center-align">
+          <h4>Logs</h4>
+          <textarea id="log" style="height:15vh;" readonly></textarea>
+          <!-- <button id="clear-logs">Clear Logs</button> -->
+          <a id="clear-logs2" class="waves-effect waves-light btn">Clear Logs</a>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s8 offset-s2 center-align">
+          <!-- <button id="test">Run Test</button> -->
+          <a id="test2" class="waves-effect waves-light btn">Run Test</a>
+        </div>
+      </div>
+    </div>
+
+    <!--Import jQuery before materialize.js-->
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/materialize.js"></script>
+
+    <script type="text/javascript" src="js/utils.js"></script>
+    <script type="text/javascript" src="js/test-chrome-ext.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </body>
+</html>
