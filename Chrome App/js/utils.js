@@ -17,6 +17,8 @@ function clearConnections() {
 			tbody.removeChild(tbody.childNodes[i])
 		}
 	}
+
+	updateConnections()
 }
 
 /**
@@ -159,6 +161,8 @@ function init() {
 	    }
 	    setAddress(address)
     })
+
+    updateConnections()
 }
 
 /**
@@ -179,6 +183,61 @@ function startAndStopServer() {
  */
 function hideWindow() {
 	chrome.app.window.get("SigVer_App_Window_1").hide()
+}
+
+/**
+ * Function which changes the state of the switch
+ */
+function updateSwitch() {
+	if (switchServer.checked) {
+		switchServer.checked = false
+	} else {
+		switchServer.checked = true
+	}
+}
+
+/**
+ * Function which updates the number of connections displayed and running when connections are added or deleted
+ */
+function updateConnections() {
+	let runningConnections = document.getElementById('running-connections'),
+		tbody = document.getElementsByTagName('tbody')[0],
+		runningCount = 0,
+		displayedCount = tbody.childNodes.length
+
+	for (let i = 0 ; i < displayedCount ; i++) {
+		if (tbody.childNodes[i].getAttribute('running') === "true") {
+			runningCount++
+		}
+	}
+
+	if (displayedCount === 0 || displayedCount === 1) {
+		runningConnections.innerText = "" + displayedCount + " connection displayed\n" + runningCount + " connection running"
+	} else {
+		if (runningCount === 0 || runningCount === 1) {
+			runningConnections.innerText = "" + displayedCount + " connections displayed\n" + runningCount + " connection running"
+		} else {
+			runningConnections.innerText = "" + displayedCount + " connections displayed\n" + runningCount + " connections running"
+		}
+	}
+}
+
+/**
+ * Function which changes the connection table when the server is stopped
+ */
+function closeAllConnections() {
+	let tbody = document.getElementsByTagName('tbody')[0]
+
+	for (let i = 0 ; i < tbody.childNodes.length ; i++) {
+		let tr = tbody.childNodes[i],
+			running = tr.getAttribute('running'),
+			id = tr.getAttribute('id').split('-')[1]
+
+		if (running === "true") {
+			tr.childNodes[2].innerText = 'Server Off'
+			setConnectionOff(id)
+		}
+	}
 }
 
 /**

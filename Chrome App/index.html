@@ -44,14 +44,15 @@
         </div>
       </div>
       <div class="row">
-        <div class="col s8 offset-s2 center-align">
+        <div class="col s10 offset-s1 center-align">
           <h4>Connections</h4>
+          <div id="running-connections">0 connection running</div>
           <table class="bordered centered responsive-table">
             <thead>
               <tr>
                 <th data-field="connection-number">Number</th>
                 <th data-field="connection-time">Type</th>
-                <th data-field="connection-type">Time</th>
+                <th data-field="connection-type">Time<br></th>
                 <th data-field="connection-close">Close</th>
               </tr>
             </thead>
@@ -66,7 +67,7 @@
       <div class="row">
         <div class="col s8 offset-s2 center-align">
           <h4>Logs</h4>
-          <textarea id="log" style="height:15vh;" readonly></textarea>
+          <textarea id="log" readonly></textarea>
           <!-- <button id="clear-logs">Clear Logs</button> -->
           <a id="clear-logs2" class="waves-effect waves-light btn">Clear Logs</a>
         </div>

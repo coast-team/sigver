@@ -1,0 +1,7 @@
+html {
+  	overflow: auto;
+}
+
+textarea {
+	height: 15vh;
+}

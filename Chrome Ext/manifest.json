@@ -1,0 +1,26 @@
+{
+  "name": "SigVer Launcher",
+  "description": "An extension to interact with the SigVer Chrome App",
+  "version": "0.3.0",
+
+  "permissions": [
+    "management"
+  ],
+
+  "icons": {
+    "48": "icon.png"
+  },
+
+  "browser_action": {
+    "default_icon": "browser_action_icon.png",
+    "default_title": "SigVer Launcher",
+    "default_popup": "popup.html"
+  },
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+
+  "manifest_version": 2
+}

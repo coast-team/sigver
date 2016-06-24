@@ -1,0 +1,20 @@
+html {
+  overflow-x: hidden;
+}
+
+body {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+button {
+  width: 100%;
+  margin-top: 7px;
+  margin-bottom: 7px;
+  margin-left: 2px;
+  margin-right: 20px;
+  white-space: nowrap;
+}
+
+h3 {
+  text-align: center;
+}

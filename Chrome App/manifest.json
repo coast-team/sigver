@@ -1,7 +1,7 @@
 {
   "name": "SigVer Chrome Application",
   "description": "Runs a simple signaling server for initiating WebRTC connection in NetFlux.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "manifest_version": 2,
 
   "permissions": [
@@ -33,7 +33,7 @@
   "externally_connectable": {
     "ids": [ "*" ],
     "matches": [
-      "*://*.google.com/*"
+      //valid : "*://*.google.com/*"
       //invalid : *://*.*.com/*
     ]
   }

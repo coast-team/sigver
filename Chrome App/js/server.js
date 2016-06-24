@@ -14,21 +14,27 @@ const WEBSOCKET_OPEN = 1;
 
 // Get useful functions to display infos on the app's page
 // See utils.js for the doc
-// id = "SigVer_App_Window_1" is defined in background.js
+
+if (!id) {
+  var id = id = "SigVer_App_Window_1" 
+}
+
 function setAddress(text) {chrome.app.window.get(id).contentWindow.setAddress(text)}
 function log(text) {chrome.app.window.get(id).contentWindow.log(text)}
 function setConnectionTime(number, type) {chrome.app.window.get(id).contentWindow.setConnectionTime(number, type)}
 function setConnectionOff(number) {chrome.app.window.get(id).contentWindow.setConnectionOff(number)}
 function addConnection(number, type, time, socket) {chrome.app.window.get(id).contentWindow.addConnection(number, type, time, socket)}
-
+function updateConnections() {chrome.app.window.get(id).contentWindow.updateConnections()}
+function closeAllConnections() {chrome.app.window.get(id).contentWindow.closeAllConnections()}
 
 class SigVer {
 
   constructor() {
     this.server = new http.Server();
     this.wsServer = new http.WebSocketServer(this.server);
-    this.serverSocketId = -1;
+    // this.serverSocketId = -1;
     this.isRunning = false
+    // this.myConnectedSockets = [];
   }
 
   start(port) {
@@ -108,6 +114,7 @@ class SigVer {
 
               addConnection(socket.connectionNumber, 'Key', 'Running', socket)
               connectionNb++
+              updateConnections()
 
 
 
@@ -151,6 +158,7 @@ class SigVer {
 
                   addConnection(socket.connectionNumber, 'Join', 'Running', socket)
                   connectionNb++
+                  updateConnections()
 
 
                   return;
@@ -199,6 +207,7 @@ class SigVer {
 
           setConnectionTime(socket.connectionNumber, socket.stoppedAt - socket.createdAt)
           setConnectionOff(socket.connectionNumber)
+          updateConnections()
         });
 
         return true;
@@ -206,12 +215,15 @@ class SigVer {
     }
 
     this.isRunning = true
+    chrome.runtime.sendMessage('ojejgneppnladelhcnndbhigjjdjmkhg', JSON.stringify({serverRunning: true}))
   }
 
   stop() {
     this.server.stop();
-    log("Server stopped")
     this.isRunning = false
+    closeAllConnections()
+    log("Server stopped")
+    chrome.runtime.sendMessage('ojejgneppnladelhcnndbhigjjdjmkhg', JSON.stringify({serverRunning: false}))
   }
 
 }
