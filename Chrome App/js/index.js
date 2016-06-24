@@ -1,10 +1,10 @@
 "use strict";
 
 var switchServer = document.getElementById('switch-server'),
-	buttonClearConnections = document.getElementById('clear-connections2'),
-	buttonClearLogs = document.getElementById('clear-logs2'),
-	buttonTest = document.getElementById('test2'),
-	hideWindowButton = document.getElementById('hide-window2')
+	buttonClearConnections = document.getElementById('clear-connections'),
+	buttonClearLogs = document.getElementById('clear-logs'),
+	buttonTest = document.getElementById('test'),
+	hideWindowButton = document.getElementById('hide-window')
 
 var sigVer
 

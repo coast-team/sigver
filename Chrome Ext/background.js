@@ -1,7 +1,5 @@
-let appIsRunning = false
-
-function updateIcon(current) {
-  	chrome.browserAction.setIcon({path:"icon" + current + ".png"});
+function updateIcon(icon) {
+  	chrome.browserAction.setIcon({path:"icon" + icon + ".png"});
 }
 
 chrome.runtime.onMessageExternal.addListener(function(message) {

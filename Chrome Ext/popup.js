@@ -26,12 +26,6 @@ function launchSigVer() {
   })
 }
 
-// function launchServer() {
-//   launchSigVer()
-
-//   chrome.runtime.sendMessage('kejjailklidpodgempkdnjgcdifpmgph', JSON.stringify({hide: true}))
-// }
-
 function startServer() {
   launchSigVer()
   chrome.runtime.sendMessage(JSON.stringify({startServer: true}))

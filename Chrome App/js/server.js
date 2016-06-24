@@ -32,15 +32,11 @@ class SigVer {
   constructor() {
     this.server = new http.Server();
     this.wsServer = new http.WebSocketServer(this.server);
-    // this.serverSocketId = -1;
     this.isRunning = false
-    // this.myConnectedSockets = [];
   }
 
   start(port) {
     let connectionNb = 1
-
-
 
     if (http.Server && http.WebSocketServer) {
       // Listen for HTTP connections.
@@ -71,16 +67,12 @@ class SigVer {
       var connectedSockets = [];
 
       this.wsServer.addEventListener('request', function(req) {
+        // New socket connected
         var socket = req.accept();
         connectedSockets.push(socket);
 
-
         socket.connectionNumber = connectionNb
         socket.createdAt = new Date().valueOf()
-
-        
-
-
 
         // When a message is received on one socket, rebroadcast it on all
         // connected sockets.
@@ -110,13 +102,9 @@ class SigVer {
               socket.joiningClients = [];
               log('a key has been approved')
 
-
-
               addConnection(socket.connectionNumber, 'Key', 'Running', socket)
               connectionNb++
               updateConnections()
-
-
 
             } else if (msg.hasOwnProperty('id')) {
               // sending data to the client with the corresponding id
@@ -154,12 +142,9 @@ class SigVer {
                     data: msg.data
                   }));
 
-
-
                   addConnection(socket.connectionNumber, 'Join', 'Running', socket)
                   connectionNb++
                   updateConnections()
-
 
                   return;
                 }
@@ -180,8 +165,7 @@ class SigVer {
               error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format');
             }
           } catch (event) {
-            error(socket, DATA_SYNTAX_ERROR,
-              'Server accepts only JSON');
+            error(socket, DATA_SYNTAX_ERROR, 'Server accepts only JSON');
           }
         });
 
@@ -205,6 +189,7 @@ class SigVer {
             }
           }
 
+          // Update visible informations
           setConnectionTime(socket.connectionNumber, socket.stoppedAt - socket.createdAt)
           setConnectionOff(socket.connectionNumber)
           updateConnections()
