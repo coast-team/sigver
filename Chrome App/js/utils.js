@@ -139,9 +139,9 @@ function log(text) {
 	var log = document.getElementById('log')
 	
 	if (log === "undefined" || log === null) {
-	    console.log(text);
+	    console.log(text)
 	} else {
-	    log.innerText = log.innerHTML + text + '\n';
+	    log.innerText = log.innerHTML + text + '\n'
 	}
 }
 

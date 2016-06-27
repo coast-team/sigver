@@ -1,7 +1,7 @@
 {
-  "name": "SigVer Chrome Application",
-  "description": "Runs a simple signaling server for initiating WebRTC connection in NetFlux.",
-  "version": "0.3.0",
+  "name": "SigVer Manager",
+  "description": "An application that allows the user to start and stop at will a simple signaling server for initiating WebRTC connection in NetFlux.",
+  "version": "0.3.2",
   "manifest_version": 2,
 
   "permissions": [

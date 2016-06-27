@@ -1,23 +1,8 @@
-# [![NPM](https://nodei.co/npm/sigver.png)](https://nodei.co/npm/sigver/) [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/semantic-release/semantic-release)&nbsp;
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=flat-square)](http://commitizen.github.io/cz-cli/)&nbsp;
-
-[![npm](https://img.shields.io/npm/v/sigver.svg)](https://www.npmjs.com/package/sigver)&nbsp;
-[![Build Status](https://travis-ci.org/coast-team/sigver.svg?branch=master)](https://travis-ci.org/coast-team/sigver)
-[![Dependency Status](https://david-dm.org/coast-team/sigver.svg)](https://david-dm.org/coast-team/sigver)&nbsp;
-[![devDependency Status](https://david-dm.org/coast-team/sigver/dev-status.svg)](https://david-dm.org/coast-team/sigver#info=devDependencies)
-
 Very simple signaling server based on WebSocket to test WebRTC.
 
 ## How to use
-For Node 4 and above:
-```
-node server.js
-```
-For the previous versions of node (this by default for `npm start`):
-```
-node server.es5.js
-```
+Install the chrome application in chrome. To get a more user-friendly use of the application, also install the chrome extension.
+Then you can run the server by launching the application or using the extension.
 
 ## Message protocol
 Message is a JSON string.

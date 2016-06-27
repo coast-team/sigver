@@ -1,4 +1,4 @@
-"use strict";
+"use strict"
 
 var switchServer = document.getElementById('switch-server'),
 	buttonClearConnections = document.getElementById('clear-connections'),
@@ -16,7 +16,7 @@ chrome.runtime.getBackgroundPage((win) => {
 // Initialize the application's DOM fields when launched
 init()
 
-// Add listeners for the differents buttons and switch on the app's page
+// Add listeners for the different buttons and switch on the app's page
 switchServer.addEventListener('click', startAndStopServer)
 buttonClearConnections.addEventListener('click', clearConnections)
 buttonClearLogs.addEventListener('click', clearLogs)

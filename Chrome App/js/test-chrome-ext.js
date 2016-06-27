@@ -1,16 +1,16 @@
-'use strict';
+'use strict'
 
 // Basic test which implies 2 clients who exchanges some datas and then close the connection
 function runTest() { 
   var client2 = new WebSocket('ws://localhost:8000/111111')
 
-  client2.onclose = function(event) {
+  client2.onclose = (e) => {
     console.log('    8) CLIENT2: web socket closed')
   }
 
-  client2.onopen = function(event) {
+  client2.onopen = (e) => {
     let msgNb = 1
-    client2.onmessage = function(event) {
+    client2.onmessage = (event) => {
       let msg = JSON.parse(event.data)
       if (msg.hasOwnProperty('data') && msg.hasOwnProperty('id')) {
         console.log('3 & 7) CLIENT2: data received')
@@ -30,12 +30,12 @@ function runTest() {
 
   var client1 = new WebSocket('ws://localhost:8000/111110')
   
-  client1.onclose = function(event) {
+  client1.onclose = (e) => {
     console.log('    9) CLIENT1: web socket closed')
   }
 
-  client1.onopen = function(event) {
-    client1.onmessage = function(event) {
+  client1.onopen = (e) => {
+    client1.onmessage = (event) => {
       let msg = JSON.parse(event.data)
       if (msg.hasOwnProperty('data')) {
         console.log('    5) CLIENT1: data received')
