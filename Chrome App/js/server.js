@@ -19,13 +19,13 @@ if (!id) {
   var id = "SigVer_App_Window_1" 
 }
 
-function setAddress(text) {chrome.app.window.get(id).contentWindow.setAddress(text)}
-function log(text) {chrome.app.window.get(id).contentWindow.log(text)}
-function setConnectionTime(number, type) {chrome.app.window.get(id).contentWindow.setConnectionTime(number, type)}
-function setConnectionOff(number) {chrome.app.window.get(id).contentWindow.setConnectionOff(number)}
+// function setAddress(text) {chrome.app.window.get(id).contentWindow.setAddress(text)}
+// function log(text) {chrome.app.window.get(id).contentWindow.log(text)}
+// function setConnectionTime(number, type) {chrome.app.window.get(id).contentWindow.setConnectionTime(number, type)}
+// function setConnectionOff(number) {chrome.app.window.get(id).contentWindow.setConnectionOff(number)}
 function addConnection(number, type, time, socket) {chrome.app.window.get(id).contentWindow.addConnection(number, type, time, socket)}
-function updateConnections() {chrome.app.window.get(id).contentWindow.updateConnections()}
-function closeAllConnections() {chrome.app.window.get(id).contentWindow.closeAllConnections()}
+// function updateConnections() {chrome.app.window.get(id).contentWindow.updateConnections()}
+// function closeAllConnections() {chrome.app.window.get(id).contentWindow.closeAllConnections()}
 
 class SigVer {
 
@@ -41,7 +41,9 @@ class SigVer {
     if (http.Server && http.WebSocketServer) {
       // Listen for HTTP connections.
       let address = "ws://localhost:" + port
-      log('Server runs on: ' + address)
+
+      // log('Server runs on: ' + address)
+      chrome.runtime.sendMessage(JSON.stringify({log: 'Server runs on: ' + address}))
       this.server.listen(port)
 
       // Get the available IPv4/IPv6 addresses
@@ -49,7 +51,8 @@ class SigVer {
         for (let interfacenumber of interfaces) {
           address += '\nws://' + interfacenumber.address + ':' + port
         }
-        setAddress(address)
+        // setAddress(address)
+        chrome.runtime.sendMessage(JSON.stringify({address}))
       })
 
       // I think that we can get rid of this listener ; not sure though
@@ -75,6 +78,7 @@ class SigVer {
         // Add useful infos to the socket
         socket.connectionNumber = connectionNb
         socket.createdAt = new Date().valueOf()
+        connectionNb++
 
         // When a message is received on one socket, rebroadcast it on all connected sockets.
         socket.addEventListener('message', (event) => {
@@ -101,11 +105,14 @@ class SigVer {
               }
               socket.key = msg.key
               socket.joiningClients = []
-              log('a key has been approved')
+
+              // log('a key has been approved')
+              chrome.runtime.sendMessage(JSON.stringify({log: 'a key has been approved'}))
 
               addConnection(socket.connectionNumber, 'Key: ' + msg.key, 'Running', socket)
-              connectionNb++
-              updateConnections()
+
+              // updateConnections()
+              chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
 
             } else if (msg.hasOwnProperty('id')) {
               // sending data to the client with the corresponding id
@@ -115,7 +122,6 @@ class SigVer {
                   socket.joiningClients[index].send(JSON.stringify({
                     data: msg.data
                   }))
-                  log('data sent to a specific id')
                   return
                 }
               }
@@ -128,7 +134,9 @@ class SigVer {
 
               for (let master of connectedSockets) {
                 if (master.key === msg.join) {
-                  log('master found, join succeeded')
+                  // log('master found, join succeeded')
+                  chrome.runtime.sendMessage(JSON.stringify({log: 'master found, join succeeded'}))
+
                   socket.master = master
                   master.joiningClients.push(socket)
                   let id = master.joiningClients.length - 1
@@ -138,8 +146,9 @@ class SigVer {
                   }))
 
                   addConnection(socket.connectionNumber, 'Join: ' + msg.join, 'Running', socket)
-                  connectionNb++
-                  updateConnections()
+
+                  // updateConnections()
+                  chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
 
                   return
                 }
@@ -155,7 +164,6 @@ class SigVer {
                   data: msg.data
                 }))
               }
-              log('data transmitted')
             } else {
               error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
             }
@@ -170,7 +178,9 @@ class SigVer {
           // When a socket is closed, we notify pending clients that the server is leaving
           if (socket.hasOwnProperty('joiningClients')) {
             for (let client of socket.joiningClients) {
-              log('closing connection with pending client ', client)
+              // log('closing connection with pending client ', client)
+              chrome.runtime.sendMessage(JSON.stringify({log: 'closing connection with pending client'}))
+
               client.close(KEY_NO_LONGER_AVAILABLE,
                 'The peer is no longer available')
             }
@@ -185,9 +195,21 @@ class SigVer {
           }
 
           // Update visible informations
-          setConnectionTime(socket.connectionNumber, socket.stoppedAt - socket.createdAt)
-          setConnectionOff(socket.connectionNumber)
-          updateConnections()
+          // setConnectionTime(socket.connectionNumber, socket.stoppedAt - socket.createdAt)
+          chrome.runtime.sendMessage(JSON.stringify(
+            {
+              connectionTime: {
+                number: socket.connectionNumber,
+                time: socket.stoppedAt - socket.createdAt
+              }
+            })
+          )
+
+          // setConnectionOff(socket.connectionNumber)
+          chrome.runtime.sendMessage(JSON.stringify({connectionOff: socket.connectionNumber}))
+
+          // updateConnections()
+          chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
         })
 
         return true
@@ -195,14 +217,21 @@ class SigVer {
     }
 
     this.isRunning = true
+    // Notify the extension that the server is running
     chrome.runtime.sendMessage('poegkddcofnkjaclakbkmilkncnajglf', JSON.stringify({serverRunning: true}))
   }
 
   stop() {
     this.server.stop()
     this.isRunning = false
-    closeAllConnections()
-    log("Server stopped")
+
+    // closeAllConnections()
+    chrome.runtime.sendMessage(JSON.stringify({closeAllConnections: true}))
+
+    // log("Server stopped")
+    chrome.runtime.sendMessage(JSON.stringify({log: 'Server stopped'}))
+
+    // Notify the extension that the server is not running anymore
     chrome.runtime.sendMessage('poegkddcofnkjaclakbkmilkncnajglf', JSON.stringify({serverRunning: false}))
   }
 
@@ -215,6 +244,8 @@ class SigVer {
  * @param {string} msg explicit error message.
  */
 function error(socket, code, msg) {
-  log('Error ' + code + ': ' + msg)
+  // log('Error ' + code + ': ' + msg)
+  chrome.runtime.sendMessage(JSON.stringify({log: 'Error ' + code + ': ' + msg}))
+
   socket.close(code, msg)
 }

@@ -1,7 +1,8 @@
 {
   "name": "SigVer Manager",
+  "short_name": "SVM",
   "description": "An application that allows the user to start and stop at will a simple signaling server for initiating WebRTC connection in NetFlux.",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "manifest_version": 2,
 
   "permissions": [

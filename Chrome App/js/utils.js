@@ -22,7 +22,7 @@ function clearConnections() {
 }
 
 /**
- * Function which set the text of the div address.
+ * Function which set the text of the collection address.
  * @param {string} text to set.
  */
 function setAddress(text) {
@@ -30,10 +30,10 @@ function setAddress(text) {
 }
 
 /**
- * Function which get the first address of the div address.
+ * Function which get the first address of the addresses collection.
  */
 function getFirstAddress() {
-  	return document.getElementById('address').innerText.split('\n')[0]
+  	return document.getElementById('address').childNodes[0].childNodes[0].innerText
 }
 
 /**
@@ -44,18 +44,16 @@ function addConnectionNumber(number) {
 	let tbody = document.getElementsByTagName('tbody')[0]
 
 	let tr = document.createElement('tr')
-	let tdNumber = document.createElement('td')
 	let tdClose = document.createElement('td')
-	let numberNode = document.createTextNode(number)
-	let closeButton = document.createElement('button')
+	let closeButtonMaterialize = document.createElement('a')
 	let closeButtonNode = document.createTextNode('Close')
 
-	tdNumber.appendChild(numberNode)
-	closeButton.appendChild(closeButtonNode)
-	closeButton.setAttribute('id', 'close-' + number)
-	tdClose.appendChild(closeButton)
+	closeButtonMaterialize.setAttribute('class', 'waves-effect waves-light btn-small')
+	closeButtonMaterialize.setAttribute('id', 'close-' + number)
+	closeButtonMaterialize.appendChild(closeButtonNode)
+	tdClose.appendChild(closeButtonMaterialize)
 
-	tr.appendChild(tdNumber)
+	tr.appendChild(document.createElement('td'))
 	tr.appendChild(document.createElement('td'))
 	tr.appendChild(document.createElement('td'))
 	tr.appendChild(tdClose)
@@ -72,19 +70,62 @@ function addConnectionNumber(number) {
  */
 function setConnectionTime(number, time) {
 	let tr = document.getElementById('tr-' + number)
-	let td = tr.childNodes[2]
+	if (tr) {
+		let tdTime = tr.childNodes[2],
+			timeNode
 
-	td.innerHTML = ""
+		tdTime.innerHTML = ""
 
-	let timeNode
+		if (typeof time === "number") {
+			timeNode = document.createTextNode("" + time + " ms")
+		} else {
+			timeNode = document.createTextNode(time)
+		}
 
-	if (typeof time === "number") {
-		timeNode = document.createTextNode("" + time + " ms")
-	} else {
-		timeNode = document.createTextNode(time)
+		tdTime.appendChild(timeNode)
 	}
+}
 
-	td.appendChild(timeNode)
+/**
+ * Function to set the time at which a given connection started
+ * @param {int} number connection's number
+ * @param {int} time time in milliseconds
+ */
+function setConnectionStartedAt(number, time) {
+	let tr = document.getElementById('tr-' + number)
+	if (tr) {
+		let tdStarted = tr.childNodes[1],
+			startedNode,
+			date = new Date(time)
+
+		let hours = date.getHours(),
+			minutes = date.getMinutes(),
+			seconds = date.getSeconds(),
+			milliseconds = date.getMilliseconds()
+
+		if (hours < 10) {
+			hours = '0' + hours
+		}
+
+		if (minutes < 10) {
+			minutes = '0' + minutes
+		}
+
+		if (seconds < 10) {
+			seconds = '0' + seconds
+		}
+
+		if (milliseconds < 10) {
+			milliseconds = '00' + milliseconds
+		} else if (milliseconds < 100) {
+			milliseconds = '0' + milliseconds
+		}
+		
+		startedNode = document.createTextNode(hours + "h " + minutes + "m " + seconds + "." + milliseconds + "s")
+		
+		tdStarted.innerHTML = ""
+		tdStarted.appendChild(startedNode)
+	}
 }
 
 /**
@@ -94,11 +135,13 @@ function setConnectionTime(number, time) {
  */
 function setConnectionType(number, type) {
 	let tr = document.getElementById('tr-' + number)
-	let td = tr.childNodes[1]
+	if (tr) {
+		let td = tr.childNodes[0]
 
-	let typeNode = document.createTextNode(type)
+		let typeNode = document.createTextNode(type)
 
-	td.appendChild(typeNode)
+		td.appendChild(typeNode)
+	}
 }
 
 /**
@@ -109,8 +152,10 @@ function setConnectionOff(number) {
 	let tr = document.getElementById('tr-' + number)
 	let closeButton = document.getElementById('close-' + number)
 
-	tr.setAttribute('running', "false")
-	closeButton.disabled = true
+	if (tr) {
+		tr.setAttribute('running', "false")
+		closeButton.setAttribute('class', closeButton.className + " disabled")
+	}
 }
 
 /**
@@ -126,6 +171,8 @@ function addConnection(number, type, time, socket) {
 	setConnectionType(number, type)
 
 	setConnectionTime(number, time)
+
+	setConnectionStartedAt(number, socket.createdAt)
 
 	document.getElementById('tr-' + number).setAttribute('running', "true")
 	document.getElementById('close-' + number).addEventListener('click', () => {socket.close()})
@@ -150,17 +197,19 @@ function log(text) {
  */
 function init() {
 	let count = 0,
-		address = "Server is Off"
+		address = ["Server is Off"]
 
-	chrome.system.network.getNetworkInterfaces((interfaces) => {
-        count = interfaces.length
-        count++
+	// chrome.system.network.getNetworkInterfaces((interfaces) => {
+ //        count = interfaces.length
+ //        count++
 
-        for (var i = 0 ; i < count ; i++) {
-	    	address += "\n"
-	    }
-	    setAddress(address)
-    })
+ //        for (var i = 0 ; i < count ; i++) {
+	//     	address += "\n"
+	//     }
+	//     setAddress(address)
+ //    })
+
+ 	setAddress(address)
 
     updateConnections()
 }

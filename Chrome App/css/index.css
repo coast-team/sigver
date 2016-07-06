@@ -5,3 +5,33 @@ html {
 textarea {
 	height: 15vh;
 }
+
+.btn-small {
+	text-decoration: none;
+	color: #fff;
+	background-color: #26a69a;
+	text-align: center;
+	letter-spacing: .5px;
+	transition: .2s ease-out;
+	cursor: pointer;
+
+	border: none;
+  	border-radius: 2px;
+  	display: inline-block;
+  	height: 20px;
+  	line-height: 20px;
+  	outline: 0;
+  	padding: 0 1rem;
+  	text-transform: uppercase;
+  	font-size: 9px;
+  	vertical-align: middle;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.disabled {
+	background-color: #DFDFDF !important;
+	box-shadow: none;
+	color: #9F9F9F !important;
+	cursor: default;
+	pointer-events: none;
+}

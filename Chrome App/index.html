@@ -6,7 +6,6 @@
     <!--Import materialize.css-->
     <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
 
-    <!--Css to have a scroll bar if needed-->
     <link type="text/css" rel="stylesheet" href="css/index.css">
 
     <!--Let browser know website is optimized for mobile-->
@@ -37,22 +36,23 @@
         </div>
         <div class="col s6 center-align">
           <h4>Addresses</h4>
-          <div id="address">
+          <!-- <div id="address">
             An address
-          </div>
+          </div> -->
+          <textarea id="address" readonly style="height:10vh; width:80%"></textarea>
         </div>
       </div>
       <div class="row">
         <div class="col s10 offset-s1 center-align">
           <h4>Connections</h4>
           <div id="running-connections">0 connection running</div>
-          <table class="bordered centered responsive-table">
+          <table class="bordered centered responsive-table scroll">
             <thead>
               <tr>
-                <th data-field="connection-number">Number</th>
-                <th data-field="connection-time">Type</th>
-                <th data-field="connection-type">Time<br></th>
-                <th data-field="connection-close">Close</th>
+                <th data-field="connection-type">Type</th>
+                <th data-field="connection-started">Started At</th>
+                <th data-field="connection-duration">Duration<br></th>
+                <th data-field="connection-action">Action</th>
               </tr>
             </thead>
             <tbody></tbody>
