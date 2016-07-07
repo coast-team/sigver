@@ -38,35 +38,37 @@ chrome.runtime.onMessage.addListener((message) => {
 	if (mes.hasOwnProperty('startServer')) {
 		// The extension has to tell the app to start the server
 		if (mes.startServer) {
-			// Open a connection with the application
-			port = chrome.runtime.connect('dobclcfmeoocbfnghgjcgamkgdlinjif')
-			
-			// The extension receives a message on this connection
-			port.onMessage.addListener((message2) => {
-				let mes2
+			setTimeout(() => {
+				// Open a connection with the application
+				port = chrome.runtime.connect('dobclcfmeoocbfnghgjcgamkgdlinjif')
+				
+				// The extension receives a message on this connection
+				port.onMessage.addListener((message2) => {
+					let mes2
 
-				try {
-					mes2 = JSON.parse(message2)
-				} catch(e) {
-					console.log('Only JSON accepted')
-				}
-
-				if (mes2.hasOwnProperty('received')) {
-					// The application has received the message and can make what is expected
-					if (mes2.received) {
-						port.disconnect()
+					try {
+						mes2 = JSON.parse(message2)
+					} catch(e) {
+						console.log('Only JSON accepted')
 					}
-				} else if (mes2.hasOwnProperty('resend')) {
-					// The application has received the message but can't make what is expected
-					if (mes2.resend) {
-						// Resend the message
-						setTimeout(() => {port.postMessage(JSON.stringify({startServer: true}))}, 100)
-					} 
-				}
-			})
 
-			// Sending the first message to start the server
-			port.postMessage(JSON.stringify({startServer: true}))
+					if (mes2.hasOwnProperty('received')) {
+						// The application has received the message and can make what is expected
+						if (mes2.received) {
+							port.disconnect()
+						}
+					} else if (mes2.hasOwnProperty('resend')) {
+						// The application has received the message but can't make what is expected
+						if (mes2.resend) {
+							// Resend the message
+							setTimeout(() => {port.postMessage(JSON.stringify({startServer: true}))}, 100)
+						} 
+					}
+				})
+
+				// Sending the first message to start the server
+				port.postMessage(JSON.stringify({startServer: true}))
+			}, 100)
 		}
 	} else if (mes.hasOwnProperty('stopServer')) {
 		// The extension has to tell the app to stop the server
