@@ -9,8 +9,8 @@ const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
 
 let settings = {
-  host: 'localhost',
-  port: 8000
+  host: process.env.NODE_IP || 'localhost',
+  port: process.env.NODE_PORT || 8000
 }
 process.argv.forEach((value, index, array) => {
   if (value.match('-(h|-host)')) {
@@ -66,11 +66,10 @@ server.on('connection', (socket) => {
         if (socket.master.readyState === WebSocket.OPEN) {
           socket.master.send(JSON.stringify({id, data: msg.data}))
         }
+      } else {
+        console.log('data: ', msg)
+        error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
       }
-      // } else {
-      //   console.log('data: ', msg)
-      //   error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
-      // }
     } catch (event) {
       error(socket, DATA_SYNTAX_ERROR, 'erver accepts only JSON')
     }
