@@ -22,11 +22,15 @@
     "url": "https://github.com/coast-team/sigver.git"
   },
   "dependencies": {
-    "ws": "^1.0.1"
+    "ws": "^1.1.1"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^1.2.1",
+    "utf-8-validate": "^1.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",
-    "babel-preset-es2015": "6.9.0",
+    "babel-preset-es2015": "^6.9.0",
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^1.1.5",
     "ghooks": "^1.0.3",
