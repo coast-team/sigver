@@ -14,11 +14,6 @@
   var KEY_UNKNOWN = 4003;
   var KEY_NO_LONGER_AVAILABLE = 4004;
 
-  var settings = {
-    host: process.env.NODE_IP || 'localhost',
-    port: process.env.NODE_PORT || 8000,
-    onStart: function onStart() {}
-  };
   var server = void 0;
 
   function error(socket, code, msg) {
@@ -26,11 +21,12 @@
     socket.close(code, msg);
   }
 
-  function start(options) {
-    Object.assign(settings, options);
-    server = new WebSocketServer(settings, function () {
-      console.log('Server runs on: ' + settings.host + ':' + settings.port);
-      settings.onStart();
+  function start(host, port) {
+    var onStart = arguments.length <= 2 || arguments[2] === undefined ? function () {} : arguments[2];
+
+    server = new WebSocketServer({ host: host, port: port }, function () {
+      console.log('Server runs on: ' + host + ':' + port);
+      onStart();
     });
 
     server.on('connection', function (socket) {

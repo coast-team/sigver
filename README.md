@@ -31,16 +31,21 @@ Very simple signaling server based on WebSocket to test WebRTC.
 ### As library
 ```javascript
 const sigver = require('sigver')
-sigver.start({
-  host: process.env.NODE_IP || "localhost"
-  port: process.env.NODE_PORT || 8000
+
+/**
+ * Start the server
+ * @param {string} host
+ * @param {number} port
+ * @param {callback} onStart
+ */
+sigver.start(host, port,
   onStart: () => {
 
     // Do something...
 
     sigver.stop()
   }
-})
+)
 ```
 
 

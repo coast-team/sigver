@@ -8,11 +8,6 @@ const KEY_ALREADY_EXISTS = 4002
 const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
 
-let settings = {
-  host: process.env.NODE_IP || 'localhost',
-  port: process.env.NODE_PORT || 8000,
-  onStart: () => {}
-}
 let server
 
 function error (socket, code, msg) {
@@ -20,11 +15,10 @@ function error (socket, code, msg) {
   socket.close(code, msg)
 }
 
-function start (options) {
-  Object.assign(settings, options)
-  server = new WebSocketServer(settings, () => {
-    console.log(`Server runs on: ${settings.host}:${settings.port}`)
-    settings.onStart()
+function start (host, port, onStart = () => {}) {
+  server = new WebSocketServer({host, port}, () => {
+    console.log(`Server runs on: ${host}:${port}`)
+    onStart()
   })
 
   server.on('connection', (socket) => {
