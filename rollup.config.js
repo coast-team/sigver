@@ -7,7 +7,6 @@ let filesize = require('rollup-plugin-filesize')
 
 rollup.rollup({
   entry: 'src/index.js',
-  banner: '#!/usr/bin/env node',
   plugins: [
     babel({
       exclude: 'node_modules/**',
@@ -18,7 +17,7 @@ rollup.rollup({
   ]
 }).then((bundle) => {
   console.log('index.es5.min.js: ')
-  bundle.write({dest: 'bin/index.es5.min.js'})
+  bundle.write({banner: '#!/usr/bin/env node', dest: 'bin/index.es5.min.js'})
 })
 
 rollup.rollup({
@@ -38,3 +37,8 @@ rollup.rollup({
     dest: 'dist/sigver.es5.umd.js'
   })
 })
+// {
+//   output: {
+//     comments: '#.*'
+//   }
+// }
