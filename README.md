@@ -9,34 +9,54 @@
 
 Very simple signaling server based on WebSocket to test WebRTC.
 
+| [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/32px-Node.js_logo.svg.png" alt="NodeJS" width="32px" height="20px" />](http://godban.github.io/browsers-support-badges/)</br>NodeJS |
+| --------- |
+| 4 and above
+
 ## How to use
-For Node 6 and above:
-```
-node server.js [OPTIONS]
-```
-For the previous versions of node (this by default for `npm start`):
-```
-node server.es5.js [OPTIONS]
-```
--h, --host
- - Specify host for the server. `localhost` by default.
+    npm install -g sigver
 
--p, --port
- - Specify port for the server. `8000` by default.
+### As command line tool
+    Usage: sigver [options]
 
-## Message protocol
+    Options:
+      -h, --help      output usage information
+      -v, --version   output the version number
+      -h, --host <n>  specify host (DEFAULT: process.env.NODE_IP || "localhost")
+      -p, --port <n>  specify port (DEFAULT: process.env.NODE_PORT || 8000)
+
+    Examples:
+      $ sigver
+      $ sigver -h 192.168.0.1 -p 9000
+
+### As library
+```javascript
+const sigver = require('sigver')
+sigver.start({
+  host: process.env.NODE_IP || "localhost"
+  port: process.env.NODE_PORT || 8000
+  onStart: () => {
+
+    // Do something...
+
+    sigver.stop()
+  }
+})
+```
+
+
+## Protocol
 Message is a JSON string.
 
 ### Income messages
 #### From peer who triggered connection
-- When you wants to establish a connection with someone (you need to provide him this `key`).
+- When you want to establish a connection with someone (you need to provide him this `key` and wait until he send the `join` message to the server).
 ```json
  {"key": "[some unique key]"}
 ```
 - When you wants to forward `data` to the peer identified by `id`.
 ```json
-{"id": "[identifier]",
-   "data": "[any data]"}
+{"id": "[identifier]", "data": "[any data]"}
 ```
 
 
@@ -60,8 +80,7 @@ Message is a JSON string.
 ```
 - Server notify that the peer with `id` is no longer available.
 ```json
- {"id": "[identifier of the unavailable peer]",
-   "unavailable": "true"}
+ {"id": "[identifier of the unavailable peer]", "unavailable": "true"}
 ```
 
 #### To peer wishing to connect

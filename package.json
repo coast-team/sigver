@@ -1,17 +1,22 @@
 {
   "name": "sigver",
-  "description": "webRTC signaling server",
+  "description": "WebRTC signaling server",
   "version": "0.0.0-sementically-released",
-  "main": "server.es5.js",
+  "main": "es5/sigver.umd.js",
+  "jsnext:main": "sigver.js",
+  "bin": {
+    "sigver": "bin/index.es5.min.js"
+  },
   "scripts": {
-    "start": "node server.es5.js",
-    "build": "babel --presets es2015 -o server.es5.js server.js",
-    "test": "node test.js",
+    "start": "node bin/index.es5.min.js",
+    "build": "rm -rf dist bin & node rollup.config.js",
+    "pretest": "npm run build",
+    "test": "node test/sigver.test.js",
     "commit": "git-cz",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "keywords": [
-    "webRTC",
+    "WebRTC",
     "signaling",
     "server"
   ],
@@ -22,6 +27,7 @@
     "url": "https://github.com/coast-team/sigver.git"
   },
   "dependencies": {
+    "commander": "^2.9.0",
     "ws": "^1.1.1"
   },
   "optionalDependencies": {
@@ -29,11 +35,14 @@
     "utf-8-validate": "^1.2.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.6.5",
-    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-es2015-rollup": "^1.2.0",
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^1.1.5",
     "ghooks": "^1.0.3",
+    "rollup": "^0.34.7",
+    "rollup-plugin-babel": "^2.6.1",
+    "rollup-plugin-filesize": "^0.4.4",
+    "rollup-plugin-uglify": "^1.0.1",
     "semantic-release": "^4.3.5",
     "standard": "^7.1.1"
   },
