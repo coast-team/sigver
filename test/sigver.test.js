@@ -24,7 +24,6 @@ sigver.start(host, port, () => {
           })
         } else {
           master.close()
-          sigver.stop()
         }
       }
     })
@@ -34,6 +33,7 @@ sigver.start(host, port, () => {
       let client = new WebSocket('ws://localhost:' + port + '/111111')
       client.on('close', () => {
         console.log('    9) CLIENT: web socket closed')
+        sigver.stop()
       })
       client.on('open', () => {
         client.on('message', (data, flags) => {
