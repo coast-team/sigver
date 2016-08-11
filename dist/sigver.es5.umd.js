@@ -40,10 +40,10 @@
         }
         if ('key' in msg) {
           if (keys.has(msg.key)) {
-            socket.send('{"isKeyOk":"false"}');
+            socket.send('{"isKeyOk":false}');
             error(socket, KEY_ALREADY_EXISTS, 'The key already exists');
           } else {
-            socket.send('{"isKeyOk":"true"}');
+            socket.send('{"isKeyOk":true}');
             socket.joiningSockets = [];
             keys.set(msg.key, socket);
           }
@@ -54,13 +54,12 @@
             socket.keyHolder = keys.get(msg.join);
             var id = socket.keyHolder.joiningSockets.length;
             socket.keyHolder.joiningSockets[id] = socket;
-            console.log('length after ADD: ' + socket.keyHolder.joiningSockets.length);
-            socket.send('{"isJoinOk":"true"}');
+            socket.send('{"isJoinOk":true}');
             if ('data' in msg) {
               socket.keyHolder.send(JSON.stringify({ id: id, data: msg.data }));
             }
           } else {
-            socket.send('{"isJoinOk":"false"}');
+            socket.send('{"isJoinOk":false}');
             error(socket, KEY_UNKNOWN, 'Unknown key');
           }
         } else if ('data' in msg) {
@@ -82,7 +81,6 @@
             socket.keyHolder.send(JSON.stringify({ id: id, unavailable: true }));
           }
           socket.keyHolder.joiningSockets.splice(id, 1);
-          console.log('length after REMOVE: ' + socket.keyHolder.joiningSockets.length);
         } else {
           var _iteratorNormalCompletion = true;
           var _didIteratorError = false;
