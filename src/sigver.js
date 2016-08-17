@@ -9,11 +9,21 @@ const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
 
 let server
-const keys = new Map()
+const keyHolders = new Set()
 
 function error (socket, code, msg) {
   console.log('Error ' + code + ': ' + msg)
   socket.close(code, msg)
+}
+
+function isKeyExist (key) {
+  for (let h of keyHolders) if (h.key === key) return true
+  return false
+}
+
+function getKeyHolder (key) {
+  for (let h of keyHolders) if (h.key === key) return h
+  return null
 }
 
 function start (host, port, onStart = () => {}) {
@@ -30,59 +40,60 @@ function start (host, port, onStart = () => {}) {
       } catch (event) {
         error(socket, MESSAGE_TYPE_ERROR, 'Server accepts only JSON string')
       }
-      if ('key' in msg) {
-        if (keys.has(msg.key)) {
-          socket.send('{"isKeyOk":false}')
-          error(socket, KEY_ALREADY_EXISTS, 'The key already exists')
-        } else {
-          socket.send('{"isKeyOk":true}')
-          socket.joiningSockets = []
-          keys.set(msg.key, socket)
-        }
-      } else if ('id' in msg) {
-        socket.joiningSockets[+msg.id].send(JSON.stringify({data: msg.data}))
-      } else if ('join' in msg) {
-        if (keys.has(msg.join)) {
-          socket.keyHolder = keys.get(msg.join)
-          let id = socket.keyHolder.joiningSockets.length
-          socket.keyHolder.joiningSockets[id] = socket
-          socket.send('{"isJoinOk":true}')
-          if ('data' in msg) {
-            socket.keyHolder.send(JSON.stringify({id, data: msg.data}))
+      try {
+        if ('key' in msg) {
+          if (isKeyExist(msg.key)) {
+            socket.send('{"isKeyOk":false}')
+            error(socket, KEY_ALREADY_EXISTS, 'The key already exists')
+          } else {
+            socket.send('{"isKeyOk":true}')
+            socket.connectingPeers = []
+            socket.key = msg.key
+            keyHolders.add(socket)
+            socket.on('close', (event) => {
+              keyHolders.delete(socket)
+              for (let s of socket.connectingPeers) {
+                s.close(KEY_NO_LONGER_AVAILABLE, 'The peer with this key is no longer available')
+              }
+            })
+          }
+        } else if ('id' in msg && 'data' in msg) {
+          socket.connectingPeers[+msg.id].send(JSON.stringify({data: msg.data}))
+        } else if ('join' in msg) {
+          if (isKeyExist(msg.join)) {
+            socket.send('{"isKeyOk":true}')
+            socket.keyHolder = getKeyHolder(msg.join)
+            let id = socket.keyHolder.connectingPeers.length
+            socket.keyHolder.connectingPeers[id] = socket
+            socket.on('close', (event) => {
+              if (socket.keyHolder.readyState === OPEN) {
+                socket.keyHolder.send(JSON.stringify({id, unavailable: true}))
+              }
+              socket.keyHolder.connectingPeers.splice(id, 1)
+            })
+            if ('data' in msg) {
+              socket.keyHolder.send(JSON.stringify({id, data: msg.data}))
+            }
+          } else {
+            socket.send('{"isKeyOk":false}')
+            error(socket, KEY_UNKNOWN, 'Unknown key: ' + msg.join)
+          }
+        } else if ('data' in msg) {
+          if ('keyHolder' in socket) {
+            let id = socket.keyHolder.connectingPeers.indexOf(socket)
+            if (socket.keyHolder.readyState === OPEN) socket.keyHolder.send(JSON.stringify({id, data: msg.data}))
+          } else {
+            console.log('The client has not been assigned yet to a keyHolder')
           }
         } else {
-          socket.send('{"isJoinOk":false}')
-          error(socket, KEY_UNKNOWN, 'Unknown key')
+          error(socket, MESSAGE_UNKNOWN_ATTRIBUTE, 'Unknown JSON attribute: ' + data)
         }
-      } else if ('data' in msg) {
-        let id = socket.keyHolder.joiningSockets.indexOf(socket)
-        if ('keyHolder' in socket) {
-          socket.keyHolder.send(JSON.stringify({id, data: msg.data}))
-        } else {
-          console.log(`The client ${id} has not been assigned yet to a keyHolder`)
-        }
-      } else {
-        error(socket, MESSAGE_UNKNOWN_ATTRIBUTE, 'Unknown JSON attribute: ' + data)
+      } catch (err) {
+        error(socket, err.code, err.message)
       }
     })
 
-    socket.on('close', (event) => {
-      if ('keyHolder' in socket) {
-        let id = socket.keyHolder.joiningSockets.indexOf(socket)
-        if (socket.keyHolder.readyState === OPEN) {
-          socket.keyHolder.send(JSON.stringify({id, unavailable: true}))
-        }
-        socket.keyHolder.joiningSockets.splice(id, 1)
-      } else {
-        for (let s of socket.joiningSockets) {
-          s.close(KEY_NO_LONGER_AVAILABLE, 'The peer with this key is no longer available')
-        }
-      }
-    })
-
-    socket.on('error', (event) => {
-      console.log('ERROR: ', event)
-    })
+    socket.on('error', (event) => console.log('ERROR: ', event))
   })
 }
 

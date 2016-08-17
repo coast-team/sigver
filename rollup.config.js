@@ -2,7 +2,6 @@
 
 let rollup = require('rollup')
 let babel = require('rollup-plugin-babel')
-let uglify = require('rollup-plugin-uglify')
 let filesize = require('rollup-plugin-filesize')
 
 rollup.rollup({
@@ -12,7 +11,6 @@ rollup.rollup({
       exclude: 'node_modules/**',
       presets: ['es2015-rollup']
     }),
-    uglify(),
     filesize()
   ]
 }).then((bundle) => {
@@ -37,8 +35,3 @@ rollup.rollup({
     dest: 'dist/sigver.es5.umd.js'
   })
 })
-// {
-//   output: {
-//     comments: '#.*'
-//   }
-// }

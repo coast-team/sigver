@@ -77,6 +77,10 @@ Message is a JSON string.
 ```
 
 ### Outcome messages
+- Responce to ̀`{"key":...}` and `{"join":...}` messages.
+```json
+ {"isKeyOk": "[true|false]"}
+```
 #### To peer who triggered connection
 - Server forwards `data` from a peer identified by `id`.
 ```json
