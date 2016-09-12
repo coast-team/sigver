@@ -13,39 +13,19 @@ const KEY_NO_LONGER_AVAILABLE = 4004
 let server
 const keyHolders = new Set()
 
-function error (socket, code, msg) {
-  console.log('Error ' + code + ': ' + msg)
-  socket.close(code, msg)
-}
-
-function isKeyExist (key) {
-  for (let h of keyHolders) if (h.key === key) return true
-  return false
-}
-
-function getKeyHolder (key) {
-  for (let h of keyHolders) if (h.key === key) return h
-  return null
-}
-
-function generateId (peers) {
-  let id
-  do {
-    id = Math.ceil(Math.random() * MAX_ID)
-    if (peers.has(id)) continue
-    break
-  } while (true)
-  return id
-}
-
 function start (host, port, onStart = () => {}) {
   server = new WebSocketServer({host, port}, () => {
     console.log(`Server runs on: ${host}:${port}`)
     onStart()
   })
 
-  server.on('connection', (socket) => {
-    socket.on('message', (data) => {
+  server.on('error', err => {
+    console.error('Server error: ' + err)
+  })
+
+  server.on('connection', socket => {
+    socket.on('close', err => { console.log(`Socket closed: ${err}`) })
+    socket.on('message', data => {
       let msg
       try {
         msg = JSON.parse(data)
@@ -54,53 +34,60 @@ function start (host, port, onStart = () => {}) {
       }
       try {
         if ('key' in msg) {
-          if (isKeyExist(msg.key)) {
+          if (keyExists(msg.key)) {
             socket.send('{"isKeyOk":false}')
-            error(socket, KEY_ALREADY_EXISTS, 'The key already exists')
+            error(socket, KEY_ALREADY_EXISTS, `The key ${msg.key} exists already`)
           } else {
             socket.send('{"isKeyOk":true}')
-            socket.connectingPeers = new Map()
-            socket.key = msg.key
+            socket.$connectingPeers = new Map()
+            socket.$key = msg.key
             keyHolders.add(socket)
-            socket.on('close', (event) => {
+            socket.on('close', (code, errMsg) => {
+              console.log(`${msg.key} has been closed with code: ${code} and message: ${errMsg}`)
               keyHolders.delete(socket)
-              socket.connectingPeers.forEach(s => {
-                s.close(KEY_NO_LONGER_AVAILABLE, 'The peer with this key is no longer available')
+              socket.$connectingPeers.forEach(s => {
+                s.close(KEY_NO_LONGER_AVAILABLE, `${msg.key} is no longer available`)
               })
             })
           }
         } else if ('id' in msg && 'data' in msg) {
-          socket.connectingPeers.get(msg.id).send(JSON.stringify({data: msg.data}))
+          let connectingPeer = socket.$connectingPeers.get(msg.id)
+          if (connectingPeer) {
+            socket.$connectingPeers.get(msg.id).send(JSON.stringify({data: msg.data}))
+          } else {
+            console.log(`The peer ${msg.id} related to ${socket.$key} key could not be found`)
+          }
         } else if ('join' in msg) {
-          if (isKeyExist(msg.join)) {
+          if (keyExists(msg.join)) {
             socket.send('{"isKeyOk":true}')
-            socket.keyHolder = getKeyHolder(msg.join)
-            let peers = socket.keyHolder.connectingPeers
+            socket.$keyHolder = getKeyHolder(msg.join)
+            let peers = socket.$keyHolder.$connectingPeers
             let id = generateId(peers)
             peers.set(id, socket)
-            socket.on('close', (event) => {
-              if (socket.keyHolder.readyState === OPEN) {
-                socket.keyHolder.send(JSON.stringify({id, unavailable: true}))
+            socket.on('close', (code, errMsg) => {
+              console.log(`${id} socket retlated to ${msg.join} key has been closed with code: ${code} and message: ${errMsg}`)
+              if (socket.$keyHolder.readyState === OPEN) {
+                socket.$keyHolder.send(JSON.stringify({id, unavailable: true}))
               }
               peers.delete(id)
             })
             if ('data' in msg) {
-              socket.keyHolder.send(JSON.stringify({id, data: msg.data}))
+              socket.$keyHolder.send(JSON.stringify({id, data: msg.data}))
             }
           } else {
             socket.send('{"isKeyOk":false}')
             error(socket, KEY_UNKNOWN, 'Unknown key: ' + msg.join)
           }
         } else if ('data' in msg) {
-          if ('keyHolder' in socket) {
+          if ('$keyHolder' in socket) {
             let id
-            for (let [key, value] of socket.keyHolder.connectingPeers) {
+            for (let [key, value] of socket.$keyHolder.$connectingPeers) {
               if (value === socket) {
                 id = key
                 break
               }
             }
-            if (socket.keyHolder.readyState === OPEN) socket.keyHolder.send(JSON.stringify({id, data: msg.data}))
+            if (socket.$keyHolder.readyState === OPEN) socket.$keyHolder.send(JSON.stringify({id, data: msg.data}))
           } else {
             console.log('The client has not been assigned yet to a keyHolder')
           }
@@ -112,13 +99,39 @@ function start (host, port, onStart = () => {}) {
       }
     })
 
-    socket.on('error', (event) => console.log('ERROR: ', event))
+    socket.on('error', err => console.log(`Socket ERROR: ${err}`))
   })
 }
 
 function stop () {
   console.log('Server has stopped successfully')
   server.close()
+}
+
+function error (socket, code, msg) {
+  console.trace()
+  console.log('Error ' + code + ': ' + msg)
+  socket.close(code, msg)
+}
+
+function keyExists (key) {
+  for (let h of keyHolders) if (h.$key === key) return true
+  return false
+}
+
+function getKeyHolder (key) {
+  for (let h of keyHolders) if (h.$key === key) return h
+  return null
+}
+
+function generateId (peers) {
+  let id
+  do {
+    id = Math.ceil(Math.random() * MAX_ID)
+    if (peers.has(id)) continue
+    break
+  } while (true)
+  return id
 }
 
 export {start, stop}
