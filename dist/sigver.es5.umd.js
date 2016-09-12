@@ -4,6 +4,28 @@
   (factory((global.sigver = global.sigver || {})));
 }(this, (function (exports) { 'use strict';
 
+var set = function set(object, property, value, receiver) {
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent !== null) {
+      set(parent, property, value, receiver);
+    }
+  } else if ("value" in desc && desc.writable) {
+    desc.value = value;
+  } else {
+    var setter = desc.set;
+
+    if (setter !== undefined) {
+      setter.call(receiver, value);
+    }
+  }
+
+  return value;
+};
+
 var slicedToArray = function () {
   function sliceIterator(arr, i) {
     var _arr = [];
@@ -78,13 +100,13 @@ function start(host, port) {
       try {
         msg = JSON.parse(data);
       } catch (event) {
-        error(socket, MESSAGE_TYPE_ERROR, 'Server accepts only JSON string');
+        error$1(socket, MESSAGE_TYPE_ERROR, 'Server accepts only JSON string');
       }
       try {
         if ('key' in msg) {
           if (keyExists(msg.key)) {
             socket.send('{"isKeyOk":false}');
-            error(socket, KEY_ALREADY_EXISTS, 'The key ' + msg.key + ' exists already');
+            error$1(socket, KEY_ALREADY_EXISTS, 'The key ' + msg.key + ' exists already');
           } else {
             socket.send('{"isKeyOk":true}');
             socket.$connectingPeers = new Map();
@@ -126,7 +148,7 @@ function start(host, port) {
             })();
           } else {
             socket.send('{"isKeyOk":false}');
-            error(socket, KEY_UNKNOWN, 'Unknown key: ' + msg.join);
+            error$1(socket, KEY_UNKNOWN, 'Unknown key: ' + msg.join);
           }
         } else if ('data' in msg) {
           if ('$keyHolder' in socket) {
@@ -167,10 +189,10 @@ function start(host, port) {
             console.log('The client has not been assigned yet to a keyHolder');
           }
         } else {
-          error(socket, MESSAGE_UNKNOWN_ATTRIBUTE, 'Unknown JSON attribute: ' + data);
+          error$1(socket, MESSAGE_UNKNOWN_ATTRIBUTE, 'Unknown JSON attribute: ' + data);
         }
       } catch (err) {
-        error(socket, err.code, err.message);
+        error$1(socket, err.code, err.message);
       }
     });
 
@@ -185,7 +207,7 @@ function stop() {
   server.close();
 }
 
-function error(socket, code, msg) {
+function error$1(socket, code, msg) {
   console.trace();
   console.log('Error ' + code + ': ' + msg);
   socket.close(code, msg);
