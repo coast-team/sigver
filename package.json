@@ -2,8 +2,8 @@
   "name": "sigver",
   "description": "WebRTC signaling server",
   "version": "0.0.0-sementically-released",
-  "main": "es5/sigver.umd.js",
-  "jsnext:main": "sigver.js",
+  "main": "dist/sigver.es5.umd.js",
+  "jsnext:main": "src/sigver.js",
   "bin": {
     "sigver": "bin/index.es5.min.js"
   },
