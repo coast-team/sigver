@@ -41,14 +41,12 @@ const sigver = require('sigver')
  * @param {number} port
  * @param {callback} onStart
  */
-sigver.start(host, port,
-  onStart: () => {
+sigver.start(host, port, () => {
 
     // Do something...
 
     sigver.stop()
-  }
-)
+})
 ```
 
 
