@@ -3,9 +3,11 @@
 
 const PORT = 8000
 
+const MAX_ID = 4294967295
+
 // CloseEvent codes
-const DATA_SYNTAX_ERROR = 4000
-const DATA_UNKNOWN_ATTRIBUTE = 4001
+const MESSAGE_TYPE_ERROR = 4000
+const MESSAGE_UNKNOWN_ATTRIBUTE = 4001
 const KEY_ALREADY_EXISTS = 4002
 const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
@@ -16,7 +18,7 @@ const WEBSOCKET_OPEN = 1
 // See utils.js for the doc
 
 if (!id) {
-  var id = "SigVer_App_Window_1" 
+  var id = "SigVer_App_Window_1"
 }
 
 // function setAddress(text) {chrome.app.window.get(id).contentWindow.setAddress(text)}
@@ -33,6 +35,7 @@ class SigVer {
     this.server = new http.Server()
     this.wsServer = new http.WebSocketServer(this.server)
     this.isRunning = false
+    this.keyHolders = new Set()
   }
 
   start(port) {
@@ -88,128 +91,120 @@ class SigVer {
           try {
             msg = JSON.parse(data)
           } catch (event) {
-            error(socket, DATA_SYNTAX_ERROR,
-              'Server accepts only JSON')
+            error(socket, MESSAGE_TYPE_ERROR, 'Server accepts only JSON string')
           }
 
           try {
-            if (msg.hasOwnProperty('key')) {
-              // creation of a channel
+            if ('key' in msg) {
+              if (keyExists(msg.key, this.keyHolders)) {
+                socket.send('{"isKeyOk":false}')
+                error(socket, KEY_ALREADY_EXISTS, `The key ${msg.key} exists already`)
+              } else {
+                socket.send('{"isKeyOk":true}')
+                socket.$connectingPeers = new Map()
+                socket.$key = msg.key
+                this.keyHolders.add(socket)
+                socket.addEventListener('close', () => {
+                  socket.stoppedAt = new Date().valueOf()
 
-              for (let master of connectedSockets) {
-                if (master.key === msg.key) {
-                  error(socket, KEY_ALREADY_EXISTS,
-                    'The key already exists')
-                  return
-                }
-              }
-              socket.key = msg.key
-              socket.joiningClients = []
+                  this.keyHolders.delete(socket)
+                  socket.$connectingPeers.forEach(s => {
+                    s.close(KEY_NO_LONGER_AVAILABLE, `${msg.key} is no longer available`)
+                  })
 
-              // log('a key has been approved')
-              chrome.runtime.sendMessage(JSON.stringify({log: 'a key has been approved'}))
+                  // Update visible informations
+                  // setConnectionTime(socket.connectionNumber, socket.stoppedAt - socket.createdAt)
+                  chrome.runtime.sendMessage(JSON.stringify(
+                    {
+                      connectionTime: {
+                        number: socket.connectionNumber,
+                        time: socket.stoppedAt - socket.createdAt
+                      }
+                    })
+                  )
 
-              addConnection(socket.connectionNumber, 'Key: ' + msg.key, 'Running', socket)
-
-              // updateConnections()
-              chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
-
-            } else if (msg.hasOwnProperty('id')) {
-              // sending data to the client with the corresponding id
-
-              for (let index in socket.joiningClients) {
-                if (index === msg.id.toString()) {
-                  socket.joiningClients[index].send(JSON.stringify({
-                    data: msg.data
-                  }))
-                  return
-                }
-              }
-              socket.send(JSON.stringify({
-                id: msg.id,
-                unavailable: true
-              }))
-            } else if (msg.hasOwnProperty('join')) {
-              // a new client joins the channel
-
-              for (let master of connectedSockets) {
-                if (master.key === msg.join) {
-                  // log('master found, join succeeded')
-                  chrome.runtime.sendMessage(JSON.stringify({log: 'master found, join succeeded'}))
-
-                  socket.master = master
-                  master.joiningClients.push(socket)
-                  let id = master.joiningClients.length - 1
-                  master.send(JSON.stringify({
-                    id,
-                    data: msg.data
-                  }))
-
-                  addConnection(socket.connectionNumber, 'Join: ' + msg.join, 'Running', socket)
+                  // setConnectionOff(socket.connectionNumber)
+                  chrome.runtime.sendMessage(JSON.stringify({connectionOff: socket.connectionNumber}))
 
                   // updateConnections()
                   chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
+                })
 
-                  return
-                }
+                // log('a key has been approved')
+                chrome.runtime.sendMessage(JSON.stringify({log: 'a key has been approved'}))
+
+                addConnection(socket.connectionNumber, 'Key: ' + msg.key, 'Running', socket)
+
+                // updateConnections()
+                chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
               }
-              error(socket, KEY_UNKNOWN, 'Unknown key')
-            } else if (msg.hasOwnProperty('data') && socket.hasOwnProperty('master')) {
-              // a client sends datas
+            } else if ('id' in msg && 'data' in msg) {
+              // sending data to the client with the corresponding id
+              let connectingPeer = socket.$connectingPeers.get(msg.id)
+              if (connectingPeer) {
+                socket.$connectingPeers.get(msg.id).send(JSON.stringify({data: msg.data}))
+              }
+            } else if ('join' in msg) {
+              // a new client joins the channel
+              if (keyExists(msg.join, this.keyHolders)) {
+                chrome.runtime.sendMessage(JSON.stringify({log: 'key found, join succeeded'}))
+                socket.send('{"isKeyOk":true}')
+                socket.$keyHolder = getKeyHolder(msg.join, this.keyHolders)
+                let peers = socket.$keyHolder.$connectingPeers
+                let id = generateId(peers)
+                peers.set(id, socket)
+                socket.addEventListener('close', () => {
+                  socket.stoppedAt = new Date().valueOf()
+                  if (socket.$keyHolder.readyState === WEBSOCKET_OPEN) {
+                    socket.$keyHolder.send(JSON.stringify({id, unavailable: true}))
+                  }
+                  peers.delete(id)
+                  // Update visible informations
+                  // setConnectionTime(socket.connectionNumber, socket.stoppedAt - socket.createdAt)
+                  chrome.runtime.sendMessage(JSON.stringify(
+                    {
+                      connectionTime: {
+                        number: socket.connectionNumber,
+                        time: socket.stoppedAt - socket.createdAt
+                      }
+                    })
+                  )
 
-              let id = socket.master.joiningClients.indexOf(socket)
-              if (socket.master.readyState === WEBSOCKET_OPEN) {
-                socket.master.send(JSON.stringify({
-                  id,
-                  data: msg.data
-                }))
+                  // setConnectionOff(socket.connectionNumber)
+                  chrome.runtime.sendMessage(JSON.stringify({connectionOff: socket.connectionNumber}))
+
+                  // updateConnections()
+                  chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
+                })
+                if ('data' in msg) {
+                  socket.$keyHolder.send(JSON.stringify({id, data: msg.data}))
+                }
+                addConnection(socket.connectionNumber, 'Join: ' + msg.join, 'Running', socket)
+
+                // updateConnections()
+                chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
+              } else {
+                socket.send('{"isKeyOk":false}')
+                error(socket, KEY_UNKNOWN, 'Unknown key: ' + msg.join)
+              }
+            } else if ('data' in msg) {
+              // a client sends data
+              if ('$keyHolder' in socket) {
+                let id
+                for (let [key, value] of socket.$keyHolder.$connectingPeers) {
+                  if (value === socket) {
+                    id = key
+                    break
+                  }
+                }
+                if (socket.$keyHolder.readyState === WEBSOCKET_OPEN) socket.$keyHolder.send(JSON.stringify({id, data: msg.data}))
               }
             } else {
-              error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
+              error(socket, MESSAGE_UNKNOWN_ATTRIBUTE, 'Unknown JSON attribute: ' + data)
             }
-          } catch (event) {
-            error(socket, DATA_SYNTAX_ERROR, 'Server accepts only JSON')
+          } catch (err) {
+            error(socket, err.code, err.message)
           }
-        })
-
-        socket.addEventListener('close', () => {
-          socket.stoppedAt = new Date().valueOf()
-
-          // When a socket is closed, we notify pending clients that the server is leaving
-          if (socket.hasOwnProperty('joiningClients')) {
-            for (let client of socket.joiningClients) {
-              // log('closing connection with pending client ', client)
-              chrome.runtime.sendMessage(JSON.stringify({log: 'closing connection with pending client'}))
-
-              client.close(KEY_NO_LONGER_AVAILABLE,
-                'The peer is no longer available')
-            }
-          }
-
-          // When a socket is closed, remove it from the list of connected sockets.
-          for (var i = 0 ; i < connectedSockets.length ; i++) {
-            if (connectedSockets[i] === socket) {
-              connectedSockets.splice(i, 1)
-              break
-            }
-          }
-
-          // Update visible informations
-          // setConnectionTime(socket.connectionNumber, socket.stoppedAt - socket.createdAt)
-          chrome.runtime.sendMessage(JSON.stringify(
-            {
-              connectionTime: {
-                number: socket.connectionNumber,
-                time: socket.stoppedAt - socket.createdAt
-              }
-            })
-          )
-
-          // setConnectionOff(socket.connectionNumber)
-          chrome.runtime.sendMessage(JSON.stringify({connectionOff: socket.connectionNumber}))
-
-          // updateConnections()
-          chrome.runtime.sendMessage(JSON.stringify({updateConnections: true}))
         })
 
         return true
@@ -243,9 +238,28 @@ class SigVer {
  * @param {int} code error code.
  * @param {string} msg explicit error message.
  */
-function error(socket, code, msg) {
-  // log('Error ' + code + ': ' + msg)
-  chrome.runtime.sendMessage(JSON.stringify({log: 'Error ' + code + ': ' + msg}))
+ function error (socket, code, msg) {
+   console.trace()
+   console.log('Error ' + code + ': ' + msg)
+   socket.close(code, msg)
+ }
 
-  socket.close(code, msg)
-}
+ function keyExists (key, keyHolders) {
+   for (let h of keyHolders) if (h.$key === key) return true
+   return false
+ }
+
+ function getKeyHolder (key, keyHolders) {
+   for (let h of keyHolders) if (h.$key === key) return h
+   return null
+ }
+
+ function generateId (peers) {
+   let id
+   do {
+     id = Math.ceil(Math.random() * MAX_ID)
+     if (peers.has(id)) continue
+     break
+   } while (true)
+   return id
+ }
