@@ -1,54 +1,63 @@
-'use strict'
+function isBrowser () {
+  if (typeof window === 'undefined' || (typeof process !== 'undefined' && process.title === 'node')) {
+    return false
+  }
+  return true
+}
 
-const sigver = require('../dist/sigver.es5.umd.js')
-const WebSocket = require('ws')
+let WebSocket = null
+if (isBrowser()) {
+  WebSocket = window.WebSocket
+} else {
+  try {
+    WebSocket = require('uws')
+  } catch (err) {
+    console.error('Missing uws dependency')
+    process.exit(1)
+  }
+}
 const host = 'localhost'
-const port = 8000
+const port = 8001
 
-sigver.start(host, port, () => {
-  let master = new WebSocket('ws://localhost:' + port)
+it('Should accomplish the open/join mechanism', done => {
+  let InvitingClient = new WebSocket(`ws://${host}:${port}`)
+  let JoiningClient = new WebSocket(`ws://${host}:${port}`)
 
-  master.on('close', () => {
-    console.log('    8) MASTER: web socket closed')
-  })
-  master.on('open', () => {
-    let msgNb = 1
-    master.on('message', (data, flags) => {
-      let msg = JSON.parse(data)
-      if (msg.hasOwnProperty('id') && msg.hasOwnProperty('data')) {
-        console.log('3 & 7) MASTER: data received')
-        if (msgNb > 0) {
-          msgNb--
-          master.send(JSON.stringify({id: msg.id, data: 'some data from master'}), () => {
-            console.log('    4) MASTER: data sent')
-          })
-        } else {
-          master.close()
-        }
+  let onOpenInviting = () => {
+    InvitingClient.send(JSON.stringify({key: '11111'}))
+
+    InvitingClient.onmessage = evt => {
+      let msg = JSON.parse(evt.data)
+      console.log('InvitingClient: ', msg)
+      if ('isKeyOk' in msg) {
+        expect(msg.isKeyOk).toBeTruthy()
+        JoiningClient.send(JSON.stringify({join: '11111'}))
+      } else if ('id' in msg && 'data' in msg) {
+        expect(msg.data).toEqual('some data from joining client')
+        InvitingClient.send(JSON.stringify({
+          id: msg.id,
+          data: 'some data from inviting client'
+        }))
+      } else done.fail()
+    }
+  }
+  if (isBrowser()) InvitingClient.onopen = onOpenInviting
+  else InvitingClient.on('open', onOpenInviting)
+
+  let onOpenJoining = () => {
+    console.log('JoiningClient open')
+    JoiningClient.onmessage = evt => {
+      let msg = JSON.parse(evt.data)
+      console.log('JoiningClient: ', msg)
+      if ('isKeyOk' in msg) {
+        expect(msg.isKeyOk).toBeTruthy()
+        JoiningClient.send(JSON.stringify({data: 'some data from joining client'}))
+      } else if ('data' in msg) {
+        expect(msg.data).toEqual('some data from inviting client')
+        done()
       }
-    })
-    master.send(JSON.stringify({key: '11111'}), () => {
-      console.log('    1) MASTER: key sent')
-
-      let client = new WebSocket('ws://localhost:' + port + '/111111')
-      client.on('close', () => {
-        console.log('    9) CLIENT: web socket closed')
-        sigver.stop()
-      })
-      client.on('open', () => {
-        client.on('message', (data, flags) => {
-          let msg = JSON.parse(data)
-          if (msg.hasOwnProperty('data')) {
-            console.log('    5) CLIENT: data received')
-            client.send(JSON.stringify({data: 'some data from client'}), () => {
-              console.log('    6) CLIENT: data sent')
-            })
-          }
-        })
-        client.send(JSON.stringify({join: '11111', data: 'some data from client'}), () => {
-          console.log('    2) CLIENT: join with data sent')
-        })
-      })
-    })
-  })
+    }
+  }
+  if (isBrowser()) JoiningClient.onopen = onOpenJoining
+  else JoiningClient.on('open', onOpenJoining)
 })

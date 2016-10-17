@@ -14,8 +14,8 @@ rollup.rollup({
     filesize()
   ]
 }).then((bundle) => {
-  console.log('index.es5.min.js: ')
-  bundle.write({banner: '#!/usr/bin/env node', dest: 'bin/index.es5.min.js'})
+  console.log('server.js: ')
+  bundle.write({banner: '#!/usr/bin/env node', dest: 'server.js'})
 })
 
 rollup.rollup({

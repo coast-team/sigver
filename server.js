@@ -1,4 +1,172 @@
 #!/usr/bin/env node
+var asyncGenerator = function () {
+  function AwaitValue(value) {
+    this.value = value;
+  }
+
+  function AsyncGenerator(gen) {
+    var front, back;
+
+    function send(key, arg) {
+      return new Promise(function (resolve, reject) {
+        var request = {
+          key: key,
+          arg: arg,
+          resolve: resolve,
+          reject: reject,
+          next: null
+        };
+
+        if (back) {
+          back = back.next = request;
+        } else {
+          front = back = request;
+          resume(key, arg);
+        }
+      });
+    }
+
+    function resume(key, arg) {
+      try {
+        var result = gen[key](arg);
+        var value = result.value;
+
+        if (value instanceof AwaitValue) {
+          Promise.resolve(value.value).then(function (arg) {
+            resume("next", arg);
+          }, function (arg) {
+            resume("throw", arg);
+          });
+        } else {
+          settle(result.done ? "return" : "normal", result.value);
+        }
+      } catch (err) {
+        settle("throw", err);
+      }
+    }
+
+    function settle(type, value) {
+      switch (type) {
+        case "return":
+          front.resolve({
+            value: value,
+            done: true
+          });
+          break;
+
+        case "throw":
+          front.reject(value);
+          break;
+
+        default:
+          front.resolve({
+            value: value,
+            done: false
+          });
+          break;
+      }
+
+      front = front.next;
+
+      if (front) {
+        resume(front.key, front.arg);
+      } else {
+        back = null;
+      }
+    }
+
+    this._invoke = send;
+
+    if (typeof gen.return !== "function") {
+      this.return = undefined;
+    }
+  }
+
+  if (typeof Symbol === "function" && Symbol.asyncIterator) {
+    AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
+      return this;
+    };
+  }
+
+  AsyncGenerator.prototype.next = function (arg) {
+    return this._invoke("next", arg);
+  };
+
+  AsyncGenerator.prototype.throw = function (arg) {
+    return this._invoke("throw", arg);
+  };
+
+  AsyncGenerator.prototype.return = function (arg) {
+    return this._invoke("return", arg);
+  };
+
+  return {
+    wrap: function (fn) {
+      return function () {
+        return new AsyncGenerator(fn.apply(this, arguments));
+      };
+    },
+    await: function (value) {
+      return new AwaitValue(value);
+    }
+  };
+}();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var get = function get(object, property, receiver) {
+  if (object === null) object = Function.prototype;
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent === null) {
+      return undefined;
+    } else {
+      return get(parent, property, receiver);
+    }
+  } else if ("value" in desc) {
+    return desc.value;
+  } else {
+    var getter = desc.get;
+
+    if (getter === undefined) {
+      return undefined;
+    }
+
+    return getter.call(receiver);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var set = function set(object, property, value, receiver) {
   var desc = Object.getOwnPropertyDescriptor(object, property);
 
@@ -59,8 +227,8 @@ var slicedToArray = function () {
   };
 }();
 
-var WebSocketServer = require('ws').Server;
-var OPEN = require('ws').OPEN;
+var WebSocketServer = require('uws').Server;
+var OPEN = 1;
 
 var MAX_ID = 4294967295;
 
@@ -75,7 +243,7 @@ var server = void 0;
 var keyHolders = new Set();
 
 function start(host, port) {
-  var onStart = arguments.length <= 2 || arguments[2] === undefined ? function () {} : arguments[2];
+  var onStart = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
 
   server = new WebSocketServer({ host: host, port: port }, function () {
     console.log('Server runs on: ' + host + ':' + port);
@@ -87,9 +255,9 @@ function start(host, port) {
   });
 
   server.on('connection', function (socket) {
-    socket.on('close', function (err) {
+    socket.onclose = function (err) {
       console.log('Socket closed: ' + err);
-    });
+    };
     socket.on('message', function (data) {
       var msg = void 0;
       try {
@@ -107,13 +275,13 @@ function start(host, port) {
             socket.$connectingPeers = new Map();
             socket.$key = msg.key;
             keyHolders.add(socket);
-            socket.on('close', function (code, errMsg) {
-              console.log(msg.key + ' has been closed with code: ' + code + ' and message: ' + errMsg);
+            socket.onclose = function (closeEvt) {
+              console.log(msg.key + ' has been closed with code: ' + closeEvt.code + ' and message: ' + closeEvt.reason);
               keyHolders.delete(socket);
               socket.$connectingPeers.forEach(function (s) {
                 s.close(KEY_NO_LONGER_AVAILABLE, msg.key + ' is no longer available');
               });
-            });
+            };
           }
         } else if ('id' in msg && 'data' in msg) {
           var connectingPeer = socket.$connectingPeers.get(msg.id);
@@ -130,13 +298,13 @@ function start(host, port) {
               var peers = socket.$keyHolder.$connectingPeers;
               var id = generateId(peers);
               peers.set(id, socket);
-              socket.on('close', function (code, errMsg) {
-                console.log(id + ' socket retlated to ' + msg.join + ' key has been closed with code: ' + code + ' and message: ' + errMsg);
+              socket.onclose = function (closeEvt) {
+                console.log(id + ' socket retlated to ' + msg.join + ' key has been closed with code: ' + closeEvt.code + ' and message: ' + closeEvt.reason);
                 if (socket.$keyHolder.readyState === OPEN) {
                   socket.$keyHolder.send(JSON.stringify({ id: id, unavailable: true }));
                 }
                 peers.delete(id);
-              });
+              };
               if ('data' in msg) {
                 socket.$keyHolder.send(JSON.stringify({ id: id, data: msg.data }));
               }

@@ -1,0 +1,4 @@
+apps:
+  - script : server.js
+    name: 'sigver-test'
+    args: '--port 8001'

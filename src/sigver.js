@@ -1,5 +1,5 @@
-const WebSocketServer = require('ws').Server
-const OPEN = require('ws').OPEN
+const WebSocketServer = require('uws').Server
+const OPEN = 1
 
 const MAX_ID = 4294967295
 
@@ -24,7 +24,7 @@ function start (host, port, onStart = () => {}) {
   })
 
   server.on('connection', socket => {
-    socket.on('close', err => { console.log(`Socket closed: ${err}`) })
+    socket.onclose = err => { console.log(`Socket closed: ${err}`) }
     socket.on('message', data => {
       let msg
       try {
@@ -42,13 +42,13 @@ function start (host, port, onStart = () => {}) {
             socket.$connectingPeers = new Map()
             socket.$key = msg.key
             keyHolders.add(socket)
-            socket.on('close', (code, errMsg) => {
-              console.log(`${msg.key} has been closed with code: ${code} and message: ${errMsg}`)
+            socket.onclose = closeEvt => {
+              console.log(`${msg.key} has been closed with code: ${closeEvt.code} and message: ${closeEvt.reason}`)
               keyHolders.delete(socket)
               socket.$connectingPeers.forEach(s => {
                 s.close(KEY_NO_LONGER_AVAILABLE, `${msg.key} is no longer available`)
               })
-            })
+            }
           }
         } else if ('id' in msg && 'data' in msg) {
           let connectingPeer = socket.$connectingPeers.get(msg.id)
@@ -64,13 +64,13 @@ function start (host, port, onStart = () => {}) {
             let peers = socket.$keyHolder.$connectingPeers
             let id = generateId(peers)
             peers.set(id, socket)
-            socket.on('close', (code, errMsg) => {
-              console.log(`${id} socket retlated to ${msg.join} key has been closed with code: ${code} and message: ${errMsg}`)
+            socket.onclose = closeEvt => {
+              console.log(`${id} socket retlated to ${msg.join} key has been closed with code: ${closeEvt.code} and message: ${closeEvt.reason}`)
               if (socket.$keyHolder.readyState === OPEN) {
                 socket.$keyHolder.send(JSON.stringify({id, unavailable: true}))
               }
               peers.delete(id)
-            })
+            }
             if ('data' in msg) {
               socket.$keyHolder.send(JSON.stringify({id, data: msg.data}))
             }
