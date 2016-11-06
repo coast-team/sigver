@@ -1,126 +1,195 @@
 const WebSocketServer = require('uws').Server
-const OPEN = 1
 
 const MAX_ID = 4294967295
+const KEY_BYTE_LENGTH_LIMIT = 2048
 
 // CloseEvent codes
-const MESSAGE_TYPE_ERROR = 4000
-const MESSAGE_UNKNOWN_ATTRIBUTE = 4001
+const MESSAGE_FORMAT_ERROR = 4000
+const MESSAGE_UNKNOWN = 4001
 const KEY_ALREADY_EXISTS = 4002
 const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
+const KEY_LENGTH_REACHED = 4005
+const TRANSMIT_BEFORE_OPEN_OR_JOIN = 4006
 
-let server
-const keyHolders = new Set()
+// Predifined responces
+let tmpDv
+// Key not OK
+const keyNotOk = new ArrayBuffer(1)
+tmpDv = new DataView(keyNotGood)
+tmpDv.setUint8(0, 10)
 
-function start (host, port, onStart = () => {}) {
-  server = new WebSocketServer({host, port}, () => {
-    console.log(`Server runs on: ${host}:${port}`)
-    onStart()
-  })
+// Key OK
+const keyOk = new ArrayBuffer(1)
+tmpDv = new DataView(keyNotGood)
+tmpDv.setUint8(0, 11)
 
-  server.on('error', err => {
-    console.error('Server error: ' + err)
-  })
+// Joining client has disconnected
+const clientDisconnected = new ArrayBuffer(1)
+tmpDv = new DataView(keyNotGood)
+tmpDv.setUint8(0, 12)
 
-  server.on('connection', socket => {
-    socket.onclose = err => { console.log(`Socket closed: ${err}`) }
-    socket.on('message', data => {
-      let msg
-      try {
-        msg = JSON.parse(data)
-      } catch (event) {
-        error(socket, MESSAGE_TYPE_ERROR, 'Server accepts only JSON string')
-      }
-      try {
-        if ('key' in msg) {
-          if (keyExists(msg.key)) {
-            socket.send('{"isKeyOk":false}')
-            error(socket, KEY_ALREADY_EXISTS, `The key ${msg.key} exists already`)
-          } else {
-            socket.send('{"isKeyOk":true}')
-            socket.$connectingPeers = new Map()
-            socket.$key = msg.key
-            keyHolders.add(socket)
-            socket.onclose = closeEvt => {
-              console.log(`${msg.key} has been closed with code: ${closeEvt.code} and message: ${closeEvt.reason}`)
-              keyHolders.delete(socket)
-              socket.$connectingPeers.forEach(s => {
-                s.close(KEY_NO_LONGER_AVAILABLE, `${msg.key} is no longer available`)
-              })
-            }
-          }
-        } else if ('id' in msg && 'data' in msg) {
-          let connectingPeer = socket.$connectingPeers.get(msg.id)
-          if (connectingPeer) {
-            socket.$connectingPeers.get(msg.id).send(JSON.stringify({data: msg.data}))
-          } else {
-            console.log(`The peer ${msg.id} related to ${socket.$key} key could not be found`)
-          }
-        } else if ('join' in msg) {
-          if (keyExists(msg.join)) {
-            socket.send('{"isKeyOk":true}')
-            socket.$keyHolder = getKeyHolder(msg.join)
-            let peers = socket.$keyHolder.$connectingPeers
-            let id = generateId(peers)
-            peers.set(id, socket)
-            socket.onclose = closeEvt => {
-              console.log(`${id} socket retlated to ${msg.join} key has been closed with code: ${closeEvt.code} and message: ${closeEvt.reason}`)
-              if (socket.$keyHolder.readyState === OPEN) {
-                socket.$keyHolder.send(JSON.stringify({id, unavailable: true}))
-              }
-              peers.delete(id)
-            }
-            if ('data' in msg) {
-              socket.$keyHolder.send(JSON.stringify({id, data: msg.data}))
-            }
-          } else {
-            socket.send('{"isKeyOk":false}')
-            error(socket, KEY_UNKNOWN, 'Unknown key: ' + msg.join)
-          }
-        } else if ('data' in msg) {
-          if ('$keyHolder' in socket) {
-            let id
-            for (let [key, value] of socket.$keyHolder.$connectingPeers) {
-              if (value === socket) {
-                id = key
-                break
-              }
-            }
-            if (socket.$keyHolder.readyState === OPEN) socket.$keyHolder.send(JSON.stringify({id, data: msg.data}))
-          } else {
-            console.log('The client has not been assigned yet to a keyHolder')
-          }
-        } else {
-          error(socket, MESSAGE_UNKNOWN_ATTRIBUTE, 'Unknown JSON attribute: ' + data)
-        }
-      } catch (err) {
-        error(socket, err.code, err.message)
-      }
+// Transmitting before open or join request
+const transmitNotAllowed = new ArrayBuffer(1)
+tmpDv = new DataView(keyNotGood)
+tmpDv.setUint8(0, 13)
+
+const openedClients = new Set()
+
+class Sigver {
+  constructor (options, onStart) {
+    this.server = new WebSocketServer(options, () => {
+      console.log(`Server runs on: ${this.server.host}`)
+      onStart()
     })
 
-    socket.on('error', err => console.log(`Socket ERROR: ${err}`))
+    this.server.on('error', err => console.error(`Server error: ${err}`))
+
+    socket.on('message', (data, flags) => {
+      try {
+        if (!flags.binary) throw new SigverError(
+          socket, MESSAGE_FORMAT_ERROR,
+          'Received message is not in binary format'
+        )
+
+        let dv = new DataView(data)
+        switch (dv.getUInt8(0)) {
+          // Open key
+          case 1:
+            openKey(socket, data)
+            break
+          // Join opened key
+          case 2:
+            joinKey(socket, data)
+            break
+          // Transmit message to joining peer
+          case 3:
+            transmitToJoining(socket, dv)
+            break
+          // Transmit message to the peer who opened the key
+          case 4:
+          transmitToOpened(socket, dv)
+            break
+          default:
+            throw new SigverError(socket, MESSAGE_UNKNOWN, 'Unknown message')
+        }
+      } catch (err) {
+        socket.close(err.code, err.message)
+      }
+    })
+  }
+
+  close (cb) {
+    console.log('Server has stopped successfully')
+    server.close(cb)
+  }
+
+
+}
+
+openKey (socket, data) {
+  if (data.byteLength > KEY_BYTE_LENGTH_LIMIT) {
+    socket.send(keyNotOk, {binary: true})
+    throw new SigverError(
+      socket, KEY_LENGTH_REACHED,
+      'Key too long'
+    )
+  }
+  if (keyExists(data)) {
+    socket.send(keyNotOk, {binary: true})
+    throw new SigverError(
+      socket, KEY_ALREADY_EXISTS,
+      `The key ${msg.key} exists already`
+    )
+  }
+  socket.$key = data
+  socket.$joiningClients = new Map()
+  openedClients.add(socket)
+  socket.on('close', closeEvt => {
+    openedClients.delete(socket)
+    socket.$joiningClients.forEach(s => {
+      s.close(KEY_NO_LONGER_AVAILABLE, `${msg.key} is no longer available`)
+    })
   })
 }
 
-function stop () {
-  console.log('Server has stopped successfully')
-  server.close()
+function joinKey (socket, data) {
+  if (!keyExists(data)) {
+    socket.send(keyNotOk, {binary: true})
+    throw new SigverError(socket, KEY_UNKNOWN, 'Unknown key')
+  }
+  socket.send(keyOk, {binary: true})
+  socket.$openedClient = getKeyHolder(data)
+  let peers = socket.$openedClient.$joiningClients
+  socket.$id = generateId(peers)
+  peers.set(id, socket)
+  socket.on('close', closeEvt => peers.delete(socket.$id))
 }
 
-function error (socket, code, msg) {
-  console.trace()
-  console.log('Error ' + code + ': ' + msg)
-  socket.close(code, msg)
+function transmitToJoining (socket, dv) {
+  if (!'$joiningClients' in socket) {
+    socket.send(transmitNotAllowed, {binary: true})
+    throw new SigverError(
+      socket, TRANSMIT_BEFORE_OPEN_OR_JOIN,
+      'Transmitting data before open or join request'
+    )
+  }
+  let id = dv.getUInt32()
+  let joiningClient = socket.$joiningClients.get(id)
+  if (joiningClient) {
+    let buf = new ArrayBuffer(dv.buffer.byteLength + 1)
+    let ui8 = new UInt8Array(buf)
+    ui8[0] = 14
+    let source = new UInt8Array(dv.buffer)
+    for (let i = 1; i < buf.byteLength; i++) {
+      ui8[i] = source[i - 1]
+    }
+    joiningClient.send(buf, {binary: true})
+  } else {
+    socket.send(clientDisconnected, {binary: true})
+  }
+}
+
+function transmitToOpened (socket, data) {
+  if (!'$openedClient' in socket) {
+    socket.send(transmitNotAllowed, {binary: true})
+    throw new SigverError(
+      socket, TRANSMIT_BEFORE_OPEN_OR_JOIN,
+      'Transmitting data before open or join request'
+    )
+  }
+  let buf = new ArrayBuffer(data.byteLength + 4)
+  let dv = new DataView(buf)
+  dv.setUint32(0, socket.$id)
+  let ui8 = new UInt8Array(buf)
+  let source = new UInt8Array(data)
+  for (let i = 4; i < buf.byteLength; i++) {
+    ui8[i] = source[i - 4]
+  }
+  socket.$openedClient.send(buf, {binary: true})
+}
+
+class SigverError extands Error {
+  constructor (socket, code, message) {
+    super(message)
+    this.socket = socket
+    this.code = code
+  }
 }
 
 function keyExists (key) {
-  for (let h of keyHolders) if (h.$key === key) return true
+  let ui8;
+  for (let s of openedClients) {
+    ui8 = new UInt8Array(s.$key)
+    for (let i = 1; i < s.$key.byteLength) {
+      if (h.$key === key) return true
+    }
+  }
   return false
 }
 
 function getKeyHolder (key) {
-  for (let h of keyHolders) if (h.$key === key) return h
+  for (let h of openedClients) if (h.$key === key) return h
   return null
 }
 
@@ -134,4 +203,4 @@ function generateId (peers) {
   return id
 }
 
-export {start, stop}
+export default Sigver
