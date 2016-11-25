@@ -14,24 +14,25 @@ const TRANSMIT_BEFORE_OPEN_OR_JOIN = 4006
 
 // Predifined responces
 let tmpDv
+
 // Key not OK
 const keyNotOk = new ArrayBuffer(1)
-tmpDv = new DataView(keyNotGood)
+tmpDv = new DataView(keyNotOk)
 tmpDv.setUint8(0, 10)
 
 // Key OK
 const keyOk = new ArrayBuffer(1)
-tmpDv = new DataView(keyNotGood)
+tmpDv = new DataView(keyOk)
 tmpDv.setUint8(0, 11)
 
 // Joining client has disconnected
 const clientDisconnected = new ArrayBuffer(1)
-tmpDv = new DataView(keyNotGood)
+tmpDv = new DataView(clientDisconnected)
 tmpDv.setUint8(0, 12)
 
 // Transmitting before open or join request
 const transmitNotAllowed = new ArrayBuffer(1)
-tmpDv = new DataView(keyNotGood)
+tmpDv = new DataView(transmitNotAllowed)
 tmpDv.setUint8(0, 13)
 
 const openedClients = new Set()
@@ -45,60 +46,61 @@ class Sigver {
 
     this.server.on('error', err => console.error(`Server error: ${err}`))
 
-    socket.on('message', (data, flags) => {
-      try {
-        if (!flags.binary) throw new SigverError(
-          socket, MESSAGE_FORMAT_ERROR,
-          'Received message is not in binary format'
-        )
+    this.server.on('connection', socket => {
+      socket.on('message', (data, flags) => {
+        try {
+          if (!flags.binary) {
+            throw new SigverError(socket, MESSAGE_FORMAT_ERROR,
+              'Received message is not in binary format')
+          }
 
-        let dv = new DataView(data)
-        switch (dv.getUInt8(0)) {
-          // Open key
-          case 1:
-            openKey(socket, data)
-            break
-          // Join opened key
-          case 2:
-            joinKey(socket, data)
-            break
-          // Transmit message to joining peer
-          case 3:
-            transmitToJoining(socket, dv)
-            break
-          // Transmit message to the peer who opened the key
-          case 4:
-          transmitToOpened(socket, dv)
-            break
-          default:
-            throw new SigverError(socket, MESSAGE_UNKNOWN, 'Unknown message')
+          let dv = new DataView(data)
+          switch (dv.getUInt8(0)) {
+            // Open key
+            case 1:
+              openKey(socket, data)
+              break
+            // Join opened key
+            case 2:
+              joinKey(socket, data)
+              break
+            // Transmit message to joining peer
+            case 3:
+              transmitToJoining(socket, dv)
+              break
+            // Transmit message to the peer who opened the key
+            case 4:
+              transmitToOpened(socket, dv)
+              break
+            default:
+              throw new SigverError(socket, MESSAGE_UNKNOWN, 'Unknown message')
+          }
+        } catch (err) {
+          socket.close(err.code, err.message)
         }
-      } catch (err) {
-        socket.close(err.code, err.message)
-      }
+      })
     })
   }
 
   close (cb) {
     console.log('Server has stopped successfully')
-    server.close(cb)
+    this.server.close(cb)
   }
-
 
 }
 
-openKey (socket, data) {
+function openKey (socket, data) {
   if (data.byteLength > KEY_BYTE_LENGTH_LIMIT) {
     socket.send(keyNotOk, {binary: true})
-    throw new SigverError(
-      socket, KEY_LENGTH_REACHED,
+    throw new SigverError(socket,
+      KEY_LENGTH_REACHED,
       'Key too long'
     )
   }
   if (keyExists(data)) {
     socket.send(keyNotOk, {binary: true})
-    throw new SigverError(
-      socket, KEY_ALREADY_EXISTS,
+    throw new SigverError(socket,
+      KEY_ALREADY_EXISTS,
       `The key ${msg.key} exists already`
     )
   }
@@ -169,7 +171,7 @@ function transmitToOpened (socket, data) {
   socket.$openedClient.send(buf, {binary: true})
 }
 
-class SigverError extands Error {
+class SigverError extends Error {
   constructor (socket, code, message) {
     super(message)
     this.socket = socket
@@ -181,7 +183,7 @@ function keyExists (key) {
   let ui8;
   for (let s of openedClients) {
     ui8 = new UInt8Array(s.$key)
-    for (let i = 1; i < s.$key.byteLength) {
+    for (let i = 1; i < s.$key.byteLength; i++) {
       if (h.$key === key) return true
     }
   }
