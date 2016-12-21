@@ -1,4 +1,4 @@
-import {start} from './sigver'
+import Sigver from './core'
 const program = require('commander')
 
 let host = process.env.NODE_IP || 'localhost'
@@ -20,4 +20,6 @@ program
 
 if (program.host) host = program.host
 if (program.port) port = program.port
-start(host, port)
+
+// Run server
+const server = new Sigver({host, port})

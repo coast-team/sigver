@@ -5,8 +5,15 @@ cache:
     - node_modules
 notifications:
   email: false
+addons:
+  firefox: "latest"
+  apt:
+    sources:
+      - google-chrome
+    packages:
+      - google-chrome-stable
 node_js:
-  - '6'
+  - '7'
 before_install:
   - npm i -g update
 before_script:

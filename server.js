@@ -1,114 +1,44 @@
 #!/usr/bin/env node
-var asyncGenerator = function () {
-  function AwaitValue(value) {
-    this.value = value;
+(function () {
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+
+
+
+
+
+
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
   }
+};
 
-  function AsyncGenerator(gen) {
-    var front, back;
-
-    function send(key, arg) {
-      return new Promise(function (resolve, reject) {
-        var request = {
-          key: key,
-          arg: arg,
-          resolve: resolve,
-          reject: reject,
-          next: null
-        };
-
-        if (back) {
-          back = back.next = request;
-        } else {
-          front = back = request;
-          resume(key, arg);
-        }
-      });
-    }
-
-    function resume(key, arg) {
-      try {
-        var result = gen[key](arg);
-        var value = result.value;
-
-        if (value instanceof AwaitValue) {
-          Promise.resolve(value.value).then(function (arg) {
-            resume("next", arg);
-          }, function (arg) {
-            resume("throw", arg);
-          });
-        } else {
-          settle(result.done ? "return" : "normal", result.value);
-        }
-      } catch (err) {
-        settle("throw", err);
-      }
-    }
-
-    function settle(type, value) {
-      switch (type) {
-        case "return":
-          front.resolve({
-            value: value,
-            done: true
-          });
-          break;
-
-        case "throw":
-          front.reject(value);
-          break;
-
-        default:
-          front.resolve({
-            value: value,
-            done: false
-          });
-          break;
-      }
-
-      front = front.next;
-
-      if (front) {
-        resume(front.key, front.arg);
-      } else {
-        back = null;
-      }
-    }
-
-    this._invoke = send;
-
-    if (typeof gen.return !== "function") {
-      this.return = undefined;
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
     }
   }
 
-  if (typeof Symbol === "function" && Symbol.asyncIterator) {
-    AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
-      return this;
-    };
-  }
-
-  AsyncGenerator.prototype.next = function (arg) {
-    return this._invoke("next", arg);
-  };
-
-  AsyncGenerator.prototype.throw = function (arg) {
-    return this._invoke("throw", arg);
-  };
-
-  AsyncGenerator.prototype.return = function (arg) {
-    return this._invoke("return", arg);
-  };
-
-  return {
-    wrap: function (fn) {
-      return function () {
-        return new AsyncGenerator(fn.apply(this, arguments));
-      };
-    },
-    await: function (value) {
-      return new AwaitValue(value);
-    }
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
   };
 }();
 
@@ -120,35 +50,20 @@ var asyncGenerator = function () {
 
 
 
-
-
-
-
-
-
-var get = function get(object, property, receiver) {
-  if (object === null) object = Function.prototype;
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent === null) {
-      return undefined;
-    } else {
-      return get(parent, property, receiver);
-    }
-  } else if ("value" in desc) {
-    return desc.value;
-  } else {
-    var getter = desc.get;
-
-    if (getter === undefined) {
-      return undefined;
-    }
-
-    return getter.call(receiver);
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
   }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 };
 
 
@@ -161,280 +76,400 @@ var get = function get(object, property, receiver) {
 
 
 
-
-
-
-
-
-
-var set = function set(object, property, value, receiver) {
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent !== null) {
-      set(parent, property, value, receiver);
-    }
-  } else if ("value" in desc && desc.writable) {
-    desc.value = value;
-  } else {
-    var setter = desc.set;
-
-    if (setter !== undefined) {
-      setter.call(receiver, value);
-    }
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
   }
 
-  return value;
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
-var slicedToArray = function () {
-  function sliceIterator(arr, i) {
-    var _arr = [];
-    var _n = true;
-    var _d = false;
-    var _e = undefined;
+var IO = function () {
+  function IO() {
+    classCallCheck(this, IO);
+  }
+
+  createClass(IO, [{
+    key: "isToOpen",
+    value: function isToOpen() {}
+  }, {
+    key: "isToJoin",
+    value: function isToJoin() {}
+  }, {
+    key: "isToTransmitToOpener",
+    value: function isToTransmitToOpener() {}
+  }, {
+    key: "isToTransmitToJoining",
+    value: function isToTransmitToJoining() {}
+  }]);
+  return IO;
+}();
+
+var SigverError = function () {
+  function SigverError(code, message) {
+    classCallCheck(this, SigverError);
+
+    Error.captureStackTrace(this, this.constructor);
+    this.name = this.constructor.name;
+    this.message = code[0] + ': ' + message;
+    this.code = code[1];
+  }
+
+  createClass(SigverError, null, [{
+    key: 'MESSAGE_FORMAT_ERROR',
+    get: function get() {
+      return ['MESSAGE_FORMAT_ERROR', 4000];
+    }
+  }, {
+    key: 'MESSAGE_UNKNOWN',
+    get: function get() {
+      return ['MESSAGE_UNKNOWN', 4001];
+    }
+  }, {
+    key: 'KEY_TOO_LONG',
+    get: function get() {
+      return ['KEY_TOO_LONG', 4010];
+    }
+  }, {
+    key: 'KEY_FORMAT_ERROR',
+    get: function get() {
+      return ['KEY_FORMAT_ERROR', 4011];
+    }
+  }, {
+    key: 'KEY_FOR_OPEN_EXISTS',
+    get: function get() {
+      return ['KEY_EXISTS', 4012];
+    }
+  }, {
+    key: 'KEY_FOR_JOIN_UNKNOWN',
+    get: function get() {
+      return ['KEY_UNKNOWN', 4013];
+    }
+  }, {
+    key: 'OPENER_NO_LONGER_AVAILABLE',
+    get: function get() {
+      return ['OPENER_NO_LONGER_AVAILABLE', 4020];
+    }
+  }, {
+    key: 'JOINING_NO_LONGER_AVAILABLE',
+    get: function get() {
+      return ['JOINING_NO_LONGER_AVAILABLE', 4021];
+    }
+  }, {
+    key: 'TRANSMIT_BEFORE_OPEN',
+    get: function get() {
+      return ['TRANSMIT_BEFORE_OPEN', 4022];
+    }
+  }, {
+    key: 'TRANSMIT_BEFORE_JOIN',
+    get: function get() {
+      return ['TRANSMIT_BEFORE_JOIN', 4023];
+    }
+  }]);
+  return SigverError;
+}();
+
+var KEY_LENGTH_LIMIT = 512;
+
+var IOJsonString = function (_IO) {
+  inherits(IOJsonString, _IO);
+
+  function IOJsonString(data) {
+    classCallCheck(this, IOJsonString);
+
+    var _this = possibleConstructorReturn(this, (IOJsonString.__proto__ || Object.getPrototypeOf(IOJsonString)).call(this));
 
     try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);
-
-        if (i && _arr.length === i) break;
-      }
+      _this.msg = JSON.parse(data);
     } catch (err) {
-      _d = true;
-      _e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"]) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
+      throw new SigverError(SigverError.MESSAGE_FORMAT_ERROR, 'The message is not a JSON string');
     }
-
-    return _arr;
+    _this._key = undefined;
+    _this.open = false;
+    _this.transmitToOpener = false;
+    _this.join = false;
+    _this.transmitToJoining = false;
+    var keysNb = Object.keys(_this.msg).length;
+    if ('open' in _this.msg && keysNb === 1) {
+      _this._key = _this.msg.open;
+      _this.validateKey();
+      _this.open = true;
+    } else if ('join' in _this.msg && keysNb === 1) {
+      _this._key = _this.msg.join;
+      _this.validateKey();
+      _this.join = true;
+    } else if ('data' in _this.msg && keysNb === 1) {
+      _this.transmitToOpener = true;
+    } else if ('id' in _this.msg && 'data' in _this.msg && keysNb === 2) {
+      if (typeof _this.msg.id !== 'number') {
+        throw new Error('The id should be a number, but it is ' + _typeof(_this.msg.id) + ' instead');
+      }
+      _this.transmitToJoining = true;
+    } else {
+      throw new SigverError(SigverError.MESSAGE_UNKNOWN, 'Unknown message');
+    }
+    return _this;
   }
 
-  return function (arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if (Symbol.iterator in Object(arr)) {
-      return sliceIterator(arr, i);
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+  createClass(IOJsonString, [{
+    key: 'isToOpen',
+    value: function isToOpen() {
+      return this.open;
     }
-  };
+  }, {
+    key: 'isToJoin',
+    value: function isToJoin() {
+      return this.join;
+    }
+  }, {
+    key: 'isToTransmitToOpener',
+    value: function isToTransmitToOpener() {
+      return this.transmitToOpener;
+    }
+  }, {
+    key: 'isToTransmitToJoining',
+    value: function isToTransmitToJoining() {
+      return this.transmitToJoining;
+    }
+  }, {
+    key: 'msgIsKeyOk',
+    value: function msgIsKeyOk(isOk) {
+      return '{"isKeyOk":' + isOk + '}';
+    }
+  }, {
+    key: 'msgToJoining',
+    value: function msgToJoining() {
+      return '{"data":"' + this.data + '"}';
+    }
+  }, {
+    key: 'msgToOpener',
+    value: function msgToOpener(id) {
+      return '{"id":' + id + ',"data":"' + this.data + '"}';
+    }
+  }, {
+    key: 'validateKey',
+    value: function validateKey() {
+      if (this.key.length > KEY_LENGTH_LIMIT) {
+        throw new SigverError(SigverError.KEY_TOO_LONG, 'The key length exceeds the limit of ' + KEY_LENGTH_LIMIT + ' characters');
+      }
+      if (typeof this._key !== 'string') {
+        throw new SigverError(SigverError.KEY_FORMAT_ERROR, 'The key ' + this._key + ' is not a string');
+      }
+      if (this._key === '') {
+        throw new SigverError(SigverError.KEY_FORMAT_ERROR, 'The key ' + this._key + ' is an empty string');
+      }
+    }
+  }, {
+    key: 'key',
+    get: function get() {
+      return this._key;
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this.msg.id;
+    }
+  }, {
+    key: 'data',
+    get: function get() {
+      return this.msg.data;
+    }
+  }]);
+  return IOJsonString;
+}(IO);
+
+var Joining = function Joining(source, opener, id) {
+  var _this = this;
+
+  classCallCheck(this, Joining);
+
+  this.source = source;
+  this.source.$joining = this;
+  this.opener = opener;
+  this.id = id;
+  this.onclose = function () {};
+
+  this.source.on('close', function (closeEvt) {
+    _this.onclose();
+    _this.opener.deleteJoining(_this);
+  });
+};
+
+var MAX_ID = 2147483647; // int32 max value for id generation
+
+var Opener = function () {
+  function Opener(source) {
+    var _this = this;
+
+    classCallCheck(this, Opener);
+
+    this.source = source;
+    this.source.$opener = this;
+    this.joinings = new Map();
+    this.onclose = function () {};
+
+    this.source.on('close', function (closeEvt) {
+      _this.onclose();
+      _this.joinings.forEach(function (j) {
+        j.opener = undefined;
+        j.source.close(4008, 'Opener is no longer available');
+      });
+    });
+  }
+
+  createClass(Opener, [{
+    key: 'getJoining',
+    value: function getJoining(id) {
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = this.joinings[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var i = _step.value;
+
+          console.log('Joining: ' + i[0]);
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      return this.joinings.get(id);
+    }
+  }, {
+    key: 'addJoining',
+    value: function addJoining(source) {
+      var id = this.generateId();
+      this.joinings.set(id, new Joining(source, this, id));
+    }
+  }, {
+    key: 'deleteJoining',
+    value: function deleteJoining(joining) {
+      this.joinings.delete(joining.id);
+    }
+  }, {
+    key: 'generateId',
+    value: function generateId() {
+      var id = void 0;
+      do {
+        id = Math.ceil(Math.random() * MAX_ID);
+        if (this.joinings.has(id)) continue;
+        break;
+      } while (true);
+      return id;
+    }
+  }]);
+  return Opener;
 }();
 
 var WebSocketServer = require('uws').Server;
-var OPEN = 1;
 
-var MAX_ID = 4294967295;
+var openers = new Map();
 
-// CloseEvent codes
-var MESSAGE_TYPE_ERROR = 4000;
-var MESSAGE_UNKNOWN_ATTRIBUTE = 4001;
-var KEY_ALREADY_EXISTS = 4002;
-var KEY_UNKNOWN = 4003;
-var KEY_NO_LONGER_AVAILABLE = 4004;
+var Sigver = function () {
+  function Sigver(options) {
+    var onStart = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
+    classCallCheck(this, Sigver);
 
-var server = void 0;
-var keyHolders = new Set();
+    this.server = new WebSocketServer(options, function () {
+      console.log('Server is running on: ws://' + options.host + ':' + options.port);
+      onStart();
+    });
 
-function start(host, port) {
-  var onStart = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
+    this.server.on('error', function (err) {
+      return console.error('Server error: ' + err);
+    });
 
-  server = new WebSocketServer({ host: host, port: port }, function () {
-    console.log('Server runs on: ' + host + ':' + port);
-    onStart();
-  });
-
-  server.on('error', function (err) {
-    console.error('Server error: ' + err);
-  });
-
-  server.on('connection', function (socket) {
-    socket.onclose = function (err) {
-      console.log('Socket closed: ' + err);
-    };
-    socket.on('message', function (data) {
-      var msg = void 0;
-      try {
-        msg = JSON.parse(data);
-      } catch (event) {
-        error$1(socket, MESSAGE_TYPE_ERROR, 'Server accepts only JSON string');
-      }
-      try {
-        if ('key' in msg) {
-          if (keyExists(msg.key)) {
-            socket.send('{"isKeyOk":false}');
-            error$1(socket, KEY_ALREADY_EXISTS, 'The key ' + msg.key + ' exists already');
-          } else {
-            socket.send('{"isKeyOk":true}');
-            socket.$connectingPeers = new Map();
-            socket.$key = msg.key;
-            keyHolders.add(socket);
-            socket.onclose = function (closeEvt) {
-              console.log(msg.key + ' has been closed with code: ' + closeEvt.code + ' and message: ' + closeEvt.reason);
-              keyHolders.delete(socket);
-              socket.$connectingPeers.forEach(function (s) {
-                s.close(KEY_NO_LONGER_AVAILABLE, msg.key + ' is no longer available');
-              });
-            };
+    this.server.on('connection', function (source) {
+      source.on('message', function (data, flags) {
+        try {
+          var msg = new IOJsonString(data);
+          if (msg.isToOpen()) {
+            open(source, msg);
+          } else if (msg.isToJoin()) {
+            join(source, msg);
+          } else if (msg.isToTransmitToOpener()) {
+            transmitToOpener(source, msg);
+          } else if (msg.isToTransmitToJoining()) {
+            transmitToJoining(source, msg);
           }
-        } else if ('id' in msg && 'data' in msg) {
-          var connectingPeer = socket.$connectingPeers.get(msg.id);
-          if (connectingPeer) {
-            socket.$connectingPeers.get(msg.id).send(JSON.stringify({ data: msg.data }));
-          } else {
-            console.log('The peer ' + msg.id + ' related to ' + socket.$key + ' key could not be found');
+        } catch (err) {
+          if (err.name !== 'SigverError') {
+            console.log('Error which not a SigverError instance: ', err);
+          } else if (err.code !== SigverError.JOINING_NO_LONGER_AVAILABLE) {
+            console.log(err.message);
+            source.close(err.code, err.message);
           }
-        } else if ('join' in msg) {
-          if (keyExists(msg.join)) {
-            (function () {
-              socket.send('{"isKeyOk":true}');
-              socket.$keyHolder = getKeyHolder(msg.join);
-              var peers = socket.$keyHolder.$connectingPeers;
-              var id = generateId(peers);
-              peers.set(id, socket);
-              socket.onclose = function (closeEvt) {
-                console.log(id + ' socket retlated to ' + msg.join + ' key has been closed with code: ' + closeEvt.code + ' and message: ' + closeEvt.reason);
-                if (socket.$keyHolder.readyState === OPEN) {
-                  socket.$keyHolder.send(JSON.stringify({ id: id, unavailable: true }));
-                }
-                peers.delete(id);
-              };
-              if ('data' in msg) {
-                socket.$keyHolder.send(JSON.stringify({ id: id, data: msg.data }));
-              }
-            })();
-          } else {
-            socket.send('{"isKeyOk":false}');
-            error$1(socket, KEY_UNKNOWN, 'Unknown key: ' + msg.join);
-          }
-        } else if ('data' in msg) {
-          if ('$keyHolder' in socket) {
-            var _id = void 0;
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-              for (var _iterator = socket.$keyHolder.$connectingPeers[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                var _step$value = slicedToArray(_step.value, 2);
-
-                var key = _step$value[0];
-                var value = _step$value[1];
-
-                if (value === socket) {
-                  _id = key;
-                  break;
-                }
-              }
-            } catch (err) {
-              _didIteratorError = true;
-              _iteratorError = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion && _iterator.return) {
-                  _iterator.return();
-                }
-              } finally {
-                if (_didIteratorError) {
-                  throw _iteratorError;
-                }
-              }
-            }
-
-            if (socket.$keyHolder.readyState === OPEN) socket.$keyHolder.send(JSON.stringify({ id: _id, data: msg.data }));
-          } else {
-            console.log('The client has not been assigned yet to a keyHolder');
-          }
-        } else {
-          error$1(socket, MESSAGE_UNKNOWN_ATTRIBUTE, 'Unknown JSON attribute: ' + data);
         }
-      } catch (err) {
-        error$1(socket, err.code, err.message);
-      }
+      });
     });
-
-    socket.on('error', function (err) {
-      return console.log('Socket ERROR: ' + err);
-    });
-  });
-}
-
-function error$1(socket, code, msg) {
-  console.trace();
-  console.log('Error ' + code + ': ' + msg);
-  socket.close(code, msg);
-}
-
-function keyExists(key) {
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
-
-  try {
-    for (var _iterator2 = keyHolders[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var h = _step2.value;
-      if (h.$key === key) return true;
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2.return) {
-        _iterator2.return();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
   }
 
-  return false;
-}
-
-function getKeyHolder(key) {
-  var _iteratorNormalCompletion3 = true;
-  var _didIteratorError3 = false;
-  var _iteratorError3 = undefined;
-
-  try {
-    for (var _iterator3 = keyHolders[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-      var h = _step3.value;
-      if (h.$key === key) return h;
+  createClass(Sigver, [{
+    key: 'close',
+    value: function close(cb) {
+      console.log('Server has stopped successfully');
+      this.server.close(cb);
     }
-  } catch (err) {
-    _didIteratorError3 = true;
-    _iteratorError3 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion3 && _iterator3.return) {
-        _iterator3.return();
-      }
-    } finally {
-      if (_didIteratorError3) {
-        throw _iteratorError3;
-      }
-    }
+  }]);
+  return Sigver;
+}();
+
+function open(source, ioMsg) {
+  if (openers.has(ioMsg.key)) {
+    source.send(ioMsg.msgIsKeyOk(false));
+    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, 'The key "' + ioMsg.key + '"" exists already');
   }
-
-  return null;
+  source.send(ioMsg.msgIsKeyOk(true));
+  var opener = new Opener(source);
+  opener.onclose = function (closeEvt) {
+    return openers.delete(ioMsg.key);
+  };
+  openers.set(ioMsg.key, opener);
 }
 
-function generateId(peers) {
-  var id = void 0;
-  do {
-    id = Math.ceil(Math.random() * MAX_ID);
-    if (peers.has(id)) continue;
-    break;
-  } while (true);
-  return id;
+function join(source, ioMsg) {
+  if (!openers.has(ioMsg.key)) {
+    source.send(ioMsg.msgIsKeyOk(false));
+    throw new SigverError(SigverError.KEY_FOR_JOIN_UNKNOWN, 'Unknown key');
+  }
+  source.send(ioMsg.msgIsKeyOk(true));
+  openers.get(ioMsg.key).addJoining(source);
+}
+
+function transmitToJoining(source, ioMsg) {
+  if (!('$opener' in source)) {
+    throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open');
+  }
+  console.log('Transmit to joining: ', ioMsg);
+  var joining = source.$opener.getJoining(ioMsg.id);
+  if (joining === undefined) {
+    throw new SigverError(SigverError.JOINING_NO_LONGER_AVAILABLE, 'Joining is no longer available');
+  }
+  console.log('Sending to joining: ' + ioMsg.msgToJoining(), joining);
+  joining.source.send(ioMsg.msgToJoining());
+}
+
+function transmitToOpener(source, ioMsg) {
+  if (!('$joining' in source)) {
+    throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join');
+  }
+  var opener = source.$joining.opener;
+  if (opener === undefined) {
+    throw new SigverError(SigverError.OPENER_NO_LONGER_AVAILABLE, 'Opener is no longer available');
+  }
+  opener.source.send(ioMsg.msgToOpener(source.$joining.id));
 }
 
 var program = require('commander');
@@ -448,4 +483,8 @@ program.version('7.4.2', '-v, --version').option('-h, --host <n>', 'specify host
 
 if (program.host) host = program.host;
 if (program.port) port = program.port;
-start(host, port);
+
+// Run server
+var server = new Sigver({ host: host, port: port });
+
+}());

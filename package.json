@@ -8,11 +8,9 @@
     "sigver": "server.js"
   },
   "scripts": {
-    "start": "node bin/index.es5.min.js",
-    "build": "rm -rf dist bin & node rollup.config.js",
-    "protoc": "protoc/protoc-3.1.0-linux-x86_64 --js_out=import_style=commonjs,binary:. src/message.proto",
-    "pretest": "npm run build && pm2 startOrRestart process.yml",
-    "test": "node jasmine.conf.js",
+    "build": "node rollup.config.js",
+    "pretest": "npm run build && pm2 startOrReload process.yml",
+    "test": "karma start karma.conf.js",
     "commit": "git-cz",
     "precommit": "npm test",
     "commitmsg": "validate-commit-msg",
@@ -31,41 +29,38 @@
   },
   "dependencies": {
     "commander": "^2.9.0",
-    "google-protobuf": "^3.1.1",
-    "uws": "^0.11.0"
+    "uws": "^0.12.0"
   },
   "devDependencies": {
-    "babel-preset-es2015-rollup": "^1.2.0",
+    "babel-preset-es2015-rollup": "^3.0.0",
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^1.1.5",
-    "husky": "^0.11.9",
+    "husky": "^0.12.0",
     "jasmine": "^2.5.2",
     "jasmine-spec-reporter": "^2.7.0",
     "karma": "^1.3.0",
     "karma-chrome-launcher": "^2.0.0",
     "karma-firefox-launcher": "^1.0.0",
     "karma-jasmine": "^1.0.2",
-    "rollup": "^0.36.4",
+    "karma-rollup-preprocessor": "^3.0.1",
+    "karma-spec-reporter": "0.0.26",
+    "pm2": "^2.2.2",
+    "rollup": "^0.37.2",
     "rollup-plugin-babel": "^2.6.1",
     "rollup-plugin-filesize": "^1.0.1",
     "rollup-plugin-uglify": "^1.0.1",
     "semantic-release": "^6.3.2",
-    "standard": "^8.0.0",
+    "eslint": "^3.7.0",
+    "eslint-config-conaclos": "^1.2.0",
+    "eslint-plugin-extra-rules": "0.6.1",
+    "eslint-config-standard": "^6.2.0",
+    "eslint-plugin-promise": "^3.0.0",
+    "eslint-plugin-standard": "^2.0.0",
     "validate-commit-msg": "^2.8.2"
   },
   "config": {
     "commitizen": {
       "path": "node_modules/cz-conventional-changelog"
     }
-  },
-  "standard": {
-    "globals": [
-      "it",
-      "expect",
-      "jasmine"
-    ],
-    "ignore": [
-      "karma.conf.js"
-    ]
   }
 }

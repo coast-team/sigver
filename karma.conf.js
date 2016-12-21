@@ -15,7 +15,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'test/*.test.js'
+      'test/**/*.test.js',
     ],
 
 
@@ -27,14 +27,19 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'test/**/*.test.js': ['rollup']
+    },
+
+    rollupPreprocessor: {
+      format: 'iife',
+      moduleName: 'sigver'
     },
 
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
-
+    reporters: ['spec'],
 
     // web server port
     port: 9876,
