@@ -12,7 +12,8 @@
     "no-shadow": 0,
     "no-sync": 0,
     "no-use-before-define": 0,
-    "prefer-const": 0
+    "prefer-const": 0,
+    "no-process-env": 0
   },
   "globals": {
     "netflux": true,
