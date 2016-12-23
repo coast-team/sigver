@@ -50,22 +50,22 @@ transmit each other a few ice candidates via the server. Normally after the RTCD
 
 ### Server income messages
 #### From **Opener**
-- When you want to establish a connection with someone (you need to provide him the key and wait until he send the `join` message to the server).
+- When you want to establish a connection with someone (you need to provide him the key and wait until he sends the `join` message to the server).
 ```json
  { "open": "[some unique key]" }
 ```
-- When you wants to forward `data` to the peer identified by `id`.
+- When you want to forward `data` to the **Joining** identified by `id`.
 ```json
 { "id": "[identifier]", "data": "[answer, candidate...]" }
 ```
 
 
 #### From **Joining**
-- When you wants to connect to the person who gave you the key.
+- When you want to interchange WebRTC data with the **Opener** in order to establish an RTCDataChannel.
 ```json
 { "join": "[key provided by the peer who triggered connection]" }
 ```
-- When you wants to forward `data` to the peer.
+- When you want to forward `data` to the **Opener**.
 ```json
  { "data": "[offer, candidate...]" }
 ```
@@ -83,13 +83,13 @@ transmit each other a few ice candidates via the server. Normally after the RTCD
  { "id": "[identifier of the peer wishing to join]",
    "data": "[offer, candidate]" }
 ```
-- Server notify **Opener** that the **Joining** identified by `id` is no longer available.
+- Server notifies **Opener** that the **Joining** identified by `id` is no longer available.
 ```json
  { "id": "[identifier of the unavailable peer]", "unavailable": "true" }
 ```
 
 #### To **Joining**
-- Server forwards `data`.
+- Server forwards `data` from the **Opener**.
 ```json
  { "data": "[answer, candidate]" }
 ```
