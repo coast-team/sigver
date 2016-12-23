@@ -55,20 +55,20 @@ export default class IOJsonString extends IO {
 
   get data () { return this.msg.data }
 
-  msgIsKeyOk (isOk) {
+  static msgIsKeyOk (isOk) {
     return `{"isKeyOk":${isOk}}`
   }
 
-  msgToJoining () {
+  static msgToJoining () {
     return `{"data":"${this.data}"}`
   }
 
-  msgToOpener (id) {
+  static msgToOpener (id) {
     return `{"id":${id},"data":"${this.data}"}`
   }
 
-  msgJoiningClosed (id) {
-    return `{"id":${id},"closed":"true"}`
+  static msgJoiningUnavailable (id) {
+    return `{"id":${id},"unavailable":"true"}`
   }
 
   validateKey () {

@@ -21,15 +21,15 @@ export default class WSServer {
     this.server.on('connection', socket => {
       socket.on('message', (data, flags) => {
         try {
-          const msg = new IOJsonString(data)
-          if (msg.isToOpen()) {
-            open(socket, msg)
-          } else if (msg.isToJoin()) {
-            join(socket, msg)
-          } else if (msg.isToTransmitToOpener()) {
-            transmitToOpener(socket, msg)
-          } else if (msg.isToTransmitToJoining()) {
-            transmitToJoining(socket, msg)
+          const ioMsg = new IOJsonString(data)
+          if (ioMsg.isToOpen()) {
+            open(socket, ioMsg)
+          } else if (ioMsg.isToJoin()) {
+            join(socket, ioMsg)
+          } else if (ioMsg.isToTransmitToOpener()) {
+            transmitToOpener(socket, ioMsg)
+          } else if (ioMsg.isToTransmitToJoining()) {
+            transmitToJoining(socket, ioMsg)
           }
         } catch (err) {
           if (err.name !== 'SigverError') {
@@ -37,6 +37,8 @@ export default class WSServer {
           } else if (err.code !== SigverError.JOINING_GONE) {
             console.log(err.message)
             socket.close(err.code, err.message)
+          } else {
+            socket.send(IOJsonString.msgJoiningUnavailable(), errorOnSendCB)
           }
         }
       })
@@ -58,12 +60,12 @@ function errorOnSendCB (err) {
 
 function open (socket, ioMsg) {
   if (openers.has(ioMsg.key)) {
-    socket.send(ioMsg.msgIsKeyOk(false), errorOnSendCB)
+    socket.send(IOJsonString.msgIsKeyOk(false), errorOnSendCB)
     throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS,
       `The key "${ioMsg.key}"" exists already`
     )
   }
-  socket.send(ioMsg.msgIsKeyOk(true), errorOnSendCB)
+  socket.send(IOJsonString.msgIsKeyOk(true), errorOnSendCB)
   const opener = new Opener(socket)
   opener.onclose = closeEvt => openers.delete(ioMsg.key)
   openers.set(ioMsg.key, opener)
@@ -71,10 +73,10 @@ function open (socket, ioMsg) {
 
 function join (socket, ioMsg) {
   if (!openers.has(ioMsg.key)) {
-    socket.send(ioMsg.msgIsKeyOk(false), errorOnSendCB)
+    socket.send(IOJsonString.msgIsKeyOk(false), errorOnSendCB)
     throw new SigverError(SigverError.KEY_FOR_JOIN_UNKNOWN, 'Unknown key')
   }
-  socket.send(ioMsg.msgIsKeyOk(true), errorOnSendCB)
+  socket.send(IOJsonString.msgIsKeyOk(true), errorOnSendCB)
   const opener = openers.get(ioMsg.key)
   opener.addJoining(socket)
 }
@@ -87,7 +89,7 @@ function transmitToJoining (socket, ioMsg) {
   if (joining === undefined || joining.source.readyState !== WebSocket.OPEN) {
     throw new SigverError(SigverError.JOINING_GONE, 'Joining is no longer available')
   }
-  joining.source.send(ioMsg.msgToJoining(), errorOnSendCB)
+  joining.source.send(IOJsonString.msgToJoining(), errorOnSendCB)
 }
 
 function transmitToOpener (socket, ioMsg) {
@@ -98,5 +100,5 @@ function transmitToOpener (socket, ioMsg) {
   if (opener === undefined || opener.source.readyState !== WebSocket.OPEN) {
     throw new SigverError(SigverError.OPENER_GONE, 'Opener is no longer available')
   }
-  opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB)
+  opener.source.send(IOJsonString.msgToOpener(socket.$joining.id), errorOnSendCB)
 }
