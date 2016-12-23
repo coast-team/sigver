@@ -1,11 +1,11 @@
 import WSServer from './WSServer'
 const program = require('commander')
 
-let host = process.env.NODE_IP || 'localhost'
+let host = process.env.NODE_IP || '0.0.0.0'
 let port = process.env.NODE_PORT || 8000
 
 program
-  .version('7.4.2', '-v, --version')
+  .version('8.0.1', '-v, --version')
   .option('-h, --host <n>', 'specify host (DEFAULT: process.env.NODE_IP || "localhost")')
   .option('-p, --port <n>', 'specify port (DEFAULT: process.env.NODE_PORT || 8000)')
   .on('--help', () => {

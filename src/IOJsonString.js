@@ -59,16 +59,16 @@ export default class IOJsonString extends IO {
     return `{"isKeyOk":${isOk}}`
   }
 
-  static msgToJoining () {
+  static msgJoiningUnavailable (id) {
+    return `{"id":${id},"unavailable":"true"}`
+  }
+
+  msgToJoining () {
     return `{"data":"${this.data}"}`
   }
 
-  static msgToOpener (id) {
+  msgToOpener (id) {
     return `{"id":${id},"data":"${this.data}"}`
-  }
-
-  static msgJoiningUnavailable (id) {
-    return `{"id":${id},"unavailable":"true"}`
   }
 
   validateKey () {

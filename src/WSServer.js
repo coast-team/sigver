@@ -19,9 +19,9 @@ export default class WSServer {
     this.server.on('error', err => console.error(`Server error: ${err}`))
 
     this.server.on('connection', socket => {
-      socket.on('message', (data, flags) => {
+      socket.onmessage = msgEvent => {
         try {
-          const ioMsg = new IOJsonString(data)
+          const ioMsg = new IOJsonString(msgEvent.data)
           if (ioMsg.isToOpen()) {
             open(socket, ioMsg)
           } else if (ioMsg.isToJoin()) {
@@ -41,7 +41,7 @@ export default class WSServer {
             socket.send(IOJsonString.msgJoiningUnavailable(), errorOnSendCB)
           }
         }
-      })
+      }
     })
   }
 
@@ -89,7 +89,7 @@ function transmitToJoining (socket, ioMsg) {
   if (joining === undefined || joining.source.readyState !== WebSocket.OPEN) {
     throw new SigverError(SigverError.JOINING_GONE, 'Joining is no longer available')
   }
-  joining.source.send(IOJsonString.msgToJoining(), errorOnSendCB)
+  joining.source.send(ioMsg.msgToJoining(), errorOnSendCB)
 }
 
 function transmitToOpener (socket, ioMsg) {
@@ -100,5 +100,5 @@ function transmitToOpener (socket, ioMsg) {
   if (opener === undefined || opener.source.readyState !== WebSocket.OPEN) {
     throw new SigverError(SigverError.OPENER_GONE, 'Opener is no longer available')
   }
-  opener.source.send(IOJsonString.msgToOpener(socket.$joining.id), errorOnSendCB)
+  opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB)
 }
