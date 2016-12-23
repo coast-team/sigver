@@ -1,4 +1,3 @@
-import babel from 'rollup-plugin-babel'
 import filesize from 'rollup-plugin-filesize'
 
 export default {
@@ -6,11 +5,5 @@ export default {
   dest: 'server.js',
   format: 'iife',
   banner: '#!/usr/bin/env node',
-  plugins: [
-    babel({
-      exclude: 'node_modules/**',
-      presets: ['es2015-rollup']
-    }),
-    filesize()
-  ]
+  plugins: [ filesize() ]
 }
