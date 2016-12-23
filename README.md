@@ -1,99 +1,90 @@
-# [![NPM](https://nodei.co/npm/sigver.png)](https://nodei.co/npm/sigver/) [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
+# <p style="text-align: center">Sigver</p>
+<p style="text-align: center">WebSocket signaling server for WebRTC. Used by
+[Netflux](https://github.com/coast-team/netflux).<p>
 
-[![Build Status](https://travis-ci.org/coast-team/sigver.svg?branch=master)](https://travis-ci.org/coast-team/sigver)&nbsp;
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/semantic-release/semantic-release)&nbsp;
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=flat-square)](http://commitizen.github.io/cz-cli/)&nbsp;
+<p align="center" >
+  [![npm version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)&nbsp;
+  [![Build Status](https://travis-ci.org/coast-team/sigver.svg?branch=master)](https://travis-ci.org/coast-team/sigver)&nbsp;
+  [![dependencies Status](https://david-dm.org/coast-team/sigver/status.svg)](https://david-dm.org/coast-team/sigver)&nbsp;
+  [![devDependencies Status](https://david-dm.org/coast-team/sigver/dev-status.svg)](https://david-dm.org/coast-team/sigver?type=dev)<br />
+  [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/semantic-release/semantic-release)&nbsp;
+  [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=flat-square)](http://commitizen.github.io/cz-cli/)
+<p>
 
-[![dependencies Status](https://david-dm.org/coast-team/sigver/status.svg)](https://david-dm.org/coast-team/sigver)&nbsp;
-[![devDependencies Status](https://david-dm.org/coast-team/sigver/dev-status.svg)](https://david-dm.org/coast-team/sigver?type=dev)&nbsp;
-[![optionalDependencies Status](https://david-dm.org/coast-team/sigver/optional-status.svg)](https://david-dm.org/coast-team/sigver?type=optional)
-
-Very simple signaling server based on WebSocket to test WebRTC.
-
-| [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/32px-Node.js_logo.svg.png" alt="NodeJS" width="32px" height="20px" />](http://godban.github.io/browsers-support-badges/)</br>NodeJS |
-| --------- |
-| 4 and above
-
+## Require
+Node.js 6.x
 
 ## How to use
-    npm install -g sigver
-
-### As command line tool
-    Usage: sigver [options]
-
-    Options:
-      -h, --help      output usage information
-      -v, --version   output the version number
-      -h, --host <n>  specify host (DEFAULT: process.env.NODE_IP || "localhost")
-      -p, --port <n>  specify port (DEFAULT: process.env.NODE_PORT || 8000)
-
-    Examples:
-      $ sigver
-      $ sigver -h 192.168.0.1 -p 9000
-
-### As library
-```javascript
-const sigver = require('sigver')
-
-/**
- * Start the server
- * @param {string} host
- * @param {number} port
- * @param {callback} onStart
- */
-sigver.start(host, port, () => {
-
-    // Do something...
-
-    sigver.stop()
-})
+```sh
+git clone https://github.com/coast-team/sigver.git
+node sigver/server.js [options]
 ```
 
+or
+
+```sh
+npm install -g sigver
+sigver [options]
+```
+### Options
+    -h, --help      output usage information
+    -v, --version   output the version number
+    -h, --host <n>  specify host (DEFAULT: process.env.NODE_IP || "0.0.0.0")
+    -p, --port <n>  specify port (DEFAULT: process.env.NODE_PORT || 8000)
+
+### Examples
+```sh
+sigver -h 192.168.0.1 -p 9000
+```
 
 ## Protocol
-Message is a JSON string.
+Message is a JSON string. We call **Opener** a client who is waiting for
+a WebRTC offer. He provides a key to the server and maintains the socket connection with him. And we call **Joining** a client who provides a key to the server as **Opener** does and the offer. If the key is valid (corresponds to one of the **Opener**'s keys), then **Opener** receives
+the **Joining**'s offer and sends him the answer. Then **Opener** and **Joining**
+transmit each other a few ice candidates via the server. Normally after the RTCDataChannel has been established between the **Opener** and the **Joining**, **Joining** closes the socket connection with the server.
 
-### Income messages
-#### From peer who triggered connection
-- When you want to establish a connection with someone (you need to provide him this `key` and wait until he send the `join` message to the server).
+### Server income messages
+#### From **Opener**
+- When you want to establish a connection with someone (you need to provide him the key and wait until he send the `join` message to the server).
 ```json
- {"key": "[some unique key]"}
+ { "open": "[some unique key]" }
 ```
 - When you wants to forward `data` to the peer identified by `id`.
 ```json
-{"id": "[identifier]", "data": "[any data]"}
+{ "id": "[identifier]", "data": "[answer, candidate...]" }
 ```
 
 
-#### From peer wishing to connect
-- When you wants to connect to the person who gave you the `key` (if `data` attribute is present, it will be forwarded).
+#### From **Joining**
+- When you wants to connect to the person who gave you the key.
 ```json
-{"join": "[key provided by the peer who triggered connection]",
-   "data": "[any data]"}
+{ "join": "[key provided by the peer who triggered connection]" }
 ```
 - When you wants to forward `data` to the peer.
 ```json
- {"data": "[any data]"}
+ { "data": "[offer, candidate...]" }
 ```
 
-### Outcome messages
-- Responce to ̀`{"key":...}` and `{"join":...}` messages.
+### Server outcome messages
+#### To **Opener** & **Joining**
+- Response to ̀`{"open":...}` and `{"join":...}` messages.
 ```json
- {"isKeyOk": "[true|false]"}
-```
-#### To peer who triggered connection
-- Server forwards `data` from a peer identified by `id`.
-```json
- {"id": "[identifier of the peer wishing to join]",
-   "data": "[some data]"}
-```
-- Server notify that the peer with `id` is no longer available.
-```json
- {"id": "[identifier of the unavailable peer]", "unavailable": "true"}
+ { "isKeyOk": "[true|false]" }
 ```
 
-#### To peer wishing to connect
+#### To **Opener**
+- Server forwards `data` from the **Joining** identified by `id`.
+```json
+ { "id": "[identifier of the peer wishing to join]",
+   "data": "[some data]" }
+```
+- Server notify **Opener** that the **Joining** identified by `id` is no longer available.
+```json
+ { "id": "[identifier of the unavailable peer]", "unavailable": "true" }
+```
+
+#### To **Joining**
 - Server forwards `data`.
 ```json
- {"data": "[some data]"}
+ { "data": "[some data]" }
 ```
