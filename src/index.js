@@ -1,4 +1,4 @@
-import Sigver from './core'
+import WSServer from './WSServer'
 const program = require('commander')
 
 let host = process.env.NODE_IP || 'localhost'
@@ -22,4 +22,6 @@ if (program.host) host = program.host
 if (program.port) port = program.port
 
 // Run server
-const server = new Sigver({host, port})
+WSServer.start({host, port}, () => {
+  console.log(`Server is running on: ws://${host}:${port}`)
+})

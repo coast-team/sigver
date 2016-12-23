@@ -9,25 +9,20 @@ export default class Opener {
     this.joinings = new Map()
     this.onclose = () => {}
 
-    this.source.on('close', closeEvt => {
+    this.source.onclose = closeEvt => {
       this.onclose()
-      this.joinings.forEach(j => {
-        j.opener = undefined
-        j.source.close(4008, 'Opener is no longer available')
-      })
-    })
+      this.joinings.forEach(j => { j.opener = undefined })
+    }
   }
 
   getJoining (id) {
-    for (let i of this.joinings) {
-      console.log('Joining: ' + i[0])
-    }
     return this.joinings.get(id)
   }
 
   addJoining (source) {
     const id = this.generateId()
-    this.joinings.set(id, new Joining(source, this, id))
+    const joining = new Joining(source, this, id)
+    this.joinings.set(id, joining)
   }
 
   deleteJoining (joining) {

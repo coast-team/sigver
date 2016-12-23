@@ -67,6 +67,10 @@ export default class IOJsonString extends IO {
     return `{"id":${id},"data":"${this.data}"}`
   }
 
+  msgJoiningClosed (id) {
+    return `{"id":${id},"closed":"true"}`
+  }
+
   validateKey () {
     if (this.key.length > KEY_LENGTH_LIMIT) {
       throw new SigverError(

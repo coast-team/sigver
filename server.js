@@ -146,12 +146,12 @@ var SigverError = function () {
       return ['KEY_UNKNOWN', 4013];
     }
   }, {
-    key: 'OPENER_NO_LONGER_AVAILABLE',
+    key: 'OPENER_GONE',
     get: function get() {
       return ['OPENER_NO_LONGER_AVAILABLE', 4020];
     }
   }, {
-    key: 'JOINING_NO_LONGER_AVAILABLE',
+    key: 'JOINING_GONE',
     get: function get() {
       return ['JOINING_NO_LONGER_AVAILABLE', 4021];
     }
@@ -247,6 +247,11 @@ var IOJsonString = function (_IO) {
       return '{"id":' + id + ',"data":"' + this.data + '"}';
     }
   }, {
+    key: 'msgJoiningClosed',
+    value: function msgJoiningClosed(id) {
+      return '{"id":' + id + ',"closed":"true"}';
+    }
+  }, {
     key: 'validateKey',
     value: function validateKey() {
       if (this.key.length > KEY_LENGTH_LIMIT) {
@@ -287,12 +292,12 @@ var Joining = function Joining(source, opener, id) {
   this.source.$joining = this;
   this.opener = opener;
   this.id = id;
-  this.onclose = function () {};
 
-  this.source.on('close', function (closeEvt) {
-    _this.onclose();
-    _this.opener.deleteJoining(_this);
-  });
+  this.source.onclose = function (closeEvt) {
+    if (_this.opener) {
+      _this.opener.deleteJoining(_this);
+    }
+  };
 };
 
 var MAX_ID = 2147483647; // int32 max value for id generation
@@ -308,50 +313,25 @@ var Opener = function () {
     this.joinings = new Map();
     this.onclose = function () {};
 
-    this.source.on('close', function (closeEvt) {
+    this.source.onclose = function (closeEvt) {
       _this.onclose();
       _this.joinings.forEach(function (j) {
         j.opener = undefined;
-        j.source.close(4008, 'Opener is no longer available');
       });
-    });
+    };
   }
 
   createClass(Opener, [{
     key: 'getJoining',
     value: function getJoining(id) {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.joinings[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var i = _step.value;
-
-          console.log('Joining: ' + i[0]);
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
       return this.joinings.get(id);
     }
   }, {
     key: 'addJoining',
     value: function addJoining(source) {
       var id = this.generateId();
-      this.joinings.set(id, new Joining(source, this, id));
+      var joining = new Joining(source, this, id);
+      this.joinings.set(id, joining);
     }
   }, {
     key: 'deleteJoining',
@@ -373,103 +353,112 @@ var Opener = function () {
   return Opener;
 }();
 
-var WebSocketServer = require('uws').Server;
+var WebSocket = require('uws');
+var WebSocketServer = WebSocket.Server;
 
 var openers = new Map();
 
-var Sigver = function () {
-  function Sigver(options) {
-    var onStart = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
-    classCallCheck(this, Sigver);
+var WSServer = function () {
+  function WSServer() {
+    classCallCheck(this, WSServer);
 
-    this.server = new WebSocketServer(options, function () {
-      console.log('Server is running on: ws://' + options.host + ':' + options.port);
-      onStart();
-    });
-
-    this.server.on('error', function (err) {
-      return console.error('Server error: ' + err);
-    });
-
-    this.server.on('connection', function (source) {
-      source.on('message', function (data, flags) {
-        try {
-          var msg = new IOJsonString(data);
-          if (msg.isToOpen()) {
-            open(source, msg);
-          } else if (msg.isToJoin()) {
-            join(source, msg);
-          } else if (msg.isToTransmitToOpener()) {
-            transmitToOpener(source, msg);
-          } else if (msg.isToTransmitToJoining()) {
-            transmitToJoining(source, msg);
-          }
-        } catch (err) {
-          if (err.name !== 'SigverError') {
-            console.log('Error which not a SigverError instance: ', err);
-          } else if (err.code !== SigverError.JOINING_NO_LONGER_AVAILABLE) {
-            console.log(err.message);
-            source.close(err.code, err.message);
-          }
-        }
-      });
-    });
+    this.server = null;
   }
 
-  createClass(Sigver, [{
+  createClass(WSServer, [{
     key: 'close',
     value: function close(cb) {
       console.log('Server has stopped successfully');
       this.server.close(cb);
     }
+  }], [{
+    key: 'start',
+    value: function start(options) {
+      var cb = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
+
+      this.server = new WebSocketServer(options, cb);
+
+      this.server.on('error', function (err) {
+        return console.error('Server error: ' + err);
+      });
+
+      this.server.on('connection', function (socket) {
+        socket.on('message', function (data, flags) {
+          try {
+            var msg = new IOJsonString(data);
+            if (msg.isToOpen()) {
+              open(socket, msg);
+            } else if (msg.isToJoin()) {
+              join(socket, msg);
+            } else if (msg.isToTransmitToOpener()) {
+              transmitToOpener(socket, msg);
+            } else if (msg.isToTransmitToJoining()) {
+              transmitToJoining(socket, msg);
+            }
+          } catch (err) {
+            if (err.name !== 'SigverError') {
+              console.log('Error which not a SigverError instance: ', err);
+            } else if (err.code !== SigverError.JOINING_GONE) {
+              console.log(err.message);
+              socket.close(err.code, err.message);
+            }
+          }
+        });
+      });
+    }
   }]);
-  return Sigver;
+  return WSServer;
 }();
 
-function open(source, ioMsg) {
+function errorOnSendCB(err) {
+  if (err) {
+    console.log('Socket error while sending ' + err.code + ': ' + err.reason);
+  }
+}
+
+function open(socket, ioMsg) {
   if (openers.has(ioMsg.key)) {
-    source.send(ioMsg.msgIsKeyOk(false));
+    socket.send(ioMsg.msgIsKeyOk(false), errorOnSendCB);
     throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, 'The key "' + ioMsg.key + '"" exists already');
   }
-  source.send(ioMsg.msgIsKeyOk(true));
-  var opener = new Opener(source);
+  socket.send(ioMsg.msgIsKeyOk(true), errorOnSendCB);
+  var opener = new Opener(socket);
   opener.onclose = function (closeEvt) {
     return openers.delete(ioMsg.key);
   };
   openers.set(ioMsg.key, opener);
 }
 
-function join(source, ioMsg) {
+function join(socket, ioMsg) {
   if (!openers.has(ioMsg.key)) {
-    source.send(ioMsg.msgIsKeyOk(false));
+    socket.send(ioMsg.msgIsKeyOk(false), errorOnSendCB);
     throw new SigverError(SigverError.KEY_FOR_JOIN_UNKNOWN, 'Unknown key');
   }
-  source.send(ioMsg.msgIsKeyOk(true));
-  openers.get(ioMsg.key).addJoining(source);
+  socket.send(ioMsg.msgIsKeyOk(true), errorOnSendCB);
+  var opener = openers.get(ioMsg.key);
+  opener.addJoining(socket);
 }
 
-function transmitToJoining(source, ioMsg) {
-  if (!('$opener' in source)) {
+function transmitToJoining(socket, ioMsg) {
+  if (!('$opener' in socket)) {
     throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open');
   }
-  console.log('Transmit to joining: ', ioMsg);
-  var joining = source.$opener.getJoining(ioMsg.id);
-  if (joining === undefined) {
-    throw new SigverError(SigverError.JOINING_NO_LONGER_AVAILABLE, 'Joining is no longer available');
+  var joining = socket.$opener.getJoining(ioMsg.id);
+  if (joining === undefined || joining.source.readyState !== WebSocket.OPEN) {
+    throw new SigverError(SigverError.JOINING_GONE, 'Joining is no longer available');
   }
-  console.log('Sending to joining: ' + ioMsg.msgToJoining(), joining);
-  joining.source.send(ioMsg.msgToJoining());
+  joining.source.send(ioMsg.msgToJoining(), errorOnSendCB);
 }
 
-function transmitToOpener(source, ioMsg) {
-  if (!('$joining' in source)) {
+function transmitToOpener(socket, ioMsg) {
+  if (!('$joining' in socket)) {
     throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join');
   }
-  var opener = source.$joining.opener;
-  if (opener === undefined) {
-    throw new SigverError(SigverError.OPENER_NO_LONGER_AVAILABLE, 'Opener is no longer available');
+  var opener = socket.$joining.opener;
+  if (opener === undefined || opener.source.readyState !== WebSocket.OPEN) {
+    throw new SigverError(SigverError.OPENER_GONE, 'Opener is no longer available');
   }
-  opener.source.send(ioMsg.msgToOpener(source.$joining.id));
+  opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB);
 }
 
 var program = require('commander');
@@ -485,6 +474,8 @@ if (program.host) host = program.host;
 if (program.port) port = program.port;
 
 // Run server
-var server = new Sigver({ host: host, port: port });
+WSServer.start({ host: host, port: port }, function () {
+  console.log('Server is running on: ws://' + host + ':' + port);
+});
 
 }());

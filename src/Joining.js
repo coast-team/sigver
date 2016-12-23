@@ -4,11 +4,11 @@ export default class Joining {
     this.source.$joining = this
     this.opener = opener
     this.id = id
-    this.onclose = () => {}
 
-    this.source.on('close', closeEvt => {
-      this.onclose()
-      this.opener.deleteJoining(this)
-    })
+    this.source.onclose = closeEvt => {
+      if (this.opener) {
+        this.opener.deleteJoining(this)
+      }
+    }
   }
 }
