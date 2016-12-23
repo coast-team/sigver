@@ -1,8 +1,9 @@
-# <p style="text-align: center">Sigver</p>
-<p style="text-align: center">WebSocket signaling server for WebRTC. Used by
-[Netflux](https://github.com/coast-team/netflux).<p>
+# <p align="center">Sigver</p>
+<p align="center">
+WebSocket signaling server for WebRTC. Used by  [Netflux](https://github.com/coast-team/netflux).
+<p>
 
-<p align="center" >
+<p align="center">
   [![npm version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)&nbsp;
   [![Build Status](https://travis-ci.org/coast-team/sigver.svg?branch=master)](https://travis-ci.org/coast-team/sigver)&nbsp;
   [![dependencies Status](https://david-dm.org/coast-team/sigver/status.svg)](https://david-dm.org/coast-team/sigver)&nbsp;
@@ -35,6 +36,10 @@ sigver [options]
 ### Examples
 ```sh
 sigver -h 192.168.0.1 -p 9000
+
+sigver --port 8002
+
+node sigver/server.js --host 192.168.0.1 -p 9000
 ```
 
 ## Protocol
@@ -76,7 +81,7 @@ transmit each other a few ice candidates via the server. Normally after the RTCD
 - Server forwards `data` from the **Joining** identified by `id`.
 ```json
  { "id": "[identifier of the peer wishing to join]",
-   "data": "[some data]" }
+   "data": "[offer, candidate]" }
 ```
 - Server notify **Opener** that the **Joining** identified by `id` is no longer available.
 ```json
@@ -86,5 +91,5 @@ transmit each other a few ice candidates via the server. Normally after the RTCD
 #### To **Joining**
 - Server forwards `data`.
 ```json
- { "data": "[some data]" }
+ { "data": "[answer, candidate]" }
 ```
