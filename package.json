@@ -8,7 +8,7 @@
     "sigver": "server.js"
   },
   "scripts": {
-    "build": "node rollup.config.js",
+    "build": "rollup -c rollup.config.js",
     "pretest": "npm run build && pm2 startOrReload process.yml",
     "test": "karma start karma.conf.js",
     "commit": "git-cz",
