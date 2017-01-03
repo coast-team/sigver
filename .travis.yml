@@ -6,6 +6,10 @@ cache:
     - node_modules
 notifications:
   email: false
+branches:
+  only:
+    - master
+    - ws
 addons:
   firefox: "latest"
   apt:
