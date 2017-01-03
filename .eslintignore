@@ -1,3 +1,2 @@
-dist/*
 karma*.js
-webrtc-adapter.js
+server.js
