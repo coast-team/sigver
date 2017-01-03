@@ -22,8 +22,8 @@ describe('Open, Join and Transmit data each other', () => {
   it('Should succeed', done => {
     const socketOpener = new WebSocket(URL)
     let socketJoining
-    const msgFromJoining = 'Hello, it is me!'
-    const msgFromOpener = 'Who me?'
+    const msgFromJoining = JSON.stringify({alice: 'Hello, it is me!'})
+    const msgFromOpener = JSON.stringify({bob: 'Who me?'})
 
     socketOpener.onerror = err => done.fail(err.message)
     socketOpener.onopen = () => {

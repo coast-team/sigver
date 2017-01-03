@@ -6,8 +6,7 @@ export default class SigverError {
     this.code = code[1]
   }
 
-  static get MESSAGE_FORMAT_ERROR () { return ['MESSAGE_FORMAT_ERROR', 4000] }
-  static get MESSAGE_UNKNOWN () { return ['MESSAGE_UNKNOWN', 4001] }
+  static get MESSAGE_ERROR () { return ['MESSAGE_FORMAT_ERROR', 4000] }
   static get KEY_TOO_LONG () { return ['KEY_TOO_LONG', 4010] }
   static get KEY_FORMAT_ERROR () { return ['KEY_FORMAT_ERROR', 4011] }
   static get KEY_FOR_OPEN_EXISTS () { return ['KEY_EXISTS', 4012] }

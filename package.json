@@ -11,8 +11,8 @@
     "build": "rollup -c rollup.config.js",
     "pretest": "npm run build && pm2 startOrReload process.yml",
     "test": "karma start karma.conf.js",
-    "commit": "git-cz",
     "precommit": "npm test",
+    "commit": "git-cz",
     "commitmsg": "validate-commit-msg",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
