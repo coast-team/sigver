@@ -64,27 +64,21 @@ export default class IOJsonString extends IO {
 
   validateKey () {
     if (this.key.length > KEY_LENGTH_LIMIT) {
-      throw new SigverError(SigverError.KEY_TOO_LONG,
+      throw new SigverError(SigverError.KEY_ERROR,
         `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
       )
     }
     if (typeof this.key !== 'string') {
-      throw new SigverError(SigverError.KEY_FORMAT_ERROR,
-        `The key ${this.key} is not a string`
-      )
+      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is not a string`)
     }
     if (this.key === '') {
-      throw new SigverError(SigverError.KEY_FORMAT_ERROR,
-        `The key ${this.key} is an empty string`
-      )
+      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is an empty string`)
     }
   }
 
   validateId () {
     if (typeof this.id !== 'number') {
-      throw new SigverError(SigverError.MESSAGE_ERROR,
-        `The joining id is not a number`
-      )
+      throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a number`)
     }
   }
 

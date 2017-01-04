@@ -20,13 +20,22 @@ class SigverError {
     this.code = code[1];
   }
 
-  static get MESSAGE_ERROR () { return ['MESSAGE_FORMAT_ERROR', 4000] }
-  static get KEY_TOO_LONG () { return ['KEY_TOO_LONG', 4010] }
-  static get KEY_FORMAT_ERROR () { return ['KEY_FORMAT_ERROR', 4011] }
-  static get KEY_FOR_OPEN_EXISTS () { return ['KEY_EXISTS', 4012] }
-  static get KEY_FOR_JOIN_UNKNOWN () { return ['KEY_UNKNOWN', 4013] }
+  // Unapropriate message format, unknown message etc.
+  static get MESSAGE_ERROR () { return ['MESSAGE_ERROR', 4000] }
+
+  // Unapropriate key format, key too long etc.
+  static get KEY_ERROR () { return ['KEY_ERROR', 4001] }
+
+  static get KEY_FOR_OPEN_EXISTS () { return ['KEY_EXISTS', 4010] }
+  static get KEY_FOR_JOIN_UNKNOWN () { return ['KEY_UNKNOWN', 4011] }
+
+  // The connection with the opener has been closed, so the server can no longer transmit him any data
   static get OPENER_GONE () { return ['OPENER_NO_LONGER_AVAILABLE', 4020] }
+
+  // Same, as previous for the joining
   static get JOINING_GONE () { return ['JOINING_NO_LONGER_AVAILABLE', 4021] }
+
+  // Before starting transmit data, the first request should be either 'open' or 'join'
   static get TRANSMIT_BEFORE_OPEN () { return ['TRANSMIT_BEFORE_OPEN', 4022] }
   static get TRANSMIT_BEFORE_JOIN () { return ['TRANSMIT_BEFORE_JOIN', 4023] }
 }
@@ -94,27 +103,21 @@ class IOJsonString extends IO {
 
   validateKey () {
     if (this.key.length > KEY_LENGTH_LIMIT) {
-      throw new SigverError(SigverError.KEY_TOO_LONG,
+      throw new SigverError(SigverError.KEY_ERROR,
         `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
       )
     }
     if (typeof this.key !== 'string') {
-      throw new SigverError(SigverError.KEY_FORMAT_ERROR,
-        `The key ${this.key} is not a string`
-      )
+      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is not a string`)
     }
     if (this.key === '') {
-      throw new SigverError(SigverError.KEY_FORMAT_ERROR,
-        `The key ${this.key} is an empty string`
-      )
+      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is an empty string`)
     }
   }
 
   validateId () {
     if (typeof this.id !== 'number') {
-      throw new SigverError(SigverError.MESSAGE_ERROR,
-        `The joining id is not a number`
-      )
+      throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a number`)
     }
   }
 
@@ -234,9 +237,7 @@ function errorOnSendCB (err) {
 function open (socket, ioMsg) {
   if (openers.has(ioMsg.key)) {
     socket.send(IOJsonString.msgIsKeyOk(false), errorOnSendCB);
-    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS,
-      `The key "${ioMsg.key}"" exists already`
-    )
+    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, `The key "${ioMsg.key}" has already been used for open`)
   }
   socket.send(IOJsonString.msgIsKeyOk(true), errorOnSendCB);
   const opener = new Opener(socket);

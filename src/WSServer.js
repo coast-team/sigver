@@ -61,9 +61,7 @@ function errorOnSendCB (err) {
 function open (socket, ioMsg) {
   if (openers.has(ioMsg.key)) {
     socket.send(IOJsonString.msgIsKeyOk(false), errorOnSendCB)
-    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS,
-      `The key "${ioMsg.key}"" exists already`
-    )
+    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, `The key "${ioMsg.key}" has already been used for open`)
   }
   socket.send(IOJsonString.msgIsKeyOk(true), errorOnSendCB)
   const opener = new Opener(socket)

@@ -101,12 +101,12 @@ describe('Open, Join and Transmit data each other', () => {
     }
   })
 
-  it(`Should fail with code: ${SigverError.KEY_TOO_LONG}`, done => {
+  it(`Should fail with code: ${SigverError.KEY_ERROR}`, done => {
     const socket = new WebSocket(URL)
     const key = 'Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.'
 
     socket.onclose = (closeEvent) => {
-      expect(closeEvent.code).toEqual(SigverError.KEY_TOO_LONG[1])
+      expect(closeEvent.code).toEqual(SigverError.KEY_ERROR[1])
       done()
     }
     socket.onerror = err => done.fail(err.reason)
