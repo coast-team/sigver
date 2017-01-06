@@ -16,7 +16,6 @@
     "no-process-env": 0
   },
   "globals": {
-    "netflux": true,
     "jasmine": true,
     "describe": true,
     "xdescribe": true,
@@ -28,15 +27,10 @@
     "beforeAll": true,
     "afterAll": true,
     "spyOn": true,
-    "DOMException": true,
-    "RTCPeerConnection": true,
-    "RTCSessionDescription": true,
-    "RTCDataChannel": true,
-    "RTCIceCandidate": true,
     "WebSocket": true,
-    "TextEncoder": true,
-    "TextDecoder": true,
     "Event": true,
-    "CloseEvent": true
+    "CloseEvent": true,
+    "EventSource": true,
+    "$": true
   }
 }
