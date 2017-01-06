@@ -18,14 +18,17 @@ const URL = 'ws://localhost:8001'
 //     process.exit(1)
 //   }
 // }
-describe('Open, Join and Transmit data each other', () => {
+describe('WebSocket Server: Open, Join and Transmit data each other', () => {
   it('Should succeed', done => {
     const socketOpener = new WebSocket(URL)
     let socketJoining
     const msgFromJoining = JSON.stringify({alice: 'Hello, it is me!'})
     const msgFromOpener = JSON.stringify({bob: 'Who me?'})
 
-    socketOpener.onerror = err => done.fail(err.message)
+    socketOpener.onerror = err => {
+      console.log('ERROR: ', err)
+      done.fail(err.message)
+    }
     socketOpener.onopen = () => {
       socketOpener.send(JSON.stringify({open: 'testKEY'}))
     }
