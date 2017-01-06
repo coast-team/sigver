@@ -1,6 +1,6 @@
 {
   "name": "sigver",
-  "description": "WebRTC signaling server",
+  "description": "WebRTC signaling server based on WebSocket and Server-Sent-Event",
   "version": "0.0.0-sementically-released",
   "main": "server.js",
   "jsnext:main": "src/WSServer.js",
@@ -20,6 +20,8 @@
   },
   "keywords": [
     "WebRTC",
+    "WebSocket",
+    "Server-Sent-Event",
     "signaling",
     "server"
   ],
