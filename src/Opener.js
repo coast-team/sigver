@@ -4,15 +4,19 @@ const MAX_ID = 2147483647 // int32 max value for id generation
 
 export default class Opener {
   constructor (source) {
+    source.$opener = this
     this.source = source
-    this.source.$opener = this
     this.joinings = new Map()
     this.onclose = () => {}
 
-    this.source.onclose = closeEvt => {
-      this.onclose()
-      this.joinings.forEach(j => { j.opener = undefined })
+    if (source.constructor.name !== 'ServerResponse') {
+      this.source.onclose = closeEvt => this.close()
     }
+  }
+
+  close () {
+    this.onclose()
+    this.joinings.forEach(j => { j.opener = undefined })
   }
 
   getJoining (id) {
@@ -23,6 +27,7 @@ export default class Opener {
     const id = this.generateId()
     const joining = new Joining(source, this, id)
     this.joinings.set(id, joining)
+    return joining
   }
 
   deleteJoining (joining) {

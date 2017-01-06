@@ -24,4 +24,11 @@ export default class SigverError {
   // Before starting transmit data, the first request should be either 'open' or 'join'
   static get TRANSMIT_BEFORE_OPEN () { return ['TRANSMIT_BEFORE_OPEN', 4022] }
   static get TRANSMIT_BEFORE_JOIN () { return ['TRANSMIT_BEFORE_JOIN', 4023] }
+
+  /*
+   The Cross-Origin Resource Sharing error. Occurs when the request
+   was cross-origin and did not validate against the provided
+   CORS configuration.
+   */
+  static get CROS_ERROR () { return ['CROSS_ORIGIN_RESOURCE_SHARING_ERROR', 4030] }
 }

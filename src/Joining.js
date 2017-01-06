@@ -5,10 +5,14 @@ export default class Joining {
     this.opener = opener
     this.id = id
 
-    this.source.onclose = closeEvt => {
-      if (this.opener) {
-        this.opener.deleteJoining(this)
-      }
+    if (source.constructor.name !== 'ServerResponse') {
+      this.source.onclose = closeEvt => this.close()
+    }
+  }
+
+  close () {
+    if (this.opener) {
+      this.opener.deleteJoining(this)
     }
   }
 }
