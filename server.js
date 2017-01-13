@@ -2,57 +2,39 @@
 (function () {
 'use strict';
 
-class IO {
-  isToOpen () {}
-
-  isToJoin () {}
-
-  isToTransmitToOpener () {}
-
-  isToTransmitToJoining () {}
-}
-
 class SigverError {
   constructor (code, message) {
     Error.captureStackTrace(this, this.constructor);
+    this.message = code + ': ' + message;
+    this.code = code;
     this.name = this.constructor.name;
-    this.message = code[0] + ': ' + message;
-    this.code = code[1];
   }
 
   // Unapropriate message format, unknown message etc.
-  static get MESSAGE_ERROR () { return ['MESSAGE_ERROR', 4000] }
+  static get MESSAGE_ERROR () { return 'MESSAGE_ERROR' }
 
   // Unapropriate key format, key too long etc.
-  static get KEY_ERROR () { return ['KEY_ERROR', 4001] }
+  static get KEY_ERROR () { return 'KEY_ERROR' }
 
-  static get KEY_FOR_OPEN_EXISTS () { return ['KEY_EXISTS', 4010] }
-  static get KEY_FOR_JOIN_UNKNOWN () { return ['KEY_UNKNOWN', 4011] }
+  static get KEY_FOR_OPEN_EXISTS () { return 'KEY_EXISTS' }
+  static get KEY_FOR_JOIN_UNKNOWN () { return 'KEY_UNKNOWN' }
 
   // The connection with the opener has been closed, so the server can no longer transmit him any data
-  static get OPENER_GONE () { return ['OPENER_NO_LONGER_AVAILABLE', 4020] }
+  static get OPENER_GONE () { return 'OPENER_NO_LONGER_AVAILABLE' }
 
   // Same, as previous for the joining
-  static get JOINING_GONE () { return ['JOINING_NO_LONGER_AVAILABLE', 4021] }
+  static get JOINING_GONE () { return 'JOINING_NO_LONGER_AVAILABLE' }
 
   // Before starting transmit data, the first request should be either 'open' or 'join'
-  static get TRANSMIT_BEFORE_OPEN () { return ['TRANSMIT_BEFORE_OPEN', 4022] }
-  static get TRANSMIT_BEFORE_JOIN () { return ['TRANSMIT_BEFORE_JOIN', 4023] }
-
-  /*
-   The Cross-Origin Resource Sharing error. Occurs when the request
-   was cross-origin and did not validate against the provided
-   CORS configuration.
-   */
-  static get CROS_ERROR () { return ['CROSS_ORIGIN_RESOURCE_SHARING_ERROR', 4030] }
+  static get TRANSMIT_BEFORE_OPEN () { return 'TRANSMIT_BEFORE_OPEN' }
+  static get TRANSMIT_BEFORE_JOIN () { return 'TRANSMIT_BEFORE_JOIN' }
 }
 
 const KEY_LENGTH_LIMIT = 512;
 
-class IOJsonString extends IO {
+class IOJsonString {
 
   constructor (data) {
-    super();
     this.id = undefined;
     this.data = undefined;
 
@@ -194,6 +176,22 @@ class Opener {
   }
 }
 
+class WSError {
+  static code (err) {
+    switch (err) {
+      case SigverError.MESSAGE_ERROR: return 4000
+      case SigverError.KEY_ERROR: return 4001
+      case SigverError.KEY_FOR_OPEN_EXISTS: return 4010
+      case SigverError.KEY_FOR_JOIN_UNKNOWN: return 4011
+      case SigverError.OPENER_GONE: return 4020
+      case SigverError.JOINING_GONE: return 4021
+      case SigverError.TRANSMIT_BEFORE_OPEN: return 4022
+      case SigverError.TRANSMIT_BEFORE_JOIN: return 4023
+      default: throw new Error('Unknown Sigver Error')
+    }
+  }
+}
+
 const WebSocket = require('uws');
 const WebSocketServer = WebSocket.Server;
 
@@ -228,7 +226,7 @@ class WSServer {
             console.log('Error which not a SigverError instance: ', err);
           } else if (err.code !== SigverError.JOINING_GONE) {
             console.log(err.message);
-            socket.close(err.code, err.message);
+            socket.close(WSError.code(err.code), err.message);
           } else {
             socket.send(IOJsonString.msgJoiningUnavailable(), errorOnSendCB);
           }
@@ -293,100 +291,35 @@ function transmitToOpener (socket, ioMsg) {
   opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB);
 }
 
-const querystring = require('querystring');
+class SSEError {
 
-const KEY_LENGTH_LIMIT$1 = 512;
+  /*
+   The Cross-Origin Resource Sharing error. Occurs when the request
+   was cross-origin and did not validate against the provided
+   CORS configuration.
+   */
+  static get CROS_ERROR () { return 'CROSS_ORIGIN_RESOURCE_SHARING_ERROR' }
 
-class IOQueryString extends IO {
+  /*
+  The client did not authenticate before sending data
+   */
+  static get AUTH_ERROR () { return 'AUTHENTICATION_ERROR' }
 
-  constructor (query) {
-    super();
-    this.myId = undefined;
-    this.id = undefined;
-    this.data = undefined;
-
-    this._openKey = undefined;
-    this._joinKey = undefined;
-    let msg;
-    try {
-      msg = querystring.parse(query);
-    } catch (err) {
-      throw new SigverError(SigverError.MESSAGE_ERROR, 'The message is not a JSON string')
-    }
-    const keysNb = Object.keys(msg).length;
-    if (('open' in msg) && keysNb === 1) {
-      this._openKey = msg.open;
-      this.validateKey();
-    } else if ('join' in msg && keysNb === 1) {
-      this._joinKey = msg.join;
-      this.validateKey();
-    } else if ('data' in msg && 'myId' in msg && keysNb === 2) {
-      this.data = JSON.stringify(msg.data);
-      this.myId = Number.parseInt(msg.myId, 10);
-    } else if ('id' in msg && 'data' in msg && 'myId' in msg && keysNb === 3) {
-      this.data = JSON.stringify(msg.data);
-      this.id = Number.parseInt(msg.id, 10);
-      this.myId = Number.parseInt(msg.myId, 10);
-      this.validateId();
-    } else {
-      throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message')
+  static code (err) {
+    switch (err) {
+      case SigverError.MESSAGE_ERROR: return 520
+      case SigverError.KEY_ERROR: return 521
+      case SigverError.KEY_FOR_OPEN_EXISTS: return 560
+      case SigverError.KEY_FOR_JOIN_UNKNOWN: return 561
+      case SigverError.OPENER_GONE: return 570
+      case SigverError.JOINING_GONE: return 571
+      case SigverError.TRANSMIT_BEFORE_OPEN: return 572
+      case SigverError.TRANSMIT_BEFORE_JOIN: return 573
+      case SSEError.CROS_ERROR: return 580
+      case SSEError.AUTH_ERROR: return 581
+      default: throw new Error('Unknown Sigver Error')
     }
   }
-
-  isToOpen () { return this._openKey !== undefined }
-
-  isToJoin () { return this._joinKey !== undefined }
-
-  isToTransmitToOpener () { return this.id === undefined }
-
-  isToTransmitToJoining () { return this.id !== undefined }
-
-  get key () { return this._openKey ? this._openKey : this._joinKey }
-
-  static msgKeyIsOk (id) {
-    return `{"isKeyOk":true,"id":${id}}`
-  }
-
-  static msgKeyIsNotOk (code, message) {
-    return `{"isKeyOk":false,"error":${code},"message":"${message}"}`
-  }
-
-  static msgJoiningUnavailable (id) {
-    return `{"id":${id},"unavailable":"true"}`
-  }
-
-  static msgError (code, message) {
-    return `{"error":${code},"message":"${message}"}`
-  }
-
-  msgToJoining () {
-    return `{"data":${this.data}}`
-  }
-
-  msgToOpener (id) {
-    return `{"id":${id},"data":${this.data}}`
-  }
-
-  validateKey () {
-    if (this.key.length > KEY_LENGTH_LIMIT$1) {
-      throw new SigverError(SigverError.KEY_ERROR,
-        `The key length exceeds the limit of ${KEY_LENGTH_LIMIT$1} characters`
-      )
-    }
-    if (typeof this.key !== 'string') {
-      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is not a string`)
-    }
-    if (this.key === '') {
-      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is an empty string`)
-    }
-  }
-
-  validateId () {
-    if (typeof this.id !== 'number') {
-      throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a number`)
-    }
-  }
-
 }
 
 const SseChannel = require('sse-channel');
@@ -394,7 +327,12 @@ const http = require('http');
 
 const MAX_ID$1 = 2147483647; // int32 max value for id generation
 
-const sse = new SseChannel({cors: {origins: ['*']}});
+const sse = new SseChannel({
+  cors: {
+    origins: ['*'],
+    credentials: true
+  }
+});
 sse.on('disconnect', (channel, res) => {
   if ('$opener' in res) {
     res.$opener.close();
@@ -413,44 +351,84 @@ class SSEServer {
 
   static start (options, cb = () => {}) {
     this.server = http.createServer((req, res) => {
-      if ((req.url.startsWith('/?') && req.method === 'GET') || (req.url === '/' && req.method === 'POST')) {
-        sse.addClient(req, res, error => {
-          try {
-            if (error) {
-              const err = new SigverError(SigverError.CROS_ERROR, error.message);
-              console.log(err.message);
-            } else {
-              const ioMsg = new IOQueryString(req.url.substring(2).toString());
-
-              if (ioMsg.isToOpen()) {
-                open$1(res, ioMsg);
-              } else if (ioMsg.isToJoin()) {
-                join$1(res, ioMsg);
-              } else if (ioMsg.isToTransmitToOpener()) {
-                transmitToOpener$1(ioMsg);
-              } else if (ioMsg.isToTransmitToJoining()) {
-                transmitToJoining$1(ioMsg);
-              }
-            }
-          } catch (err) {
-            if (err.name !== 'SigverError') {
-              console.log('Error which not a SigverError instance: ', err);
-            } else if (err.code !== SigverError.JOINING_GONE[1]) {
-              console.log(err.message);
-              if (err.code >= SigverError.KEY_ERROR[1] && err.code < SigverError.KEY_FOR_JOIN_UNKNOWN[1]) {
-                sse.send(IOQueryString.msgKeyIsNotOk(err.code, err.message), [res]);
+      if (req.url === '/') {
+        switch (req.method) {
+          /*
+           Authentication. This should be the first request by the client,
+           made with EventSource API.
+           */
+          case 'GET': {
+            sse.addClient(req, res, (err) => {
+              if (err) {
+                console.log('SSEServer: ' + new SigverError(SSEError.CROS_ERROR, err.message).message);
               } else {
-                sse.send(IOQueryString.msgError(err.code, err.message));
+                res.$id = generateId();
+                resps.set(res.$id, res);
+                sse.send({event: 'auth', data: res.$id}, [res]);
               }
-            } else {
-              sse.send(IOQueryString.msgJoiningUnavailable());
-            }
-            sse.removeClient(res);
+            });
+            break
           }
-        });
+          /*
+           After client has been authenticated with the request above, he can
+           send data to the server with POST request. The Authentication token,
+           abtained previously should always be included into this request content.
+           */
+          case 'POST': {
+            let body = [];
+            req.on('data', chunk => body.push(chunk));
+            req.on('end', () => {
+              body = Buffer.concat(body).toString();
+              let myRes = null;
+              try {
+                const separator = body.indexOf('@');
+                myRes = resps.get(Number.parseInt(body.substring(0, separator), 10));
+                if (myRes === undefined) {
+                  throw new SigverError(SSEError.AUTH_ERROR, 'Send message before authentication')
+                }
+                const data = body.substring(separator + 1);
+                const ioMsg = new IOJsonString(data);
+
+                if (ioMsg.isToOpen()) {
+                  open$1(myRes, ioMsg);
+                } else if (ioMsg.isToJoin()) {
+                  join$1(myRes, ioMsg);
+                } else if (ioMsg.isToTransmitToOpener()) {
+                  transmitToOpener$1(myRes, ioMsg);
+                } else if (ioMsg.isToTransmitToJoining()) {
+                  transmitToJoining$1(myRes, ioMsg);
+                }
+                res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin});
+              } catch (err) {
+                let shouldSendError = true;
+                if (err.name !== 'SigverError') {
+                  console.log(`SSEServer: Error is not a SigverError instance: ${err.message}`);
+                } else if (err.code !== SigverError.JOINING_GONE) {
+                  console.log(`SSEServer: ${err.message}`);
+                } else {
+                  shouldSendError = false;
+                  sse.send(IOJsonString.msgJoiningUnavailable(), [myRes]);
+                  res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin});
+                }
+                if (shouldSendError) {
+                  sse.removeClient(myRes);
+                  res.writeHead(
+                    SSEError.code(err.code),
+                    err.message,
+                    {'Access-Control-Allow-Origin': req.headers.origin}
+                  );
+                }
+              } finally {
+                res.end();
+              }
+            });
+            break
+          }
+          default:
+            res404(res, req.headers.origin);
+        }
       } else {
-        res.writeHead(404);
-        res.end();
+        res404(res, req.headers.origin);
       }
     });
 
@@ -464,36 +442,38 @@ class SSEServer {
 
 }
 
+function res404 (res, origin) {
+  res.writeHead(404, {'Access-Control-Allow-Origin': origin});
+  res.end();
+}
+
 function open$1 (res, ioMsg) {
   if (openers$1.has(ioMsg.key)) {
+    sse.send(IOJsonString.msgIsKeyOk(false), [res]);
     throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, `The key ${ioMsg.key} has already been used for open`)
   }
-  res.$id = generateId();
-  resps.set(res.$id, res);
   const opener = new Opener(res);
-  sse.send(IOQueryString.msgKeyIsOk(res.$id), [res]);
+  sse.send(IOJsonString.msgIsKeyOk(true), [res]);
   opener.onclose = closeEvt => openers$1.delete(ioMsg.key);
   openers$1.set(ioMsg.key, opener);
 }
 
 function join$1 (res, ioMsg) {
   if (!openers$1.has(ioMsg.key)) {
+    sse.send(IOJsonString.msgIsKeyOk(false), [res]);
     throw new SigverError(SigverError.KEY_FOR_JOIN_UNKNOWN, 'Unknown key')
   }
-  res.$id = generateId();
-  resps.set(res.$id, res);
   const opener = openers$1.get(ioMsg.key);
   opener.addJoining(res);
-  sse.send(IOQueryString.msgKeyIsOk(res.$id), [res]);
+  sse.send(IOJsonString.msgIsKeyOk(true), [res]);
 }
 
-function transmitToJoining$1 (ioMsg) {
-  const joiningSource = resps.get(Number.parseInt(ioMsg.myId, 10));
-  if (joiningSource !== undefined) {
-    if (!('$opener' in joiningSource)) {
+function transmitToJoining$1 (res, ioMsg) {
+  if (res !== undefined) {
+    if (!('$opener' in res)) {
       throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open')
     }
-    const joining = joiningSource.$opener.getJoining(ioMsg.id);
+    const joining = res.$opener.getJoining(ioMsg.id);
     if (joining === undefined) {
       throw new SigverError(SigverError.JOINING_GONE, 'Joining is no longer available')
     }
@@ -501,17 +481,16 @@ function transmitToJoining$1 (ioMsg) {
   }
 }
 
-function transmitToOpener$1 (ioMsg) {
-  const openerSource = resps.get(Number.parseInt(ioMsg.myId, 10));
-  if (openerSource !== undefined) {
-    if (!('$joining' in openerSource)) {
+function transmitToOpener$1 (res, ioMsg) {
+  if (res !== undefined) {
+    if (!('$joining' in res)) {
       throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join')
     }
-    const opener = openerSource.$joining.opener;
+    const opener = res.$joining.opener;
     if (opener === undefined) {
       throw new SigverError(SigverError.OPENER_GONE, 'Opener is no longer available')
     }
-    sse.send(ioMsg.msgToOpener(openerSource.$joining.id), [opener.source]);
+    sse.send(ioMsg.msgToOpener(res.$joining.id), [opener.source]);
   }
 }
 

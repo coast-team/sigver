@@ -1,6 +1,7 @@
 import IOJsonString from './IOJsonString'
 import Opener from './Opener'
-import SigverError from './SigverError'
+import SigverError from './error/SigverError'
+import WSError from '../src/error/WSError'
 
 const WebSocket = require('uws')
 const WebSocketServer = WebSocket.Server
@@ -36,7 +37,7 @@ export default class WSServer {
             console.log('Error which not a SigverError instance: ', err)
           } else if (err.code !== SigverError.JOINING_GONE) {
             console.log(err.message)
-            socket.close(err.code, err.message)
+            socket.close(WSError.code(err.code), err.message)
           } else {
             socket.send(IOJsonString.msgJoiningUnavailable(), errorOnSendCB)
           }

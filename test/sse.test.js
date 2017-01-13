@@ -1,12 +1,25 @@
-import SigverError from '../src/SigverError'
+import SigverError from '../src/error/SigverError'
+import SSEError from '../src/error/SSEError'
+import { xhtSend, randomKey } from './util.js'
 
 const URL = 'http://localhost:8002'
 
-describe('Server-Sent-Event Server: Open, Join and Transmit data each other', () => {
+describe('Server-Sent-Event: Open, Join and Transmit data each other', () => {
+  let key = ''
+
+  beforeEach(() => {
+    key = randomKey()
+  })
+
   it('Should succeed', done => {
-    const esOpener = new EventSource(`${URL}/?open=123456`)
+    const esOpener = new EventSource(URL)
     let openerId = null
-    let esJoining
+    esOpener.addEventListener('auth', evtMsg => {
+      openerId = evtMsg.data
+      xhtSend(URL, openerId, {open: key})
+    })
+    let esJoining = null
+    let JoiningId = null
     const msgFromJoining = JSON.stringify({alice: 'Hello, it is me!'})
     const msgFromOpener = JSON.stringify({bob: 'Who me?'})
 
@@ -17,26 +30,20 @@ describe('Server-Sent-Event Server: Open, Join and Transmit data each other', ()
         const keysNb = Object.keys(msg).length
         if ('isKeyOk' in msg) {
           expect(msg.isKeyOk).toBeTruthy()
-          expect(keysNb).toEqual(2)
-          expect('id' in msg).toBeTruthy()
-          openerId = msg.id
-          esJoining = new EventSource(`${URL}/?join=123456`)
+          expect(keysNb).toEqual(1)
+          esJoining = new EventSource(URL)
+          esJoining.addEventListener('auth', evtMsg => {
+            JoiningId = evtMsg.data
+            xhtSend(URL, JoiningId, {join: key})
+          })
           esJoining.onerror = err => done.fail(err.message)
           esJoining.onmessage = msgEvent => {
             const msg = JSON.parse(msgEvent.data)
             const keysNb = Object.keys(msg).length
             if ('isKeyOk' in msg) {
               expect(msg.isKeyOk).toBeTruthy()
-              expect(keysNb).toEqual(2)
-              expect('id' in msg).toBeTruthy()
-              $.get({
-                url: URL,
-                crossDomain: true,
-                data: {
-                  data: msgFromJoining,
-                  myId: msg.id
-                }
-              })
+              expect(keysNb).toEqual(1)
+              xhtSend(URL, JoiningId, {data: msgFromJoining, myId: msg.id})
             } else {
               // Received a message from Opener transmitted by sigver
               expect('data' in msg).toBeTruthy()
@@ -53,15 +60,7 @@ describe('Server-Sent-Event Server: Open, Join and Transmit data each other', ()
           expect(msg.id).toEqual(jasmine.any(Number))
           expect(typeof msg.data).toEqual('string')
           expect(msg.data).toEqual(msgFromJoining)
-          $.get({
-            url: URL,
-            crossDomain: true,
-            data: {
-              data: msgFromOpener,
-              id: msg.id,
-              myId: openerId
-            }
-          })
+          xhtSend(URL, openerId, {data: msgFromOpener, id: msg.id})
         }
       } catch (err) {
         console.log('Error: ' + msgEvent.data)
@@ -71,43 +70,56 @@ describe('Server-Sent-Event Server: Open, Join and Transmit data each other', ()
   })
 
   it(`Should fail with code: ${SigverError.KEY_FOR_OPEN_EXISTS}`, done => {
-    const es1 = new EventSource(`${URL}/?open=123456`)
-    es1.onopen = () => {
-      const es2 = new EventSource(`${URL}/?open=123456`)
-      es2.onerror = err => done.fail(err.message)
+    const es1 = new EventSource(URL)
+
+    es1.addEventListener('auth', evtMsg => {
+      xhtSend(URL, evtMsg.data, {open: key})
+      const es2 = new EventSource(URL)
+      es2.addEventListener('auth', evtMsg => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', URL, true)
+        xhr.onload = function () {
+          expect(this.status).toEqual(SSEError.code(SigverError.KEY_FOR_OPEN_EXISTS))
+          done()
+        }
+        xhr.send(evtMsg.data + '@' + JSON.stringify({open: key}))
+      })
+      es2.onerror = err => {
+        console.log('ERROR: ', err)
+        done.fail(err.message)
+      }
       es2.onmessage = msgEvent => {
         try {
           const msg = JSON.parse(msgEvent.data)
           expect('isKeyOk' in msg).toBeTruthy()
-          expect('error' in msg).toBeTruthy()
-          expect('message' in msg).toBeTruthy()
-          expect(Object.keys(msg).length).toEqual(3)
+          expect(Object.keys(msg).length).toEqual(1)
           expect(msg.isKeyOk).toBeFalsy()
-          expect(msg.error).toEqual(SigverError.KEY_FOR_OPEN_EXISTS[1])
-          es2.close()
-          done()
         } catch (err) {
-          es1.close()
           done.fail(err.message)
         }
       }
-    }
+    })
     es1.onerror = err => done.fail(err.message)
   })
 
   it(`Should fail with code: ${SigverError.KEY_ERROR}`, done => {
     const key = 'Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.'
-    const es1 = new EventSource(`${URL}/?open=${key}`)
+    const es1 = new EventSource(URL)
+    es1.addEventListener('auth', evtMsg => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', URL, true)
+      xhr.onload = function () {
+        expect(this.status).toEqual(SSEError.code(SigverError.KEY_ERROR))
+        done()
+      }
+      xhr.send(evtMsg.data + '@' + JSON.stringify({open: key}))
+    })
     es1.onmessage = msgEvent => {
       try {
         const msg = JSON.parse(msgEvent.data)
         expect('isKeyOk' in msg).toBeTruthy()
-        expect('error' in msg).toBeTruthy()
-        expect('message' in msg).toBeTruthy()
-        expect(Object.keys(msg).length).toEqual(3)
+        expect(Object.keys(msg).length).toEqual(1)
         expect(msg.isKeyOk).toBeFalsy()
-        expect(msg.error).toEqual(SigverError.KEY_ERROR[1])
-        done()
       } catch (err) {
         done.fail(err.message)
       }

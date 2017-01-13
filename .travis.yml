@@ -1,9 +1,6 @@
 sudo: required
 dist: trusty
 language: node_js
-cache:
-  directories:
-    - node_modules
 notifications:
   email: false
 branches:
@@ -20,9 +17,8 @@ addons:
 node_js:
   - '7'
 before_install:
-  - npm i -g update
+  - npm -g update
 before_script:
-  - npm prune
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sleep 3

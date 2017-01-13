@@ -31,6 +31,6 @@
     "Event": true,
     "CloseEvent": true,
     "EventSource": true,
-    "$": true
+    "XMLHttpRequest": true
   }
 }

@@ -1,12 +1,10 @@
-import IO from './IO'
-import SigverError from './SigverError'
+import SigverError from './error/SigverError'
 
 const KEY_LENGTH_LIMIT = 512
 
-export default class IOJsonString extends IO {
+export default class IOJsonString {
 
   constructor (data) {
-    super()
     this.id = undefined
     this.data = undefined
 
