@@ -3,7 +3,12 @@ import Opener from './Opener'
 import SigverError from './error/SigverError'
 import SSEError from './error/SSEError'
 
-const SseChannel = require('sse-channel')
+let SseChannel = {}
+try {
+  SseChannel = require('sse-channel')
+} catch (err) {
+  console.log('INFO: sse-channel package is not installed properly, thus EventSource server could not be run')
+}
 const http = require('http')
 
 const MAX_ID = 2147483647 // int32 max value for id generation

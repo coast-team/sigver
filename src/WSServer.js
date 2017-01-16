@@ -3,7 +3,12 @@ import Opener from './Opener'
 import SigverError from './error/SigverError'
 import WSError from '../src/error/WSError'
 
-const WebSocket = require('uws')
+let WebSocket = {}
+try {
+  WebSocket = require('uws')
+} catch (err) {
+  console.log('INFO: uws package is not installed properly, thus WebSocket server could not be run')
+}
 const WebSocketServer = WebSocket.Server
 
 const openers = new Map()

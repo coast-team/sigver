@@ -192,7 +192,12 @@ class WSError {
   }
 }
 
-const WebSocket = require('uws');
+let WebSocket = {};
+try {
+  WebSocket = require('uws');
+} catch (err) {
+  console.log('INFO: uws package is not installed properly, thus WebSocket server could not be run');
+}
 const WebSocketServer = WebSocket.Server;
 
 const openers = new Map();
@@ -322,7 +327,12 @@ class SSEError {
   }
 }
 
-const SseChannel = require('sse-channel');
+let SseChannel = {};
+try {
+  SseChannel = require('sse-channel');
+} catch (err) {
+  console.log('INFO: sse-channel package is not installed properly, thus EventSource server could not be run');
+}
 const http = require('http');
 
 const MAX_ID$1 = 2147483647; // int32 max value for id generation
@@ -537,12 +547,12 @@ if (program.type) type = program.type;
 switch (type) {
   case 'ws':
     WSServer.start({host, port}, () => {
-      console.log(`Server is listening on: ws://${host}:${port}`);
+      console.log(`WebSocket server is listening on: ws://${host}:${port}`);
     });
     break
   case 'sse':
     SSEServer.start({host, port}, () => {
-      console.log(`Server is listening on: http://${host}:${port}`);
+      console.log(`EventSource server is listening on: http://${host}:${port}`);
     });
     break
 }

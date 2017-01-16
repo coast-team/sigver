@@ -33,12 +33,12 @@ if (program.type) type = program.type
 switch (type) {
   case 'ws':
     WSServer.start({host, port}, () => {
-      console.log(`Server is listening on: ws://${host}:${port}`)
+      console.log(`WebSocket server is listening on: ws://${host}:${port}`)
     })
     break
   case 'sse':
     SSEServer.start({host, port}, () => {
-      console.log(`Server is listening on: http://${host}:${port}`)
+      console.log(`EventSource server is listening on: http://${host}:${port}`)
     })
     break
 }
