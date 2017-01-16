@@ -2,7 +2,7 @@ import SigverError from '../src/error/SigverError'
 import WSError from '../src/error/WSError'
 import { randomKey } from './util.js'
 
-const URL = 'ws://localhost:8001'
+const URL = 'ws://localhost:8034'
 // function isBrowser () {
 //   if (typeof window === 'undefined' || (typeof process !== 'undefined' && process.title === 'node')) {
 //     return false

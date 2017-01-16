@@ -2,7 +2,7 @@ import SigverError from '../src/error/SigverError'
 import SSEError from '../src/error/SSEError'
 import { xhtSend, randomKey } from './util.js'
 
-const URL = 'http://localhost:8002'
+const URL = 'http://localhost:8347'
 
 describe('Server-Sent-Event: Open, Join and Transmit data each other', () => {
   let key = ''
