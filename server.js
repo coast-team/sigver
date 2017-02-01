@@ -183,7 +183,12 @@ let WebSocket = {};
 try {
   WebSocket = require('uws');
 } catch (err) {
-  console.log('INFO: uws package is not installed properly, thus WebSocket server could not be run');
+  console.log('INFO: could not find uws package, try to use ws instead ' + err.message);
+  try {
+    WebSocket = require('ws');
+  } catch (err2) {
+    console.log('ERROR: could not find ws package too, this the server cannot be run ' + err2.message);
+  }
 }
 const WebSocketServer = WebSocket.Server;
 
