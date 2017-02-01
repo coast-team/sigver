@@ -7,10 +7,6 @@ const openers = new Map()
 
 export default class WSServer {
 
-  constructor () {
-    this.server = null
-  }
-
   static start (options, cb = () => {}, extraOptions) {
     let WebSocket = {}
     try {
@@ -38,7 +34,11 @@ export default class WSServer {
           if (ioMsg.isToOpen()) {
             open(socket, ioMsg)
           } else if (ioMsg.isToJoin()) {
-            join(socket, ioMsg)
+            if (openers.has(ioMsg.key)) {
+              join(socket, ioMsg)
+            } else {
+              open(socket, ioMsg)
+            }
           } else if (ioMsg.isToTransmitToOpener()) {
             transmitToOpener(socket, ioMsg)
           } else if (ioMsg.isToTransmitToJoining()) {
@@ -60,7 +60,6 @@ export default class WSServer {
     console.log('Server has stopped successfully')
     this.server.close(cb)
   }
-
 }
 
 function errorOnSendCB (err) {
@@ -89,12 +88,8 @@ function open (socket, ioMsg) {
 }
 
 function join (socket, ioMsg) {
-  if (openers.has(ioMsg.key)) {
-    openers.get(ioMsg.key).values().next().value.addJoining(socket)
-    socket.send(IOJsonString.msgOpened(false), errorOnSendCB)
-  } else {
-    open(socket, ioMsg)
-  }
+  openers.get(ioMsg.key).values().next().value.addJoining(socket)
+  socket.send(IOJsonString.msgOpened(false), errorOnSendCB)
 }
 
 function transmitToJoining (socket, ioMsg) {
