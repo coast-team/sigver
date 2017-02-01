@@ -5,16 +5,21 @@ const program = require('commander')
 let host = process.env.NODE_IP || '0.0.0.0'
 let port = process.env.NODE_PORT || 8000
 let type = 'ws'
+let wsLib = 'uws'
 
 program
   .version('8.1.0', '-v, --version')
-  .option('-h, --host <n>', 'select host address to bind to, DEFAULT: process.env.NODE_IP || "0.0.0.0"')
-  .option('-p, --port <n>', 'select port to use, DEFAULT: process.env.NODE_PORT || 8000')
+  .option('-h, --host <n>', 'Select host address to bind to, DEFAULT: process.env.NODE_IP || "0.0.0.0"')
+  .option('-p, --port <n>', 'Select port to use, DEFAULT: process.env.NODE_PORT || 8000\n')
   .option('-t, --type <value>',
-`specify the server type. The possible values are:
-  ws - for WebSocket only ("ws://host:port"). This is DEFAULT
-  sse - for Server-Sent-Event only ("http://host:port")
+`Specify the server type. The possible values are:
+    ws - for WebSocket only ("ws://host:port"). This is DEFAULT
+    sse - for Server-Sent-Event only ("http://host:port")
 `)
+  .option('-w, --wsLib <value>',
+`Available only when the option -t/--type is equal to ws. Specify the server module to use for WebSocket server. The possible values are:
+    ws - https://github.com/websockets/ws
+    uws - https://github.com/uWebSockets/uWebSockets. This is DEFAULT, if the module has not been installed properly or no binary is available for the current OS, then ws will be used instead`)
   .on('--help', () => {
     console.log(
 `  Examples:
@@ -29,12 +34,13 @@ program
 if (program.host) host = program.host
 if (program.port) port = program.port
 if (program.type) type = program.type
+if (program.wsLib) wsLib = program.wsLib
 
 switch (type) {
   case 'ws':
     WSServer.start({host, port}, () => {
       console.log(`WebSocket server is listening on: ws://${host}:${port}`)
-    })
+    }, {wsLib})
     break
   case 'sse':
     SSEServer.start({host, port}, () => {

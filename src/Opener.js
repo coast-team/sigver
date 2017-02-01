@@ -14,6 +14,13 @@ export default class Opener {
     }
   }
 
+  get opened () {
+    if (this.source.constructor.name !== 'ServerResponse') {
+      return this.source.readyState === this.source.OPEN
+    }
+    return true
+  }
+
   close () {
     this.onclose()
     this.joinings.forEach(j => { j.opener = undefined })

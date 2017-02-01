@@ -115,6 +115,13 @@ class Joining {
     }
   }
 
+  get opened () {
+    if (this.source.constructor.name !== 'ServerResponse') {
+      return this.source.readyState === this.source.OPEN
+    }
+    return true
+  }
+
   close () {
     if (this.opener) {
       this.opener.deleteJoining(this);
@@ -134,6 +141,13 @@ class Opener {
     if (source.constructor.name !== 'ServerResponse') {
       this.source.onclose = closeEvt => this.close();
     }
+  }
+
+  get opened () {
+    if (this.source.constructor.name !== 'ServerResponse') {
+      return this.source.readyState === this.source.OPEN
+    }
+    return true
   }
 
   close () {
@@ -179,19 +193,6 @@ class WSError {
   }
 }
 
-let WebSocket = {};
-try {
-  WebSocket = require('uws');
-} catch (err) {
-  console.log('INFO: could not find uws package, try to use ws instead ' + err.message);
-  try {
-    WebSocket = require('ws');
-  } catch (err2) {
-    console.log('ERROR: could not find ws package too, this the server cannot be run ' + err2.message);
-  }
-}
-const WebSocketServer = WebSocket.Server;
-
 const openers = new Map();
 
 class WSServer {
@@ -200,7 +201,22 @@ class WSServer {
     this.server = null;
   }
 
-  static start (options, cb = () => {}) {
+  static start (options, cb = () => {}, extraOptions) {
+    let WebSocket = {};
+    try {
+      WebSocket = require(extraOptions.wsLib);
+      console.log(`${extraOptions.wsLib} module is used for WebSocket server`);
+    } catch (err) {
+      const anotherLib = extraOptions.wsLib === 'uws' ? 'ws' : 'uws';
+      console.log(`INFO: ${err.message}. Will use ${anotherLib} instead`);
+      try {
+        WebSocket = require(anotherLib);
+      } catch (err2) {
+        console.log(`ERROR: ${err2.message}. Thus the server cannot be run`);
+      }
+    }
+    const WebSocketServer = WebSocket.Server;
+
     this.server = new WebSocketServer(options, cb);
 
     this.server.on('error', err => console.error(`Server error: ${err}`));
@@ -276,7 +292,7 @@ function transmitToJoining (socket, ioMsg) {
     throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open')
   }
   const joining = socket.$opener.getJoining(ioMsg.id);
-  if (joining === undefined || joining.source.readyState !== WebSocket.OPEN) {
+  if (joining === undefined || !joining.opened) {
     // The connection with the opener has been closed, so the server can no longer transmit him any data.
     socket.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id));
   }
@@ -288,7 +304,7 @@ function transmitToOpener (socket, ioMsg) {
     throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join')
   }
   const opener = socket.$joining.opener;
-  if (opener === undefined || opener.source.readyState !== WebSocket.OPEN) {
+  if (opener === undefined || !opener.opened) {
     // Same, as previous for the joining
     socket.$joining.source.send(ioMsg.msgUnavailable());
   }
@@ -518,16 +534,21 @@ const program = require('commander');
 let host = process.env.NODE_IP || '0.0.0.0';
 let port = process.env.NODE_PORT || 8000;
 let type = 'ws';
+let wsLib = 'uws';
 
 program
   .version('8.1.0', '-v, --version')
-  .option('-h, --host <n>', 'select host address to bind to, DEFAULT: process.env.NODE_IP || "0.0.0.0"')
-  .option('-p, --port <n>', 'select port to use, DEFAULT: process.env.NODE_PORT || 8000')
+  .option('-h, --host <n>', 'Select host address to bind to, DEFAULT: process.env.NODE_IP || "0.0.0.0"')
+  .option('-p, --port <n>', 'Select port to use, DEFAULT: process.env.NODE_PORT || 8000\n')
   .option('-t, --type <value>',
-`specify the server type. The possible values are:
-  ws - for WebSocket only ("ws://host:port"). This is DEFAULT
-  sse - for Server-Sent-Event only ("http://host:port")
+`Specify the server type. The possible values are:
+    ws - for WebSocket only ("ws://host:port"). This is DEFAULT
+    sse - for Server-Sent-Event only ("http://host:port")
 `)
+  .option('-w, --wsLib <value>',
+`Available only when the option -t/--type is equal to ws. Specify the server module to use for WebSocket server. The possible values are:
+    ws - https://github.com/websockets/ws
+    uws - https://github.com/uWebSockets/uWebSockets. This is DEFAULT, if the module has not been installed properly or no binary is available for the current OS, then ws will be used instead`)
   .on('--help', () => {
     console.log(
 `  Examples:
@@ -542,12 +563,13 @@ program
 if (program.host) host = program.host;
 if (program.port) port = program.port;
 if (program.type) type = program.type;
+if (program.wsLib) wsLib = program.wsLib;
 
 switch (type) {
   case 'ws':
     WSServer.start({host, port}, () => {
       console.log(`WebSocket server is listening on: ws://${host}:${port}`);
-    });
+    }, {wsLib});
     break
   case 'sse':
     SSEServer.start({host, port}, () => {

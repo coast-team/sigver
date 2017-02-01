@@ -10,6 +10,13 @@ export default class Joining {
     }
   }
 
+  get opened () {
+    if (this.source.constructor.name !== 'ServerResponse') {
+      return this.source.readyState === this.source.OPEN
+    }
+    return true
+  }
+
   close () {
     if (this.opener) {
       this.opener.deleteJoining(this)

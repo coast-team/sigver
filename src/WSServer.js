@@ -3,19 +3,6 @@ import Opener from './Opener'
 import SigverError from './error/SigverError'
 import WSError from '../src/error/WSError'
 
-let WebSocket = {}
-try {
-  WebSocket = require('uws')
-} catch (err) {
-  console.log('INFO: could not find uws package, try to use ws instead ' + err.message)
-  try {
-    WebSocket = require('ws')
-  } catch (err2) {
-    console.log('ERROR: could not find ws package too, this the server cannot be run ' + err2.message)
-  }
-}
-const WebSocketServer = WebSocket.Server
-
 const openers = new Map()
 
 export default class WSServer {
@@ -24,7 +11,22 @@ export default class WSServer {
     this.server = null
   }
 
-  static start (options, cb = () => {}) {
+  static start (options, cb = () => {}, extraOptions) {
+    let WebSocket = {}
+    try {
+      WebSocket = require(extraOptions.wsLib)
+      console.log(`${extraOptions.wsLib} module is used for WebSocket server`)
+    } catch (err) {
+      const anotherLib = extraOptions.wsLib === 'uws' ? 'ws' : 'uws'
+      console.log(`INFO: ${err.message}. Will use ${anotherLib} instead`)
+      try {
+        WebSocket = require(anotherLib)
+      } catch (err2) {
+        console.log(`ERROR: ${err2.message}. Thus the server cannot be run`)
+      }
+    }
+    const WebSocketServer = WebSocket.Server
+
     this.server = new WebSocketServer(options, cb)
 
     this.server.on('error', err => console.error(`Server error: ${err}`))
@@ -100,7 +102,7 @@ function transmitToJoining (socket, ioMsg) {
     throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open')
   }
   const joining = socket.$opener.getJoining(ioMsg.id)
-  if (joining === undefined || joining.source.readyState !== WebSocket.OPEN) {
+  if (joining === undefined || !joining.opened) {
     // The connection with the opener has been closed, so the server can no longer transmit him any data.
     socket.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id))
   }
@@ -112,7 +114,7 @@ function transmitToOpener (socket, ioMsg) {
     throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join')
   }
   const opener = socket.$joining.opener
-  if (opener === undefined || opener.source.readyState !== WebSocket.OPEN) {
+  if (opener === undefined || !opener.opened) {
     // Same, as previous for the joining
     socket.$joining.source.send(ioMsg.msgUnavailable())
   }
