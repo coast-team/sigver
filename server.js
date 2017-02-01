@@ -10,22 +10,13 @@ class SigverError {
     this.name = this.constructor.name;
   }
 
-  // Unapropriate message format, unknown message etc.
+  // Unapropriate message format (e.g. message is not a valid JSON string).
   static get MESSAGE_ERROR () { return 'MESSAGE_ERROR' }
 
-  // Unapropriate key format, key too long etc.
+  // Unapropriate key format (e.g. key too long).
   static get KEY_ERROR () { return 'KEY_ERROR' }
 
-  static get KEY_FOR_OPEN_EXISTS () { return 'KEY_EXISTS' }
-  static get KEY_FOR_JOIN_UNKNOWN () { return 'KEY_UNKNOWN' }
-
-  // The connection with the opener has been closed, so the server can no longer transmit him any data
-  static get OPENER_GONE () { return 'OPENER_NO_LONGER_AVAILABLE' }
-
-  // Same, as previous for the joining
-  static get JOINING_GONE () { return 'JOINING_NO_LONGER_AVAILABLE' }
-
-  // Before starting transmit data, the first request should be either 'open' or 'join'
+  // Before starting transmit data, the first request should be either 'open' or 'join'.
   static get TRANSMIT_BEFORE_OPEN () { return 'TRANSMIT_BEFORE_OPEN' }
   static get TRANSMIT_BEFORE_JOIN () { return 'TRANSMIT_BEFORE_JOIN' }
 }
@@ -74,12 +65,12 @@ class IOJsonString {
 
   get key () { return this._openKey ? this._openKey : this._joinKey }
 
-  static msgIsKeyOk (isOk) {
-    return `{"isKeyOk":${isOk}}`
+  static msgUnavailable (id) {
+    return id ? `{"unavailable":${id}}` : `{"unavailable":-1}`
   }
 
-  static msgJoiningUnavailable (id) {
-    return `{"id":${id},"unavailable":"true"}`
+  static msgOpened (opened) {
+    return `{"opened":${opened}}`
   }
 
   msgToJoining () {
@@ -181,10 +172,6 @@ class WSError {
     switch (err) {
       case SigverError.MESSAGE_ERROR: return 4000
       case SigverError.KEY_ERROR: return 4001
-      case SigverError.KEY_FOR_OPEN_EXISTS: return 4010
-      case SigverError.KEY_FOR_JOIN_UNKNOWN: return 4011
-      case SigverError.OPENER_GONE: return 4020
-      case SigverError.JOINING_GONE: return 4021
       case SigverError.TRANSMIT_BEFORE_OPEN: return 4022
       case SigverError.TRANSMIT_BEFORE_JOIN: return 4023
       default: throw new Error('Unknown Sigver Error')
@@ -229,11 +216,9 @@ class WSServer {
         } catch (err) {
           if (err.name !== 'SigverError') {
             console.log('Error which not a SigverError instance: ', err);
-          } else if (err.code !== SigverError.JOINING_GONE) {
+          } else {
             console.log(err.message);
             socket.close(WSError.code(err.code), err.message);
-          } else {
-            socket.send(IOJsonString.msgJoiningUnavailable(), errorOnSendCB);
           }
         }
       };
@@ -254,24 +239,31 @@ function errorOnSendCB (err) {
 }
 
 function open (socket, ioMsg) {
-  if (openers.has(ioMsg.key)) {
-    socket.send(IOJsonString.msgIsKeyOk(false), errorOnSendCB);
-    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, `The key "${ioMsg.key}" has already been used for open`)
-  }
-  socket.send(IOJsonString.msgIsKeyOk(true), errorOnSendCB);
   const opener = new Opener(socket);
-  opener.onclose = closeEvt => openers.delete(ioMsg.key);
-  openers.set(ioMsg.key, opener);
+  if (openers.has(ioMsg.key)) {
+    openers.get(ioMsg.key).add(opener);
+  } else {
+    const setOfOpeners = new Set();
+    setOfOpeners.add(opener);
+    openers.set(ioMsg.key, setOfOpeners);
+  }
+  socket.send(IOJsonString.msgOpened(true), errorOnSendCB);
+  opener.onclose = closeEvt => {
+    const setOfOpeners = openers.get(ioMsg.key);
+    setOfOpeners.delete(opener);
+    if (setOfOpeners.size === 0) {
+      openers.delete(ioMsg.key);
+    }
+  };
 }
 
 function join (socket, ioMsg) {
-  if (!openers.has(ioMsg.key)) {
-    socket.send(IOJsonString.msgIsKeyOk(false), errorOnSendCB);
-    throw new SigverError(SigverError.KEY_FOR_JOIN_UNKNOWN, 'Unknown key')
+  if (openers.has(ioMsg.key)) {
+    openers.get(ioMsg.key).values().next().value.addJoining(socket);
+    socket.send(IOJsonString.msgOpened(false), errorOnSendCB);
+  } else {
+    open(socket, ioMsg);
   }
-  socket.send(IOJsonString.msgIsKeyOk(true), errorOnSendCB);
-  const opener = openers.get(ioMsg.key);
-  opener.addJoining(socket);
 }
 
 function transmitToJoining (socket, ioMsg) {
@@ -280,7 +272,8 @@ function transmitToJoining (socket, ioMsg) {
   }
   const joining = socket.$opener.getJoining(ioMsg.id);
   if (joining === undefined || joining.source.readyState !== WebSocket.OPEN) {
-    throw new SigverError(SigverError.JOINING_GONE, 'Joining is no longer available')
+    // The connection with the opener has been closed, so the server can no longer transmit him any data.
+    socket.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id));
   }
   joining.source.send(ioMsg.msgToJoining(), errorOnSendCB);
 }
@@ -291,7 +284,8 @@ function transmitToOpener (socket, ioMsg) {
   }
   const opener = socket.$joining.opener;
   if (opener === undefined || opener.source.readyState !== WebSocket.OPEN) {
-    throw new SigverError(SigverError.OPENER_GONE, 'Opener is no longer available')
+    // Same, as previous for the joining
+    socket.$joining.source.send(ioMsg.msgUnavailable());
   }
   opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB);
 }

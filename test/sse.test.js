@@ -4,7 +4,7 @@ import { xhtSend, randomKey } from './util.js'
 
 const URL = 'http://localhost:8347'
 
-describe('Server-Sent-Event: Open, Join and Transmit data each other', () => {
+xdescribe('Server-Sent-Event: Open, Join and Transmit data each other', () => {
   let key = ''
 
   beforeEach(() => {

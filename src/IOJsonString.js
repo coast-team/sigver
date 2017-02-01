@@ -44,12 +44,12 @@ export default class IOJsonString {
 
   get key () { return this._openKey ? this._openKey : this._joinKey }
 
-  static msgIsKeyOk (isOk) {
-    return `{"isKeyOk":${isOk}}`
+  static msgUnavailable (id) {
+    return id ? `{"unavailable":${id}}` : `{"unavailable":-1}`
   }
 
-  static msgJoiningUnavailable (id) {
-    return `{"id":${id},"unavailable":"true"}`
+  static msgOpened (opened) {
+    return `{"opened":${opened}}`
   }
 
   msgToJoining () {
