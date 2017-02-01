@@ -48,7 +48,7 @@ describe('WebSocket', () => {
     })
   })
 
-  it('Should transmit data', done => {
+  it('Should transmit data between opener and joining', done => {
     const key = randomKey()
     const msg0 = JSON.stringify({alice: 'Hello, it is me!'})
     const msg1 = JSON.stringify({bob: 'Who me?'})
@@ -56,7 +56,7 @@ describe('WebSocket', () => {
       wsReady(done.fail),
       wsReady(done.fail)
     ]).then((wsArray) => {
-      const msgSeq1 = (function* () {
+      const msgSeq0 = (function* () {
         expect(yield).toEqual({opened: true})
         wsArray[1].send(JSON.stringify({join: key}))
         const msg = yield
@@ -67,17 +67,85 @@ describe('WebSocket', () => {
         expect(msg.data).toEqual(msg1)
         wsArray[0].send(JSON.stringify({id: msg.id, data: msg0}))
       })()
-      msgSeq1.next()
-      wsArray[0].onmessage = msgEvt => msgSeq1.next(JSON.parse(msgEvt.data))
+      msgSeq0.next()
+      wsArray[0].onmessage = msgEvt => msgSeq0.next(JSON.parse(msgEvt.data))
 
-      const msgSeq2 = (function* () {
+      const msgSeq1 = (function* () {
         expect(yield).toEqual({opened: false})
         wsArray[1].send(JSON.stringify({data: msg1}))
         expect(yield).toEqual({data: msg0})
         done()
       })()
+      msgSeq1.next()
+      wsArray[1].onmessage = msgEvt => msgSeq1.next(JSON.parse(msgEvt.data))
+      wsArray[0].send(JSON.stringify({join: key}))
+    })
+  })
+
+  it('Should transmit data between 1 opener and 2 joinings', done => {
+    const key = randomKey()
+    const msg01 = JSON.stringify({alice: 'Hello, it is me!'})
+    const msg02 = JSON.stringify({alice: 'Hello, it is me again!'})
+    const msg1 = JSON.stringify({bob: 'Who me?'})
+    const msg2 = JSON.stringify({jocker: 'Jocker!'})
+    let done0
+    let done1
+    let done2
+    Promise.all([
+      new Promise((resolve, reject) => { done0 = resolve }),
+      new Promise((resolve, reject) => { done1 = resolve }),
+      new Promise((resolve, reject) => { done2 = resolve })
+    ]).then(done)
+    Promise.all([
+      wsReady(done.fail),
+      wsReady(done.fail),
+      wsReady(done.fail)
+    ]).then((wsArray) => {
+      const msgSeq0 = (function* () {
+        expect(yield).toEqual({opened: true})
+        wsArray[1].send(JSON.stringify({join: key}))
+
+        let msg = yield
+        expect(msg.data).toBeDefined()
+        expect(msg.id).toBeDefined()
+        expect(typeof msg.id).toEqual('number')
+        expect(Object.keys(msg).length).toEqual(2)
+        expect(msg.data).toEqual(msg2)
+        wsArray[0].send(JSON.stringify({id: msg.id, data: msg02}))
+        wsArray[1].send(JSON.stringify({data: msg1}))
+
+        msg = yield
+        expect(msg.data).toBeDefined()
+        expect(msg.id).toBeDefined()
+        expect(typeof msg.id).toEqual('number')
+        expect(Object.keys(msg).length).toEqual(2)
+        expect(msg.data).toEqual(msg1)
+        wsArray[0].send(JSON.stringify({id: msg.id, data: msg01}))
+        done0()
+      })()
+      msgSeq0.next()
+      wsArray[0].onmessage = msgEvt => msgSeq0.next(JSON.parse(msgEvt.data))
+
+      const msgSeq1 = (function* () {
+        expect(yield).toEqual({opened: false})
+        wsArray[2].send(JSON.stringify({join: key}))
+
+        expect(yield).toEqual({data: msg01})
+        done1()
+      })()
+      msgSeq1.next()
+      wsArray[1].onmessage = msgEvt => msgSeq1.next(JSON.parse(msgEvt.data))
+
+      const msgSeq2 = (function* () {
+        expect(yield).toEqual({opened: false})
+        wsArray[2].send(JSON.stringify({data: msg2}))
+
+        expect(yield).toEqual({data: msg02})
+        done2()
+      })()
       msgSeq2.next()
-      wsArray[1].onmessage = msgEvt => msgSeq2.next(JSON.parse(msgEvt.data))
+      wsArray[2].onmessage = msgEvt => msgSeq2.next(JSON.parse(msgEvt.data))
+
       wsArray[0].send(JSON.stringify({join: key}))
     })
   })
