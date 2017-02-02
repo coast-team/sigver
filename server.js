@@ -5,20 +5,44 @@
 class SigverError {
   constructor (code, message) {
     Error.captureStackTrace(this, this.constructor);
-    this.message = code + ': ' + message;
     this.code = code;
+    this.message = `${this.getCodeText()}=${this.code}: ${message}`;
     this.name = this.constructor.name;
   }
 
   // Unapropriate message format (e.g. message is not a valid JSON string).
-  static get MESSAGE_ERROR () { return 'MESSAGE_ERROR' }
+  static get MESSAGE_ERROR () { return 4000 }
 
   // Unapropriate key format (e.g. key too long).
-  static get KEY_ERROR () { return 'KEY_ERROR' }
+  static get KEY_ERROR () { return 4001 }
 
   // Before starting transmit data, the first request should be either 'open' or 'join'.
-  static get TRANSMIT_BEFORE_OPEN () { return 'TRANSMIT_BEFORE_OPEN' }
-  static get TRANSMIT_BEFORE_JOIN () { return 'TRANSMIT_BEFORE_JOIN' }
+  static get TRANSMIT_BEFORE_OPEN () { return 4010 }
+  static get TRANSMIT_BEFORE_JOIN () { return 4011 }
+
+  /*
+   The Cross-Origin Resource Sharing error. Occurs when the request
+   was cross-origin and did not validate against the provided
+   CORS configuration.
+   */
+  static get CROS_ERROR () { return 4020 }
+
+  /*
+  The client did not authenticate before sending data
+   */
+  static get AUTH_ERROR () { return 4021 }
+
+  getCodeText () {
+    switch (this.code) {
+      case SigverError.MESSAGE_ERROR: return 'MESSAGE_ERROR'
+      case SigverError.KEY_ERROR: return 'KEY_ERROR'
+      case SigverError.TRANSMIT_BEFORE_OPEN: return 'TRANSMIT_BEFORE_OPEN'
+      case SigverError.TRANSMIT_BEFORE_JOIN: return 'TRANSMIT_BEFORE_JOIN'
+      case SigverError.CROS_ERROR: return 'CROSS_ORIGIN_RESOURCE_SHARING_ERROR'
+      case SigverError.AUTH_ERROR: return 'AUTHENTICATION_ERROR'
+      default: throw new Error('Unknown SigverError code')
+    }
+  }
 }
 
 const KEY_LENGTH_LIMIT = 512;
@@ -181,18 +205,6 @@ class Opener {
   }
 }
 
-class WSError {
-  static code (err) {
-    switch (err) {
-      case SigverError.MESSAGE_ERROR: return 4000
-      case SigverError.KEY_ERROR: return 4001
-      case SigverError.TRANSMIT_BEFORE_OPEN: return 4022
-      case SigverError.TRANSMIT_BEFORE_JOIN: return 4023
-      default: throw new Error('Unknown Sigver Error')
-    }
-  }
-}
-
 const openers = new Map();
 
 class WSServer {
@@ -236,10 +248,10 @@ class WSServer {
           }
         } catch (err) {
           if (err.name !== 'SigverError') {
-            console.log('Error which not a SigverError instance: ', err);
+            console.log(`WebSocketServer: Error which not a SigverError instance: : ${err.message}`);
           } else {
             console.log(err.message);
-            socket.close(WSError.code(err.code), err.message);
+            socket.close(err.code, err.message);
           }
         }
       };
@@ -306,37 +318,6 @@ function transmitToOpener (socket, ioMsg) {
   opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB);
 }
 
-class SSEError {
-
-  /*
-   The Cross-Origin Resource Sharing error. Occurs when the request
-   was cross-origin and did not validate against the provided
-   CORS configuration.
-   */
-  static get CROS_ERROR () { return 'CROSS_ORIGIN_RESOURCE_SHARING_ERROR' }
-
-  /*
-  The client did not authenticate before sending data
-   */
-  static get AUTH_ERROR () { return 'AUTHENTICATION_ERROR' }
-
-  static code (err) {
-    switch (err) {
-      case SigverError.MESSAGE_ERROR: return 520
-      case SigverError.KEY_ERROR: return 521
-      case SigverError.KEY_FOR_OPEN_EXISTS: return 560
-      case SigverError.KEY_FOR_JOIN_UNKNOWN: return 561
-      case SigverError.OPENER_GONE: return 570
-      case SigverError.JOINING_GONE: return 571
-      case SigverError.TRANSMIT_BEFORE_OPEN: return 572
-      case SigverError.TRANSMIT_BEFORE_JOIN: return 573
-      case SSEError.CROS_ERROR: return 580
-      case SSEError.AUTH_ERROR: return 581
-      default: throw new Error('Unknown Sigver Error')
-    }
-  }
-}
-
 let SseChannel = {};
 try {
   SseChannel = require('sse-channel');
@@ -380,7 +361,7 @@ class SSEServer {
           case 'GET': {
             sse.addClient(req, res, (err) => {
               if (err) {
-                console.log('SSEServer: ' + new SigverError(SSEError.CROS_ERROR, err.message).message);
+                console.log('SSEServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message);
               } else {
                 res.$id = generateId();
                 resps.set(res.$id, res);
@@ -404,7 +385,7 @@ class SSEServer {
                 const separator = body.indexOf('@');
                 myRes = resps.get(Number.parseInt(body.substring(0, separator), 10));
                 if (myRes === undefined) {
-                  throw new SigverError(SSEError.AUTH_ERROR, 'Send message before authentication')
+                  throw new SigverError(SigverError.AUTH_ERROR, 'Send message before authentication')
                 }
                 const data = body.substring(separator + 1);
                 const ioMsg = new IOJsonString(data);
@@ -412,33 +393,33 @@ class SSEServer {
                 if (ioMsg.isToOpen()) {
                   open$1(myRes, ioMsg);
                 } else if (ioMsg.isToJoin()) {
-                  join$1(myRes, ioMsg);
+                  if (openers$1.has(ioMsg.key)) {
+                    join$1(myRes, ioMsg);
+                  } else {
+                    open$1(myRes, ioMsg);
+                  }
                 } else if (ioMsg.isToTransmitToOpener()) {
                   transmitToOpener$1(myRes, ioMsg);
                 } else if (ioMsg.isToTransmitToJoining()) {
                   transmitToJoining$1(myRes, ioMsg);
                 }
-                res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin});
               } catch (err) {
-                let shouldSendError = true;
                 if (err.name !== 'SigverError') {
                   console.log(`SSEServer: Error is not a SigverError instance: ${err.message}`);
-                } else if (err.code !== SigverError.JOINING_GONE) {
-                  console.log(`SSEServer: ${err.message}`);
                 } else {
-                  shouldSendError = false;
-                  sse.send(IOJsonString.msgJoiningUnavailable(), [myRes]);
-                  res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin});
+                  console.log(`SSEServer: ${err.message}`);
+                  // sse.send(IOJsonString.msgJoiningUnavailable(), [myRes])
                 }
-                if (shouldSendError) {
-                  sse.removeClient(myRes);
-                  res.writeHead(
-                    SSEError.code(err.code),
-                    err.message,
-                    {'Access-Control-Allow-Origin': req.headers.origin}
-                  );
-                }
+                sse.send({
+                  event: 'close',
+                  data: JSON.stringify({
+                    code: err.code,
+                    reason: err.message
+                  })
+                }, [myRes]);
+                sse.removeClient(myRes);
               } finally {
+                res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin});
                 res.end();
               }
             });
@@ -468,24 +449,27 @@ function res404 (res, origin) {
 }
 
 function open$1 (res, ioMsg) {
-  if (openers$1.has(ioMsg.key)) {
-    sse.send(IOJsonString.msgIsKeyOk(false), [res]);
-    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, `The key ${ioMsg.key} has already been used for open`)
-  }
   const opener = new Opener(res);
-  sse.send(IOJsonString.msgIsKeyOk(true), [res]);
-  opener.onclose = closeEvt => openers$1.delete(ioMsg.key);
-  openers$1.set(ioMsg.key, opener);
+  if (openers$1.has(ioMsg.key)) {
+    openers$1.get(ioMsg.key).add(opener);
+  } else {
+    const setOfOpeners = new Set();
+    setOfOpeners.add(opener);
+    openers$1.set(ioMsg.key, setOfOpeners);
+  }
+  sse.send(IOJsonString.msgOpened(true), [res]);
+  opener.onclose = closeEvt => {
+    const setOfOpeners = openers$1.get(ioMsg.key);
+    setOfOpeners.delete(opener);
+    if (setOfOpeners.size === 0) {
+      openers$1.delete(ioMsg.key);
+    }
+  };
 }
 
 function join$1 (res, ioMsg) {
-  if (!openers$1.has(ioMsg.key)) {
-    sse.send(IOJsonString.msgIsKeyOk(false), [res]);
-    throw new SigverError(SigverError.KEY_FOR_JOIN_UNKNOWN, 'Unknown key')
-  }
-  const opener = openers$1.get(ioMsg.key);
-  opener.addJoining(res);
-  sse.send(IOJsonString.msgIsKeyOk(true), [res]);
+  openers$1.get(ioMsg.key).values().next().value.addJoining(res);
+  sse.send(IOJsonString.msgOpened(false), [res]);
 }
 
 function transmitToJoining$1 (res, ioMsg) {
@@ -495,9 +479,11 @@ function transmitToJoining$1 (res, ioMsg) {
     }
     const joining = res.$opener.getJoining(ioMsg.id);
     if (joining === undefined) {
-      throw new SigverError(SigverError.JOINING_GONE, 'Joining is no longer available')
+      sse.send(ioMsg.msgUnavailable(), [res.$opener.source]);
     }
     sse.send(ioMsg.msgToJoining(), [joining.source]);
+  } else {
+    throw new Error('EventSource error: undefined response object')
   }
 }
 
@@ -508,9 +494,11 @@ function transmitToOpener$1 (res, ioMsg) {
     }
     const opener = res.$joining.opener;
     if (opener === undefined) {
-      throw new SigverError(SigverError.OPENER_GONE, 'Opener is no longer available')
+      sse.send(ioMsg.msgUnavailable(res.$joining.id), [res.$joining.source]);
     }
     sse.send(ioMsg.msgToOpener(res.$joining.id), [opener.source]);
+  } else {
+    throw new Error('EventSource error: undefined response object')
   }
 }
 

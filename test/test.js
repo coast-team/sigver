@@ -1,17 +1,12 @@
-import SigverError from '../src/error/SigverError'
-import WSError from '../src/error/WSError'
-import SSEError from '../src/error/SSEError'
+import SigverError from '../src/SigverError'
 import { randomKey, RichEventSource } from './util.js'
 
 const test = (Source) => {
   let url = null
-  let ErrorSource = null
   if (Source.name === 'WebSocket') {
     url = 'ws://localhost:8034'
-    ErrorSource = WSError
   } else if (Source.name === 'RichEventSource') {
     url = 'http://localhost:8347'
-    ErrorSource = SSEError
   }
 
   describe(Source.name, () => {
@@ -277,7 +272,7 @@ const test = (Source) => {
 
       it(`with code: ${SigverError.MESSAGE_ERROR}`, done => {
         ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(ErrorSource.code(SigverError.MESSAGE_ERROR))
+          expect(closeEvt.code).toEqual(SigverError.MESSAGE_ERROR)
           done()
         }
         ws.onerror = err => done.fail(err.message)
@@ -287,7 +282,7 @@ const test = (Source) => {
       it(`with code: ${SigverError.KEY_ERROR} because of key length`, done => {
         const key = 'Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.'
         ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(ErrorSource.code(SigverError.KEY_ERROR))
+          expect(closeEvt.code).toEqual(SigverError.KEY_ERROR)
           done()
         }
         ws.onerror = err => done.fail(err.message)
@@ -296,7 +291,7 @@ const test = (Source) => {
 
       it(`with code: ${SigverError.KEY_ERROR} because of key type`, done => {
         ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(ErrorSource.code(SigverError.KEY_ERROR))
+          expect(closeEvt.code).toEqual(SigverError.KEY_ERROR)
           done()
         }
         ws.onerror = err => done.fail(err.message)
@@ -305,7 +300,7 @@ const test = (Source) => {
 
       it(`with code: ${SigverError.TRANSMIT_BEFORE_OPEN}`, done => {
         ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(ErrorSource.code(SigverError.TRANSMIT_BEFORE_OPEN))
+          expect(closeEvt.code).toEqual(SigverError.TRANSMIT_BEFORE_OPEN)
           done()
         }
         ws.onerror = err => done.fail(err.message)
@@ -314,7 +309,7 @@ const test = (Source) => {
 
       it(`with code: ${SigverError.TRANSMIT_BEFORE_JOIN}`, done => {
         ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(ErrorSource.code(SigverError.TRANSMIT_BEFORE_JOIN))
+          expect(closeEvt.code).toEqual(SigverError.TRANSMIT_BEFORE_JOIN)
           done()
         }
         ws.onerror = err => done.fail(err.message)

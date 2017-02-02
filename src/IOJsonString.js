@@ -1,4 +1,4 @@
-import SigverError from './error/SigverError'
+import SigverError from './SigverError'
 
 const KEY_LENGTH_LIMIT = 512
 

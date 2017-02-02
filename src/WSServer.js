@@ -1,7 +1,6 @@
 import IOJsonString from './IOJsonString'
 import Opener from './Opener'
-import SigverError from './error/SigverError'
-import WSError from '../src/error/WSError'
+import SigverError from './SigverError'
 
 const openers = new Map()
 
@@ -46,10 +45,10 @@ export default class WSServer {
           }
         } catch (err) {
           if (err.name !== 'SigverError') {
-            console.log('Error which not a SigverError instance: ', err)
+            console.log(`WebSocketServer: Error which not a SigverError instance: : ${err.message}`)
           } else {
             console.log(err.message)
-            socket.close(WSError.code(err.code), err.message)
+            socket.close(err.code, err.message)
           }
         }
       }

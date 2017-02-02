@@ -1,7 +1,6 @@
 import IOJsonString from './IOJsonString'
 import Opener from './Opener'
-import SigverError from './error/SigverError'
-import SSEError from './error/SSEError'
+import SigverError from './SigverError'
 
 let SseChannel = {}
 try {
@@ -46,7 +45,7 @@ export default class SSEServer {
           case 'GET': {
             sse.addClient(req, res, (err) => {
               if (err) {
-                console.log('SSEServer: ' + new SigverError(SSEError.CROS_ERROR, err.message).message)
+                console.log('SSEServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message)
               } else {
                 res.$id = generateId()
                 resps.set(res.$id, res)
@@ -70,7 +69,7 @@ export default class SSEServer {
                 const separator = body.indexOf('@')
                 myRes = resps.get(Number.parseInt(body.substring(0, separator), 10))
                 if (myRes === undefined) {
-                  throw new SigverError(SSEError.AUTH_ERROR, 'Send message before authentication')
+                  throw new SigverError(SigverError.AUTH_ERROR, 'Send message before authentication')
                 }
                 const data = body.substring(separator + 1)
                 const ioMsg = new IOJsonString(data)
@@ -98,7 +97,7 @@ export default class SSEServer {
                 sse.send({
                   event: 'close',
                   data: JSON.stringify({
-                    code: SSEError.code(err.code),
+                    code: err.code,
                     reason: err.message
                   })
                 }, [myRes])
