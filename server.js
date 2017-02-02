@@ -47,6 +47,10 @@ class SigverError {
 
 const KEY_LENGTH_LIMIT = 512;
 
+/**
+ * Parser of the incoming messages and Builder for the outcoming messages. It treats only
+ * JSON strings, otherwise throw an error.
+ */
 class IOJsonString {
 
   constructor (data) {
@@ -204,6 +208,9 @@ class Opener {
 
 const openers = new Map();
 
+/**
+ * The core of the signaling server (WebSocket and SSE) containing the main logic
+ */
 class ServerCore {
 
   constructor () {
@@ -214,6 +221,8 @@ class ServerCore {
     if (ioMsg.isToOpen()) {
       this.open(source, ioMsg);
     } else if (ioMsg.isToJoin()) {
+      // While trying to join, if the key exists, then join. If the key does
+      // not exist, then do as if the client want to open.
       if (openers.has(ioMsg.key)) {
         this.join(source, ioMsg);
       } else {
@@ -280,8 +289,18 @@ class ServerCore {
   }
 }
 
+/**
+ * WebSocket server able to use ws or uws modules.
+ */
 class WsServer extends ServerCore {
 
+  /**
+   * Start the server.
+   * @param {Object} options Options to be passed to ws or uws module
+   * @param {Function} cb Callback to execute after the server has been started
+   * @param {Object} [extraOptions]
+   * @param {string} extraOptions.wsLib Specify which module to use (ws or uws)
+   */
   start (options, cb = () => {}, extraOptions) {
     let WebSocket = {};
     try {
@@ -309,6 +328,7 @@ class WsServer extends ServerCore {
       };
       socket.onmessage = msgEvent => {
         try {
+          // Handle client message
           super.handleMessage(socket, new IOJsonString(msgEvent.data));
         } catch (err) {
           if (err.name !== 'SigverError') {
@@ -323,6 +343,9 @@ class WsServer extends ServerCore {
   }
 }
 
+/**
+ * A wrapper around ServerResponse object to simulate Socket API.
+ */
 class SseResponseWrapper {
   constructor (id, sse, res) {
     this.id = id;
@@ -367,6 +390,12 @@ sse.on('disconnect', (channel, res) => {
 });
 const resps = new Map();
 
+/**
+ * Server-Sent-Event server. Client should use EventSource API together
+ * with Ajax (Fetch or XMLHttpRequest API for example). EventSource is
+ * used for server to notify client and Ajax is used by client to send
+ * data to the server.
+ */
 class SseServer extends ServerCore {
 
   start (options, cb = () => {}) {

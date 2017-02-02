@@ -2,6 +2,10 @@ import SigverError from './SigverError'
 
 const KEY_LENGTH_LIMIT = 512
 
+/**
+ * Parser of the incoming messages and Builder for the outcoming messages. It treats only
+ * JSON strings, otherwise throw an error.
+ */
 export default class IOJsonString {
 
   constructor (data) {

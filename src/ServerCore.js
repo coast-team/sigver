@@ -4,6 +4,9 @@ import SigverError from './SigverError'
 
 const openers = new Map()
 
+/**
+ * The core of the signaling server (WebSocket and SSE) containing the main logic
+ */
 export default class ServerCore {
 
   constructor () {
@@ -14,6 +17,8 @@ export default class ServerCore {
     if (ioMsg.isToOpen()) {
       this.open(source, ioMsg)
     } else if (ioMsg.isToJoin()) {
+      // While trying to join, if the key exists, then join. If the key does
+      // not exist, then do as if the client want to open.
       if (openers.has(ioMsg.key)) {
         this.join(source, ioMsg)
       } else {

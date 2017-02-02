@@ -28,6 +28,12 @@ sse.on('disconnect', (channel, res) => {
 })
 const resps = new Map()
 
+/**
+ * Server-Sent-Event server. Client should use EventSource API together
+ * with Ajax (Fetch or XMLHttpRequest API for example). EventSource is
+ * used for server to notify client and Ajax is used by client to send
+ * data to the server.
+ */
 export default class SseServer extends ServerCore {
 
   start (options, cb = () => {}) {

@@ -1,8 +1,18 @@
 import IOJsonString from './IOJsonString'
 import ServerCore from './ServerCore'
 
+/**
+ * WebSocket server able to use ws or uws modules.
+ */
 export default class WsServer extends ServerCore {
 
+  /**
+   * Start the server.
+   * @param {Object} options Options to be passed to ws or uws module
+   * @param {Function} cb Callback to execute after the server has been started
+   * @param {Object} [extraOptions]
+   * @param {string} extraOptions.wsLib Specify which module to use (ws or uws)
+   */
   start (options, cb = () => {}, extraOptions) {
     let WebSocket = {}
     try {
@@ -30,6 +40,7 @@ export default class WsServer extends ServerCore {
       }
       socket.onmessage = msgEvent => {
         try {
+          // Handle client message
           super.handleMessage(socket, new IOJsonString(msgEvent.data))
         } catch (err) {
           if (err.name !== 'SigverError') {
