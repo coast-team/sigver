@@ -133,22 +133,20 @@ class Joining {
     this.source.$joining = this;
     this.opener = opener;
     this.id = id;
-
-    if (source.constructor.name !== 'ServerResponse') {
-      this.source.onclose = closeEvt => this.close();
-    }
+    this._opened = true;
+    this.source.onclose = closeEvt => {
+      this._opened = false;
+      if (this.opener) {
+        this.opener.deleteJoining(this);
+      }
+    };
   }
 
   get opened () {
-    if (this.source.constructor.name !== 'ServerResponse') {
+    if ('readyState' in this.source && 'OPEN' in this.source) {
       return this.source.readyState === this.source.OPEN
-    }
-    return true
-  }
-
-  close () {
-    if (this.opener) {
-      this.opener.deleteJoining(this);
+    } else {
+      return this._opened
     }
   }
 }
@@ -161,22 +159,21 @@ class Opener {
     this.source = source;
     this.joinings = new Map();
     this.onclose = () => {};
+    this._opened = true;
 
-    if (source.constructor.name !== 'ServerResponse') {
-      this.source.onclose = closeEvt => this.close();
-    }
+    this.source.onclose = closeEvt => {
+      this._opened = false;
+      this.onclose();
+      this.joinings.forEach(j => { j.opener = undefined; });
+    };
   }
 
   get opened () {
-    if (this.source.constructor.name !== 'ServerResponse') {
+    if ('readyState' in this.source && 'OPEN' in this.source) {
       return this.source.readyState === this.source.OPEN
+    } else {
+      return this._opened
     }
-    return true
-  }
-
-  close () {
-    this.onclose();
-    this.joinings.forEach(j => { j.opener = undefined; });
   }
 
   getJoining (id) {
@@ -230,6 +227,9 @@ class WSServer {
     this.server.on('error', err => console.error(`Server error: ${err}`));
 
     this.server.on('connection', socket => {
+      socket.onerror = err => {
+        console.log(`Socket error while sending ${err.code}: ${err.reason}`);
+      };
       socket.onmessage = msgEvent => {
         try {
           const ioMsg = new IOJsonString(msgEvent.data);
@@ -264,12 +264,6 @@ class WSServer {
   }
 }
 
-function errorOnSendCB (err) {
-  if (err) {
-    console.log(`Socket error while sending ${err.code}: ${err.reason}`);
-  }
-}
-
 function open (socket, ioMsg) {
   const opener = new Opener(socket);
   if (openers.has(ioMsg.key)) {
@@ -279,7 +273,7 @@ function open (socket, ioMsg) {
     setOfOpeners.add(opener);
     openers.set(ioMsg.key, setOfOpeners);
   }
-  socket.send(IOJsonString.msgOpened(true), errorOnSendCB);
+  socket.send(IOJsonString.msgOpened(true));
   opener.onclose = closeEvt => {
     const setOfOpeners = openers.get(ioMsg.key);
     setOfOpeners.delete(opener);
@@ -291,7 +285,7 @@ function open (socket, ioMsg) {
 
 function join (socket, ioMsg) {
   openers.get(ioMsg.key).values().next().value.addJoining(socket);
-  socket.send(IOJsonString.msgOpened(false), errorOnSendCB);
+  socket.send(IOJsonString.msgOpened(false));
 }
 
 function transmitToJoining (socket, ioMsg) {
@@ -303,7 +297,7 @@ function transmitToJoining (socket, ioMsg) {
     // The connection with the opener has been closed, so the server can no longer transmit him any data.
     socket.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id));
   }
-  joining.source.send(ioMsg.msgToJoining(), errorOnSendCB);
+  joining.source.send(ioMsg.msgToJoining());
 }
 
 function transmitToOpener (socket, ioMsg) {
@@ -315,7 +309,26 @@ function transmitToOpener (socket, ioMsg) {
     // Same, as previous for the joining
     socket.$joining.source.send(ioMsg.msgUnavailable());
   }
-  opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB);
+  opener.source.send(ioMsg.msgToOpener(socket.$joining.id));
+}
+
+class SseResponseWrapper {
+  constructor (id, sse, res) {
+    this.id = id;
+    this.sse = sse;
+    this.res = res;
+    this.res.$channel = this;
+    this.onclose = () => {};
+  }
+
+  close () {
+    this.onclose();
+  }
+
+  send (msg) {
+    this.sse.send(msg, [this.res]);
+  }
+
 }
 
 let SseChannel = {};
@@ -335,10 +348,10 @@ const sse = new SseChannel({
   }
 });
 sse.on('disconnect', (channel, res) => {
-  if ('$opener' in res) {
-    res.$opener.close();
-  } else if ('$joining' in res) {
-    res.$joining.close();
+  if ('$channel' in res) {
+    res.$channel.close();
+  } else {
+    throw new Error('Error on sse client disconnect. This should not be happend, check usage of sse.addClient')
   }
 });
 const openers$1 = new Map();
@@ -359,13 +372,13 @@ class SSEServer {
            made with EventSource API.
            */
           case 'GET': {
-            sse.addClient(req, res, (err) => {
+            sse.addClient(req, res, err => {
               if (err) {
                 console.log('SSEServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message);
               } else {
-                res.$id = generateId();
-                resps.set(res.$id, res);
-                sse.send({event: 'auth', data: res.$id}, [res]);
+                const sseChannel = new SseResponseWrapper(generateId(), sse, res);
+                resps.set(sseChannel.id, sseChannel);
+                sseChannel.send({event: 'auth', data: sseChannel.id});
               }
             });
             break
@@ -380,44 +393,42 @@ class SSEServer {
             req.on('data', chunk => body.push(chunk));
             req.on('end', () => {
               body = Buffer.concat(body).toString();
-              let myRes = null;
+              let channel = null;
               try {
                 const separator = body.indexOf('@');
-                myRes = resps.get(Number.parseInt(body.substring(0, separator), 10));
-                if (myRes === undefined) {
+                channel = resps.get(Number.parseInt(body.substring(0, separator), 10));
+                if (channel === undefined) {
                   throw new SigverError(SigverError.AUTH_ERROR, 'Send message before authentication')
                 }
                 const data = body.substring(separator + 1);
                 const ioMsg = new IOJsonString(data);
 
                 if (ioMsg.isToOpen()) {
-                  open$1(myRes, ioMsg);
+                  open$1(channel, ioMsg);
                 } else if (ioMsg.isToJoin()) {
                   if (openers$1.has(ioMsg.key)) {
-                    join$1(myRes, ioMsg);
+                    join$1(channel, ioMsg);
                   } else {
-                    open$1(myRes, ioMsg);
+                    open$1(channel, ioMsg);
                   }
                 } else if (ioMsg.isToTransmitToOpener()) {
-                  transmitToOpener$1(myRes, ioMsg);
+                  transmitToOpener$1(channel, ioMsg);
                 } else if (ioMsg.isToTransmitToJoining()) {
-                  transmitToJoining$1(myRes, ioMsg);
+                  transmitToJoining$1(channel, ioMsg);
                 }
               } catch (err) {
                 if (err.name !== 'SigverError') {
                   console.log(`SSEServer: Error is not a SigverError instance: ${err.message}`);
                 } else {
                   console.log(`SSEServer: ${err.message}`);
-                  // sse.send(IOJsonString.msgJoiningUnavailable(), [myRes])
                 }
-                sse.send({
-                  event: 'close',
-                  data: JSON.stringify({
-                    code: err.code,
-                    reason: err.message
-                  })
-                }, [myRes]);
-                sse.removeClient(myRes);
+                if (channel !== undefined) {
+                  channel.send({
+                    event: 'close',
+                    data: JSON.stringify({ code: err.code, reason: err.message })
+                  });
+                  sse.removeClient(channel.res);
+                }
               } finally {
                 res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin});
                 res.end();
@@ -448,8 +459,8 @@ function res404 (res, origin) {
   res.end();
 }
 
-function open$1 (res, ioMsg) {
-  const opener = new Opener(res);
+function open$1 (channel, ioMsg) {
+  const opener = new Opener(channel);
   if (openers$1.has(ioMsg.key)) {
     openers$1.get(ioMsg.key).add(opener);
   } else {
@@ -457,7 +468,7 @@ function open$1 (res, ioMsg) {
     setOfOpeners.add(opener);
     openers$1.set(ioMsg.key, setOfOpeners);
   }
-  sse.send(IOJsonString.msgOpened(true), [res]);
+  channel.send(IOJsonString.msgOpened(true));
   opener.onclose = closeEvt => {
     const setOfOpeners = openers$1.get(ioMsg.key);
     setOfOpeners.delete(opener);
@@ -467,39 +478,31 @@ function open$1 (res, ioMsg) {
   };
 }
 
-function join$1 (res, ioMsg) {
-  openers$1.get(ioMsg.key).values().next().value.addJoining(res);
-  sse.send(IOJsonString.msgOpened(false), [res]);
+function join$1 (channel, ioMsg) {
+  openers$1.get(ioMsg.key).values().next().value.addJoining(channel);
+  channel.send(IOJsonString.msgOpened(false));
 }
 
-function transmitToJoining$1 (res, ioMsg) {
-  if (res !== undefined) {
-    if (!('$opener' in res)) {
-      throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open')
-    }
-    const joining = res.$opener.getJoining(ioMsg.id);
-    if (joining === undefined) {
-      sse.send(ioMsg.msgUnavailable(), [res.$opener.source]);
-    }
-    sse.send(ioMsg.msgToJoining(), [joining.source]);
-  } else {
-    throw new Error('EventSource error: undefined response object')
+function transmitToJoining$1 (channel, ioMsg) {
+  if (!('$opener' in channel)) {
+    throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open')
   }
+  const joining = channel.$opener.getJoining(ioMsg.id);
+  if (joining === undefined || !joining.opened) {
+    channel.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id));
+  }
+  joining.source.send(ioMsg.msgToJoining());
 }
 
-function transmitToOpener$1 (res, ioMsg) {
-  if (res !== undefined) {
-    if (!('$joining' in res)) {
-      throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join')
-    }
-    const opener = res.$joining.opener;
-    if (opener === undefined) {
-      sse.send(ioMsg.msgUnavailable(res.$joining.id), [res.$joining.source]);
-    }
-    sse.send(ioMsg.msgToOpener(res.$joining.id), [opener.source]);
-  } else {
-    throw new Error('EventSource error: undefined response object')
+function transmitToOpener$1 (channel, ioMsg) {
+  if (!('$joining' in channel)) {
+    throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join')
   }
+  const opener = channel.$joining.opener;
+  if (opener === undefined || !opener.opened) {
+    channel.$joining.source.send(ioMsg.msgUnavailable());
+  }
+  opener.source.send(ioMsg.msgToOpener(channel.$joining.id));
 }
 
 function generateId () {

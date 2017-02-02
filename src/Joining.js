@@ -4,22 +4,20 @@ export default class Joining {
     this.source.$joining = this
     this.opener = opener
     this.id = id
-
-    if (source.constructor.name !== 'ServerResponse') {
-      this.source.onclose = closeEvt => this.close()
+    this._opened = true
+    this.source.onclose = closeEvt => {
+      this._opened = false
+      if (this.opener) {
+        this.opener.deleteJoining(this)
+      }
     }
   }
 
   get opened () {
-    if (this.source.constructor.name !== 'ServerResponse') {
+    if ('readyState' in this.source && 'OPEN' in this.source) {
       return this.source.readyState === this.source.OPEN
-    }
-    return true
-  }
-
-  close () {
-    if (this.opener) {
-      this.opener.deleteJoining(this)
+    } else {
+      return this._opened
     }
   }
 }

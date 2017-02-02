@@ -8,22 +8,21 @@ export default class Opener {
     this.source = source
     this.joinings = new Map()
     this.onclose = () => {}
+    this._opened = true
 
-    if (source.constructor.name !== 'ServerResponse') {
-      this.source.onclose = closeEvt => this.close()
+    this.source.onclose = closeEvt => {
+      this._opened = false
+      this.onclose()
+      this.joinings.forEach(j => { j.opener = undefined })
     }
   }
 
   get opened () {
-    if (this.source.constructor.name !== 'ServerResponse') {
+    if ('readyState' in this.source && 'OPEN' in this.source) {
       return this.source.readyState === this.source.OPEN
+    } else {
+      return this._opened
     }
-    return true
-  }
-
-  close () {
-    this.onclose()
-    this.joinings.forEach(j => { j.opener = undefined })
   }
 
   getJoining (id) {

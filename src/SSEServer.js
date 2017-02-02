@@ -1,5 +1,6 @@
 import IOJsonString from './IOJsonString'
 import Opener from './Opener'
+import SseResponseWrapper from './SseResponseWrapper'
 import SigverError from './SigverError'
 
 let SseChannel = {}
@@ -19,10 +20,10 @@ const sse = new SseChannel({
   }
 })
 sse.on('disconnect', (channel, res) => {
-  if ('$opener' in res) {
-    res.$opener.close()
-  } else if ('$joining' in res) {
-    res.$joining.close()
+  if ('$channel' in res) {
+    res.$channel.close()
+  } else {
+    throw new Error('Error on sse client disconnect. This should not be happend, check usage of sse.addClient')
   }
 })
 const openers = new Map()
@@ -43,13 +44,13 @@ export default class SSEServer {
            made with EventSource API.
            */
           case 'GET': {
-            sse.addClient(req, res, (err) => {
+            sse.addClient(req, res, err => {
               if (err) {
                 console.log('SSEServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message)
               } else {
-                res.$id = generateId()
-                resps.set(res.$id, res)
-                sse.send({event: 'auth', data: res.$id}, [res])
+                const sseChannel = new SseResponseWrapper(generateId(), sse, res)
+                resps.set(sseChannel.id, sseChannel)
+                sseChannel.send({event: 'auth', data: sseChannel.id})
               }
             })
             break
@@ -64,44 +65,42 @@ export default class SSEServer {
             req.on('data', chunk => body.push(chunk))
             req.on('end', () => {
               body = Buffer.concat(body).toString()
-              let myRes = null
+              let channel = null
               try {
                 const separator = body.indexOf('@')
-                myRes = resps.get(Number.parseInt(body.substring(0, separator), 10))
-                if (myRes === undefined) {
+                channel = resps.get(Number.parseInt(body.substring(0, separator), 10))
+                if (channel === undefined) {
                   throw new SigverError(SigverError.AUTH_ERROR, 'Send message before authentication')
                 }
                 const data = body.substring(separator + 1)
                 const ioMsg = new IOJsonString(data)
 
                 if (ioMsg.isToOpen()) {
-                  open(myRes, ioMsg)
+                  open(channel, ioMsg)
                 } else if (ioMsg.isToJoin()) {
                   if (openers.has(ioMsg.key)) {
-                    join(myRes, ioMsg)
+                    join(channel, ioMsg)
                   } else {
-                    open(myRes, ioMsg)
+                    open(channel, ioMsg)
                   }
                 } else if (ioMsg.isToTransmitToOpener()) {
-                  transmitToOpener(myRes, ioMsg)
+                  transmitToOpener(channel, ioMsg)
                 } else if (ioMsg.isToTransmitToJoining()) {
-                  transmitToJoining(myRes, ioMsg)
+                  transmitToJoining(channel, ioMsg)
                 }
               } catch (err) {
                 if (err.name !== 'SigverError') {
                   console.log(`SSEServer: Error is not a SigverError instance: ${err.message}`)
                 } else {
                   console.log(`SSEServer: ${err.message}`)
-                  // sse.send(IOJsonString.msgJoiningUnavailable(), [myRes])
                 }
-                sse.send({
-                  event: 'close',
-                  data: JSON.stringify({
-                    code: err.code,
-                    reason: err.message
+                if (channel !== undefined) {
+                  channel.send({
+                    event: 'close',
+                    data: JSON.stringify({ code: err.code, reason: err.message })
                   })
-                }, [myRes])
-                sse.removeClient(myRes)
+                  sse.removeClient(channel.res)
+                }
               } finally {
                 res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin})
                 res.end()
@@ -132,8 +131,8 @@ function res404 (res, origin) {
   res.end()
 }
 
-function open (res, ioMsg) {
-  const opener = new Opener(res)
+function open (channel, ioMsg) {
+  const opener = new Opener(channel)
   if (openers.has(ioMsg.key)) {
     openers.get(ioMsg.key).add(opener)
   } else {
@@ -141,7 +140,7 @@ function open (res, ioMsg) {
     setOfOpeners.add(opener)
     openers.set(ioMsg.key, setOfOpeners)
   }
-  sse.send(IOJsonString.msgOpened(true), [res])
+  channel.send(IOJsonString.msgOpened(true))
   opener.onclose = closeEvt => {
     const setOfOpeners = openers.get(ioMsg.key)
     setOfOpeners.delete(opener)
@@ -151,39 +150,31 @@ function open (res, ioMsg) {
   }
 }
 
-function join (res, ioMsg) {
-  openers.get(ioMsg.key).values().next().value.addJoining(res)
-  sse.send(IOJsonString.msgOpened(false), [res])
+function join (channel, ioMsg) {
+  openers.get(ioMsg.key).values().next().value.addJoining(channel)
+  channel.send(IOJsonString.msgOpened(false))
 }
 
-function transmitToJoining (res, ioMsg) {
-  if (res !== undefined) {
-    if (!('$opener' in res)) {
-      throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open')
-    }
-    const joining = res.$opener.getJoining(ioMsg.id)
-    if (joining === undefined) {
-      sse.send(ioMsg.msgUnavailable(), [res.$opener.source])
-    }
-    sse.send(ioMsg.msgToJoining(), [joining.source])
-  } else {
-    throw new Error('EventSource error: undefined response object')
+function transmitToJoining (channel, ioMsg) {
+  if (!('$opener' in channel)) {
+    throw new SigverError(SigverError.TRANSMIT_BEFORE_OPEN, 'Transmitting data before open')
   }
+  const joining = channel.$opener.getJoining(ioMsg.id)
+  if (joining === undefined || !joining.opened) {
+    channel.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id))
+  }
+  joining.source.send(ioMsg.msgToJoining())
 }
 
-function transmitToOpener (res, ioMsg) {
-  if (res !== undefined) {
-    if (!('$joining' in res)) {
-      throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join')
-    }
-    const opener = res.$joining.opener
-    if (opener === undefined) {
-      sse.send(ioMsg.msgUnavailable(res.$joining.id), [res.$joining.source])
-    }
-    sse.send(ioMsg.msgToOpener(res.$joining.id), [opener.source])
-  } else {
-    throw new Error('EventSource error: undefined response object')
+function transmitToOpener (channel, ioMsg) {
+  if (!('$joining' in channel)) {
+    throw new SigverError(SigverError.TRANSMIT_BEFORE_JOIN, 'Transmitting data before join')
   }
+  const opener = channel.$joining.opener
+  if (opener === undefined || !opener.opened) {
+    channel.$joining.source.send(ioMsg.msgUnavailable())
+  }
+  opener.source.send(ioMsg.msgToOpener(channel.$joining.id))
 }
 
 function generateId () {

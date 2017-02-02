@@ -27,6 +27,9 @@ export default class WSServer {
     this.server.on('error', err => console.error(`Server error: ${err}`))
 
     this.server.on('connection', socket => {
+      socket.onerror = err => {
+        console.log(`Socket error while sending ${err.code}: ${err.reason}`)
+      }
       socket.onmessage = msgEvent => {
         try {
           const ioMsg = new IOJsonString(msgEvent.data)
@@ -61,12 +64,6 @@ export default class WSServer {
   }
 }
 
-function errorOnSendCB (err) {
-  if (err) {
-    console.log(`Socket error while sending ${err.code}: ${err.reason}`)
-  }
-}
-
 function open (socket, ioMsg) {
   const opener = new Opener(socket)
   if (openers.has(ioMsg.key)) {
@@ -76,7 +73,7 @@ function open (socket, ioMsg) {
     setOfOpeners.add(opener)
     openers.set(ioMsg.key, setOfOpeners)
   }
-  socket.send(IOJsonString.msgOpened(true), errorOnSendCB)
+  socket.send(IOJsonString.msgOpened(true))
   opener.onclose = closeEvt => {
     const setOfOpeners = openers.get(ioMsg.key)
     setOfOpeners.delete(opener)
@@ -88,7 +85,7 @@ function open (socket, ioMsg) {
 
 function join (socket, ioMsg) {
   openers.get(ioMsg.key).values().next().value.addJoining(socket)
-  socket.send(IOJsonString.msgOpened(false), errorOnSendCB)
+  socket.send(IOJsonString.msgOpened(false))
 }
 
 function transmitToJoining (socket, ioMsg) {
@@ -100,7 +97,7 @@ function transmitToJoining (socket, ioMsg) {
     // The connection with the opener has been closed, so the server can no longer transmit him any data.
     socket.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id))
   }
-  joining.source.send(ioMsg.msgToJoining(), errorOnSendCB)
+  joining.source.send(ioMsg.msgToJoining())
 }
 
 function transmitToOpener (socket, ioMsg) {
@@ -112,5 +109,5 @@ function transmitToOpener (socket, ioMsg) {
     // Same, as previous for the joining
     socket.$joining.source.send(ioMsg.msgUnavailable())
   }
-  opener.source.send(ioMsg.msgToOpener(socket.$joining.id), errorOnSendCB)
+  opener.source.send(ioMsg.msgToOpener(socket.$joining.id))
 }
