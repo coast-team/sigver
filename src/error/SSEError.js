@@ -18,10 +18,6 @@ export default class SSEError {
     switch (err) {
       case SigverError.MESSAGE_ERROR: return 520
       case SigverError.KEY_ERROR: return 521
-      case SigverError.KEY_FOR_OPEN_EXISTS: return 560
-      case SigverError.KEY_FOR_JOIN_UNKNOWN: return 561
-      case SigverError.OPENER_GONE: return 570
-      case SigverError.JOINING_GONE: return 571
       case SigverError.TRANSMIT_BEFORE_OPEN: return 572
       case SigverError.TRANSMIT_BEFORE_JOIN: return 573
       case SSEError.CROS_ERROR: return 580

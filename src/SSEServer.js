@@ -78,33 +78,33 @@ export default class SSEServer {
                 if (ioMsg.isToOpen()) {
                   open(myRes, ioMsg)
                 } else if (ioMsg.isToJoin()) {
-                  join(myRes, ioMsg)
+                  if (openers.has(ioMsg.key)) {
+                    join(myRes, ioMsg)
+                  } else {
+                    open(myRes, ioMsg)
+                  }
                 } else if (ioMsg.isToTransmitToOpener()) {
                   transmitToOpener(myRes, ioMsg)
                 } else if (ioMsg.isToTransmitToJoining()) {
                   transmitToJoining(myRes, ioMsg)
                 }
-                res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin})
               } catch (err) {
-                let shouldSendError = true
                 if (err.name !== 'SigverError') {
                   console.log(`SSEServer: Error is not a SigverError instance: ${err.message}`)
-                } else if (err.code !== SigverError.JOINING_GONE) {
-                  console.log(`SSEServer: ${err.message}`)
                 } else {
-                  shouldSendError = false
-                  sse.send(IOJsonString.msgJoiningUnavailable(), [myRes])
-                  res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin})
+                  console.log(`SSEServer: ${err.message}`)
+                  // sse.send(IOJsonString.msgJoiningUnavailable(), [myRes])
                 }
-                if (shouldSendError) {
-                  sse.removeClient(myRes)
-                  res.writeHead(
-                    SSEError.code(err.code),
-                    err.message,
-                    {'Access-Control-Allow-Origin': req.headers.origin}
-                  )
-                }
+                sse.send({
+                  event: 'close',
+                  data: JSON.stringify({
+                    code: SSEError.code(err.code),
+                    reason: err.message
+                  })
+                }, [myRes])
+                sse.removeClient(myRes)
               } finally {
+                res.writeHead(200, {'Access-Control-Allow-Origin': req.headers.origin})
                 res.end()
               }
             })
@@ -134,24 +134,27 @@ function res404 (res, origin) {
 }
 
 function open (res, ioMsg) {
-  if (openers.has(ioMsg.key)) {
-    sse.send(IOJsonString.msgIsKeyOk(false), [res])
-    throw new SigverError(SigverError.KEY_FOR_OPEN_EXISTS, `The key ${ioMsg.key} has already been used for open`)
-  }
   const opener = new Opener(res)
-  sse.send(IOJsonString.msgIsKeyOk(true), [res])
-  opener.onclose = closeEvt => openers.delete(ioMsg.key)
-  openers.set(ioMsg.key, opener)
+  if (openers.has(ioMsg.key)) {
+    openers.get(ioMsg.key).add(opener)
+  } else {
+    const setOfOpeners = new Set()
+    setOfOpeners.add(opener)
+    openers.set(ioMsg.key, setOfOpeners)
+  }
+  sse.send(IOJsonString.msgOpened(true), [res])
+  opener.onclose = closeEvt => {
+    const setOfOpeners = openers.get(ioMsg.key)
+    setOfOpeners.delete(opener)
+    if (setOfOpeners.size === 0) {
+      openers.delete(ioMsg.key)
+    }
+  }
 }
 
 function join (res, ioMsg) {
-  if (!openers.has(ioMsg.key)) {
-    sse.send(IOJsonString.msgIsKeyOk(false), [res])
-    throw new SigverError(SigverError.KEY_FOR_JOIN_UNKNOWN, 'Unknown key')
-  }
-  const opener = openers.get(ioMsg.key)
-  opener.addJoining(res)
-  sse.send(IOJsonString.msgIsKeyOk(true), [res])
+  openers.get(ioMsg.key).values().next().value.addJoining(res)
+  sse.send(IOJsonString.msgOpened(false), [res])
 }
 
 function transmitToJoining (res, ioMsg) {
@@ -161,9 +164,11 @@ function transmitToJoining (res, ioMsg) {
     }
     const joining = res.$opener.getJoining(ioMsg.id)
     if (joining === undefined) {
-      throw new SigverError(SigverError.JOINING_GONE, 'Joining is no longer available')
+      sse.send(ioMsg.msgUnavailable(), [res.$opener.source])
     }
     sse.send(ioMsg.msgToJoining(), [joining.source])
+  } else {
+    throw new Error('EventSource error: undefined response object')
   }
 }
 
@@ -174,9 +179,11 @@ function transmitToOpener (res, ioMsg) {
     }
     const opener = res.$joining.opener
     if (opener === undefined) {
-      throw new SigverError(SigverError.OPENER_GONE, 'Opener is no longer available')
+      sse.send(ioMsg.msgUnavailable(res.$joining.id), [res.$joining.source])
     }
     sse.send(ioMsg.msgToOpener(res.$joining.id), [opener.source])
+  } else {
+    throw new Error('EventSource error: undefined response object')
   }
 }
 
