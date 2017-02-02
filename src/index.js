@@ -37,14 +37,18 @@ if (program.type) type = program.type
 if (program.wsLib) wsLib = program.wsLib
 
 switch (type) {
-  case 'ws':
-    WSServer.start({host, port}, () => {
+  case 'ws': {
+    const wsServer = new WSServer()
+    wsServer.start({host, port}, () => {
       console.log(`WebSocket server is listening on: ws://${host}:${port}`)
     }, {wsLib})
     break
-  case 'sse':
-    SSEServer.start({host, port}, () => {
+  }
+  case 'sse': {
+    const sseServer = new SSEServer()
+    sseServer.start({host, port}, () => {
       console.log(`EventSource server is listening on: http://${host}:${port}`)
     })
     break
+  }
 }
