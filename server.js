@@ -280,7 +280,7 @@ class ServerCore {
   }
 }
 
-class WSServer extends ServerCore {
+class WsServer extends ServerCore {
 
   start (options, cb = () => {}, extraOptions) {
     let WebSocket = {};
@@ -367,7 +367,7 @@ sse.on('disconnect', (channel, res) => {
 });
 const resps = new Map();
 
-class SSEServer extends ServerCore {
+class SseServer extends ServerCore {
 
   start (options, cb = () => {}) {
     // Starting server
@@ -381,7 +381,7 @@ class SSEServer extends ServerCore {
           case 'GET': {
             sse.addClient(req, res, err => {
               if (err) {
-                console.log('SSEServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message);
+                console.log('SseServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message);
               } else {
                 const sseChannel = new SseResponseWrapper(generateId(), sse, res);
                 resps.set(sseChannel.id, sseChannel);
@@ -412,9 +412,9 @@ class SSEServer extends ServerCore {
                 super.handleMessage(resWrapper, new IOJsonString(data));
               } catch (err) {
                 if (err.name !== 'SigverError') {
-                  console.log(`SSEServer: Error is not a SigverError instance: ${err.message}`);
+                  console.log(`SseServer: Error is not a SigverError instance: ${err.message}`);
                 } else {
-                  console.log(`SSEServer: ${err.message}`);
+                  console.log(`SseServer: ${err.message}`);
                 }
                 if (resWrapper !== undefined) {
                   resWrapper.send({
@@ -495,14 +495,14 @@ if (program.wsLib) wsLib = program.wsLib;
 
 switch (type) {
   case 'ws': {
-    const wsServer = new WSServer();
+    const wsServer = new WsServer();
     wsServer.start({host, port}, () => {
       console.log(`WebSocket server is listening on: ws://${host}:${port}`);
     }, {wsLib});
     break
   }
   case 'sse': {
-    const sseServer = new SSEServer();
+    const sseServer = new SseServer();
     sseServer.start({host, port}, () => {
       console.log(`EventSource server is listening on: http://${host}:${port}`);
     });

@@ -28,7 +28,7 @@ sse.on('disconnect', (channel, res) => {
 })
 const resps = new Map()
 
-export default class SSEServer extends ServerCore {
+export default class SseServer extends ServerCore {
 
   start (options, cb = () => {}) {
     // Starting server
@@ -42,7 +42,7 @@ export default class SSEServer extends ServerCore {
           case 'GET': {
             sse.addClient(req, res, err => {
               if (err) {
-                console.log('SSEServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message)
+                console.log('SseServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message)
               } else {
                 const sseChannel = new SseResponseWrapper(generateId(), sse, res)
                 resps.set(sseChannel.id, sseChannel)
@@ -73,9 +73,9 @@ export default class SSEServer extends ServerCore {
                 super.handleMessage(resWrapper, new IOJsonString(data))
               } catch (err) {
                 if (err.name !== 'SigverError') {
-                  console.log(`SSEServer: Error is not a SigverError instance: ${err.message}`)
+                  console.log(`SseServer: Error is not a SigverError instance: ${err.message}`)
                 } else {
-                  console.log(`SSEServer: ${err.message}`)
+                  console.log(`SseServer: ${err.message}`)
                 }
                 if (resWrapper !== undefined) {
                   resWrapper.send({

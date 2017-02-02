@@ -1,7 +1,7 @@
 import IOJsonString from './IOJsonString'
 import ServerCore from './ServerCore'
 
-export default class WSServer extends ServerCore {
+export default class WsServer extends ServerCore {
 
   start (options, cb = () => {}, extraOptions) {
     let WebSocket = {}

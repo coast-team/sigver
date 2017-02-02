@@ -1,5 +1,5 @@
-import WSServer from './WSServer'
-import SSEServer from './SSEServer'
+import WsServer from './WsServer'
+import SseServer from './SseServer'
 const program = require('commander')
 
 let host = process.env.NODE_IP || '0.0.0.0'
@@ -38,14 +38,14 @@ if (program.wsLib) wsLib = program.wsLib
 
 switch (type) {
   case 'ws': {
-    const wsServer = new WSServer()
+    const wsServer = new WsServer()
     wsServer.start({host, port}, () => {
       console.log(`WebSocket server is listening on: ws://${host}:${port}`)
     }, {wsLib})
     break
   }
   case 'sse': {
-    const sseServer = new SSEServer()
+    const sseServer = new SseServer()
     sseServer.start({host, port}, () => {
       console.log(`EventSource server is listening on: http://${host}:${port}`)
     })
