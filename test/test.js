@@ -1,7 +1,12 @@
 import SigverError from '../src/SigverError'
 import { randomKey, RichEventSource } from './util.js'
 
-const test = (Source) => {
+describe('', () => {
+  test(WebSocket)
+  test(RichEventSource)
+})
+
+function test (Source) {
   let url = null
   if (Source.name === 'WebSocket') {
     url = 'ws://localhost:8034'
@@ -318,8 +323,3 @@ const test = (Source) => {
     })
   })
 }
-
-describe('GLOBAL', () => {
-  test(WebSocket)
-  test(RichEventSource)
-})
