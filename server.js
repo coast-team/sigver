@@ -67,17 +67,17 @@ class IOJsonString {
     }
     const keysNb = Object.keys(msg).length;
     if (('open' in msg) && keysNb === 1) {
+      this.validateKey(msg.open);
       this._openKey = msg.open;
-      this.validateKey();
     } else if ('join' in msg && keysNb === 1) {
+      this.validateKey(msg.join);
       this._joinKey = msg.join;
-      this.validateKey();
     } else if ('data' in msg && keysNb === 1) {
       this.data = JSON.stringify(msg.data);
     } else if ('id' in msg && 'data' in msg && keysNb === 2) {
+      this.validateId(msg.id);
       this.data = JSON.stringify(msg.data);
       this.id = msg.id;
-      this.validateId();
     } else {
       throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message')
     }
@@ -109,22 +109,22 @@ class IOJsonString {
     return `{"id":${id},"data":${this.data}}`
   }
 
-  validateKey () {
-    if (this.key.length > KEY_LENGTH_LIMIT) {
+  validateKey (key) {
+    if (typeof key !== 'string') {
+      throw new SigverError(SigverError.KEY_ERROR, `The key ${key} is not a string`)
+    }
+    if (key === '') {
+      throw new SigverError(SigverError.KEY_ERROR, `The key ${key} is an empty string`)
+    }
+    if (key.length > KEY_LENGTH_LIMIT) {
       throw new SigverError(SigverError.KEY_ERROR,
         `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
       )
     }
-    if (typeof this.key !== 'string') {
-      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is not a string`)
-    }
-    if (this.key === '') {
-      throw new SigverError(SigverError.KEY_ERROR, `The key ${this.key} is an empty string`)
-    }
   }
 
-  validateId () {
-    if (typeof this.id !== 'number') {
+  validateId (id) {
+    if (typeof id !== 'number') {
       throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a number`)
     }
   }
@@ -332,7 +332,7 @@ class WsServer extends ServerCore {
           super.handleMessage(socket, new IOJsonString(msgEvent.data));
         } catch (err) {
           if (err.name !== 'SigverError') {
-            console.log(`WebSocketServer: Error which not a SigverError instance: : ${err.message}`);
+            console.log(`WebSocketServer: Error which not a SigverError instance: : ${err.message}`, err.stack);
           } else {
             console.log(err.message);
             socket.close(err.code, err.message);

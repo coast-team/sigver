@@ -44,7 +44,7 @@ export default class WsServer extends ServerCore {
           super.handleMessage(socket, new IOJsonString(msgEvent.data))
         } catch (err) {
           if (err.name !== 'SigverError') {
-            console.log(`WebSocketServer: Error which not a SigverError instance: : ${err.message}`)
+            console.log(`WebSocketServer: Error which not a SigverError instance: : ${err.message}`, err.stack)
           } else {
             console.log(err.message)
             socket.close(err.code, err.message)
