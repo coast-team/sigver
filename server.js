@@ -265,7 +265,7 @@ class ServerCore {
     }
     const joining = source.$opener.getJoining(ioMsg.id);
     if (joining === undefined || !joining.opened) {
-      source.$opener.source.send(ioMsg.msgUnavailable(ioMsg.id));
+      source.$opener.source.send(IOJsonString.msgUnavailable(ioMsg.id));
     }
     joining.source.send(ioMsg.msgToJoining());
   }
@@ -276,7 +276,7 @@ class ServerCore {
     }
     const opener = source.$joining.opener;
     if (opener === undefined || !opener.opened) {
-      source.$joining.source.send(ioMsg.msgUnavailable());
+      source.$joining.source.send(IOJsonString.msgUnavailable());
     }
     opener.source.send(ioMsg.msgToOpener(source.$joining.id));
   }
