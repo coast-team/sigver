@@ -7,10 +7,13 @@
   "bin": {
     "sigver": "server.js"
   },
+  "engines": {
+    "node": ">=6.9.5"
+  },
   "scripts": {
     "start": "node server.js",
     "sse": "npm run build && node server.js -h localhost -t sse",
-    "build": "rollup -c rollup.config.js",
+    "build": "rollup -c rollup.config_ws.js && rollup -c rollup.config.js",
     "pretest": "npm run build && pm2 startOrReload process.yml",
     "test": "karma start karma.conf.js",
     "precommit": "npm test -- --no-auto-watch --single-run",
@@ -59,6 +62,7 @@
     "karma-spec-reporter": "0.0.26",
     "pm2": "^2.3.0",
     "rollup": "^0.41.4",
+    "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-filesize": "^1.0.1",
     "semantic-release": "^6.3.2",
     "validate-commit-msg": "^2.11.1"
