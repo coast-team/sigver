@@ -17,8 +17,8 @@
     "pretest": "npm run build && pm2 startOrReload process.yml",
     "test": "karma start karma.conf.js",
     "precommit": "npm test -- --no-auto-watch --single-run",
-    "commit": "git-cz",
     "commitmsg": "validate-commit-msg",
+    "cz": "git-cz",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "keywords": [
