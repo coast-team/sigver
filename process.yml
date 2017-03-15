@@ -1,7 +1,7 @@
 apps:
   - script : server.js
     name: 'sigver-ws-test'
-    args: '--port 8034 --type ws'
+    args: '--port 8034 --type ws --wsLib uws'
   - script : server.js
     name: 'sigver-sse-test'
     args: '--port 8347 --type sse'
