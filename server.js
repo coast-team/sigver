@@ -293,7 +293,6 @@ class ServerCore {
  * WebSocket server able to use ws or uws modules.
  */
 class WsServer extends ServerCore {
-
   /**
    * Start the server.
    * @param {Object} options Options to be passed to ws or uws module
@@ -302,6 +301,10 @@ class WsServer extends ServerCore {
    * @param {string} extraOptions.wsLib Specify which module to use (ws or uws)
    */
   start (options, cb = () => {}, extraOptions) {
+    const defaultOptions = {
+      perMessageDeflate: false
+    };
+    const settings = Object.assign({}, defaultOptions, options);
     let WebSocket = {};
     try {
       WebSocket = require(extraOptions.wsLib);
@@ -318,7 +321,7 @@ class WsServer extends ServerCore {
     const WebSocketServer = WebSocket.Server;
 
     // Starting server
-    this.server = new WebSocketServer(options, cb);
+    this.server = new WebSocketServer(settings, cb);
 
     this.server.on('error', err => console.error(`Server error: ${err}`));
 
