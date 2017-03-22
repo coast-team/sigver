@@ -52,7 +52,6 @@ const KEY_LENGTH_LIMIT = 512;
  * JSON strings, otherwise throw an error.
  */
 class IOJsonString {
-
   constructor (data) {
     this.id = undefined;
     this.data = undefined;
@@ -128,7 +127,6 @@ class IOJsonString {
       throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a number`)
     }
   }
-
 }
 
 class Joining {
@@ -212,7 +210,6 @@ const openers = new Map();
  * The core of the signaling server (WebSocket and SSE) containing the main logic
  */
 class ServerCore {
-
   constructor () {
     this.server = null;
   }
@@ -365,7 +362,6 @@ class SseResponseWrapper {
   send (msg) {
     this.sse.send(msg, [this.res]);
   }
-
 }
 
 let SseChannel = {};
@@ -400,7 +396,6 @@ const resps = new Map();
  * data to the server.
  */
 class SseServer extends ServerCore {
-
   start (options, cb = () => {}) {
     // Starting server
     this.server = http.createServer((req, res) => {

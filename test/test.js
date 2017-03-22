@@ -66,7 +66,7 @@ function test (Source) {
         wsReady(done.fail),
         wsReady(done.fail)
       ]).then((wsArray) => {
-        const msgSeq0 = (function* () {
+        const msgSeq0 = (function * () {
           expect(yield).toEqual({opened: true})
           wsArray[1].send(JSON.stringify({join: key}))
           const msg = yield
@@ -80,7 +80,7 @@ function test (Source) {
         msgSeq0.next()
         wsArray[0].onmessage = msgEvt => msgSeq0.next(JSON.parse(msgEvt.data))
 
-        const msgSeq1 = (function* () {
+        const msgSeq1 = (function * () {
           expect(yield).toEqual({opened: false})
           wsArray[1].send(JSON.stringify({data: msg1}))
           expect(yield).toEqual({data: msg0})
@@ -111,7 +111,7 @@ function test (Source) {
         wsReady(done.fail),
         wsReady(done.fail)
       ]).then((wsArray) => {
-        const msgSeq0 = (function* () {
+        const msgSeq0 = (function * () {
           expect(yield).toEqual({opened: true})
           wsArray[1].send(JSON.stringify({join: key}))
 
@@ -136,7 +136,7 @@ function test (Source) {
         msgSeq0.next()
         wsArray[0].onmessage = msgEvt => msgSeq0.next(JSON.parse(msgEvt.data))
 
-        const msgSeq1 = (function* () {
+        const msgSeq1 = (function * () {
           expect(yield).toEqual({opened: false})
           wsArray[2].send(JSON.stringify({join: key}))
 
@@ -146,7 +146,7 @@ function test (Source) {
         msgSeq1.next()
         wsArray[1].onmessage = msgEvt => msgSeq1.next(JSON.parse(msgEvt.data))
 
-        const msgSeq2 = (function* () {
+        const msgSeq2 = (function * () {
           expect(yield).toEqual({opened: false})
           wsArray[2].send(JSON.stringify({data: msg2}))
 
@@ -256,7 +256,7 @@ function test (Source) {
       }))
       .then(() => wsReady(done.fail))
       .then(ws => {
-        const msgSeq = (function* (msg) {
+        const msgSeq = (function * (msg) {
           expect(yield).toEqual({opened: false})
           ws.send(JSON.stringify({open: key}))
           expect(yield).toEqual({opened: true})

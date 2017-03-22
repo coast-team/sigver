@@ -3,7 +3,6 @@ export function randomKey () {
 }
 
 export class RichEventSource {
-
   constructor (url) {
     this.auth = ''
     this._onopen = () => {}
