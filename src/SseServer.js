@@ -35,7 +35,6 @@ const resps = new Map()
  * data to the server.
  */
 export default class SseServer extends ServerCore {
-
   start (options, cb = () => {}) {
     // Starting server
     this.server = http.createServer((req, res) => {

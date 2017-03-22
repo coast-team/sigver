@@ -8,7 +8,6 @@ const openers = new Map()
  * The core of the signaling server (WebSocket and SSE) containing the main logic
  */
 export default class ServerCore {
-
   constructor () {
     this.server = null
   }

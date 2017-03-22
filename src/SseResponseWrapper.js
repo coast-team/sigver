@@ -17,5 +17,4 @@ export default class SseResponseWrapper {
   send (msg) {
     this.sse.send(msg, [this.res])
   }
-
 }

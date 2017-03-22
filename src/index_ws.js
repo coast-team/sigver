@@ -5,7 +5,6 @@ import ServerCore from './ServerCore'
  * WebSocket server able to use ws or uws modules.
  */
 class SignalingServer extends ServerCore {
-
   constructor (serverInstance) {
     super()
     this.server = serverInstance

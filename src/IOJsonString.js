@@ -7,7 +7,6 @@ const KEY_LENGTH_LIMIT = 512
  * JSON strings, otherwise throw an error.
  */
 export default class IOJsonString {
-
   constructor (data) {
     this.id = undefined
     this.data = undefined
@@ -83,5 +82,4 @@ export default class IOJsonString {
       throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a number`)
     }
   }
-
 }
