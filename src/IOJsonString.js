@@ -26,14 +26,16 @@ export default class IOJsonString {
     } else if ('join' in msg && keysNb === 1) {
       this.validateKey(msg.join)
       this._joinKey = msg.join
-    } else if ('data' in msg && keysNb === 1) {
+    } else if ('data' in msg) {
       this.data = JSON.stringify(msg.data)
-    } else if ('id' in msg && 'data' in msg && keysNb === 2) {
-      this.validateId(msg.id)
-      this.data = JSON.stringify(msg.data)
-      this.id = msg.id
+      if ('id' in msg && keysNb === 2) {
+        this.validateId(msg.id)
+        this.id = msg.id
+      } else if (keysNb !== 1) {
+        throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message: ' + data)
+      }
     } else {
-      throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message')
+      throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message: ' + data)
     }
   }
 
@@ -41,26 +43,20 @@ export default class IOJsonString {
 
   isToJoin () { return this._joinKey !== undefined }
 
-  isToTransmitToOpener () { return this.id === undefined }
-
-  isToTransmitToJoining () { return this.id !== undefined }
+  isToTransmit () { return this.data !== undefined }
 
   get key () { return this._openKey ? this._openKey : this._joinKey }
 
   static msgUnavailable (id) {
-    return id ? `{"unavailable":${id}}` : `{"unavailable":-1}`
+    return id ? `{"unavailable":"${id}"}` : `{"unavailable":"0"}`
   }
 
-  static msgOpened (opened) {
-    return `{"opened":${opened}}`
+  static msgFirst (first) {
+    return `{"first":${first}}`
   }
 
-  msgToJoining () {
-    return `{"data":${this.data}}`
-  }
-
-  msgToOpener (id) {
-    return `{"id":${id},"data":${this.data}}`
+  msgTransmit (id) {
+    return id ? `{"id":"${id}","data":${this.data}}` : `{"data":${this.data}}`
   }
 
   validateKey (key) {
@@ -78,8 +74,8 @@ export default class IOJsonString {
   }
 
   validateId (id) {
-    if (typeof id !== 'number') {
-      throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a number`)
+    if (typeof id !== 'string') {
+      throw new SigverError(SigverError.MESSAGE_ERROR, `The joining id is not a string`)
     }
   }
 }

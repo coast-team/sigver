@@ -12,10 +12,6 @@ export default class SigverError {
   // Unapropriate key format (e.g. key too long).
   static get KEY_ERROR () { return 4001 }
 
-  // Before starting transmit data, the first request should be either 'open' or 'join'.
-  static get TRANSMIT_BEFORE_OPEN () { return 4010 }
-  static get TRANSMIT_BEFORE_JOIN () { return 4011 }
-
   /*
    The Cross-Origin Resource Sharing error. Occurs when the request
    was cross-origin and did not validate against the provided

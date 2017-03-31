@@ -1,9 +1,9 @@
 import SigverError from '../src/SigverError'
-import { randomKey, RichEventSource } from './util.js'
+import { randomKey } from './util.js'
 
 describe('', () => {
   test(WebSocket)
-  test(RichEventSource)
+  // test(RichEventSource)
 })
 
 function test (Source) {
@@ -34,14 +34,14 @@ function test (Source) {
     afterEach(() => {
       for (let ws of channels) {
         ws.onclose = () => {}
-        ws.close()
+        ws.close(1000)
       }
     })
 
     it('Should send join', done => {
       wsReady(done.fail).then(ws => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
           done()
         }
         ws.send(JSON.stringify({join: randomKey()}))
@@ -51,7 +51,7 @@ function test (Source) {
     it('Should send open', done => {
       wsReady(done.fail).then(ws => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
           done()
         }
         ws.send(JSON.stringify({open: randomKey()}))
@@ -67,12 +67,12 @@ function test (Source) {
         wsReady(done.fail)
       ]).then((wsArray) => {
         const msgSeq0 = (function * () {
-          expect(yield).toEqual({opened: true})
+          expect(yield).toEqual({first: true})
           wsArray[1].send(JSON.stringify({join: key}))
           const msg = yield
           expect(msg.data).toBeDefined()
           expect(msg.id).toBeDefined()
-          expect(typeof msg.id).toEqual('number')
+          expect(typeof msg.id).toEqual('string')
           expect(Object.keys(msg).length).toEqual(2)
           expect(msg.data).toEqual(msg1)
           wsArray[0].send(JSON.stringify({id: msg.id, data: msg0}))
@@ -81,14 +81,14 @@ function test (Source) {
         wsArray[0].onmessage = msgEvt => msgSeq0.next(JSON.parse(msgEvt.data))
 
         const msgSeq1 = (function * () {
-          expect(yield).toEqual({opened: false})
+          expect(yield).toEqual({first: false})
           wsArray[1].send(JSON.stringify({data: msg1}))
           expect(yield).toEqual({data: msg0})
           done()
         })()
         msgSeq1.next()
         wsArray[1].onmessage = msgEvt => msgSeq1.next(JSON.parse(msgEvt.data))
-        wsArray[0].send(JSON.stringify({join: key}))
+        wsArray[0].send(JSON.stringify({open: key}))
       })
     })
 
@@ -112,13 +112,13 @@ function test (Source) {
         wsReady(done.fail)
       ]).then((wsArray) => {
         const msgSeq0 = (function * () {
-          expect(yield).toEqual({opened: true})
+          expect(yield).toEqual({first: true})
           wsArray[1].send(JSON.stringify({join: key}))
 
           let msg = yield
           expect(msg.data).toBeDefined()
           expect(msg.id).toBeDefined()
-          expect(typeof msg.id).toEqual('number')
+          expect(typeof msg.id).toEqual('string')
           expect(Object.keys(msg).length).toEqual(2)
           expect(msg.data).toEqual(msg2)
           wsArray[0].send(JSON.stringify({id: msg.id, data: msg02}))
@@ -127,7 +127,7 @@ function test (Source) {
           msg = yield
           expect(msg.data).toBeDefined()
           expect(msg.id).toBeDefined()
-          expect(typeof msg.id).toEqual('number')
+          expect(typeof msg.id).toEqual('string')
           expect(Object.keys(msg).length).toEqual(2)
           expect(msg.data).toEqual(msg1)
           wsArray[0].send(JSON.stringify({id: msg.id, data: msg01}))
@@ -137,7 +137,7 @@ function test (Source) {
         wsArray[0].onmessage = msgEvt => msgSeq0.next(JSON.parse(msgEvt.data))
 
         const msgSeq1 = (function * () {
-          expect(yield).toEqual({opened: false})
+          expect(yield).toEqual({first: false})
           wsArray[2].send(JSON.stringify({join: key}))
 
           expect(yield).toEqual({data: msg01})
@@ -147,7 +147,7 @@ function test (Source) {
         wsArray[1].onmessage = msgEvt => msgSeq1.next(JSON.parse(msgEvt.data))
 
         const msgSeq2 = (function * () {
-          expect(yield).toEqual({opened: false})
+          expect(yield).toEqual({first: false})
           wsArray[2].send(JSON.stringify({data: msg2}))
 
           expect(yield).toEqual({data: msg02})
@@ -156,7 +156,7 @@ function test (Source) {
         msgSeq2.next()
         wsArray[2].onmessage = msgEvt => msgSeq2.next(JSON.parse(msgEvt.data))
 
-        wsArray[0].send(JSON.stringify({join: key}))
+        wsArray[0].send(JSON.stringify({open: key}))
       })
     })
 
@@ -167,15 +167,15 @@ function test (Source) {
       .then(ws => new Promise((resolve, reject) => {
         ws.onclose = resolve
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
-          ws.close()
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
+          ws.close(1000)
         }
         ws.send(JSON.stringify({join: key}))
       }))
       .then(() => wsReady(done.fail))
       .then(ws => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
           done()
         }
         ws.send(JSON.stringify({join: key}))
@@ -189,35 +189,15 @@ function test (Source) {
       .then(ws => new Promise((resolve, reject) => {
         ws.onclose = resolve
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
-          ws.close()
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
+          ws.close(1000)
         }
         ws.send(JSON.stringify({open: key}))
       }))
       .then(() => wsReady(done.fail))
       .then(ws => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
-          done()
-        }
-        ws.send(JSON.stringify({join: key}))
-      })
-    })
-
-    it('Should NOT join first after: someone else join first', done => {
-      const key = randomKey()
-      wsReady(done.fail)
-      .then(ws => new Promise((resolve, reject) => {
-        ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
-          resolve()
-        }
-        ws.send(JSON.stringify({join: key}))
-      }))
-      .then(() => wsReady(done.fail))
-      .then(ws => {
-        ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: false})
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
           done()
         }
         ws.send(JSON.stringify({join: key}))
@@ -229,7 +209,7 @@ function test (Source) {
       wsReady(done.fail)
       .then(ws => new Promise((resolve, reject) => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
           resolve()
         }
         ws.send(JSON.stringify({open: key}))
@@ -237,7 +217,7 @@ function test (Source) {
       .then(() => wsReady(done.fail))
       .then(ws => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: false})
+          expect(JSON.parse(msgEvt.data)).toEqual({first: false})
           done()
         }
         ws.send(JSON.stringify({join: key}))
@@ -249,7 +229,7 @@ function test (Source) {
       wsReady(done.fail)
       .then(ws => new Promise((resolve, reject) => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({opened: true})
+          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
           resolve()
         }
         ws.send(JSON.stringify({open: key}))
@@ -257,9 +237,9 @@ function test (Source) {
       .then(() => wsReady(done.fail))
       .then(ws => {
         const msgSeq = (function * (msg) {
-          expect(yield).toEqual({opened: false})
+          expect(yield).toEqual({first: false})
           ws.send(JSON.stringify({open: key}))
-          expect(yield).toEqual({opened: true})
+          expect(yield).toEqual({first: false})
           done()
         })()
         msgSeq.next()
@@ -301,24 +281,6 @@ function test (Source) {
         }
         ws.onerror = err => done.fail(err.message)
         ws.send(JSON.stringify({open: 123456789}))
-      })
-
-      it(`with code: ${SigverError.TRANSMIT_BEFORE_OPEN}`, done => {
-        ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(SigverError.TRANSMIT_BEFORE_OPEN)
-          done()
-        }
-        ws.onerror = err => done.fail(err.message)
-        ws.send(JSON.stringify({id: 124, data: 'something'}))
-      })
-
-      it(`with code: ${SigverError.TRANSMIT_BEFORE_JOIN}`, done => {
-        ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(SigverError.TRANSMIT_BEFORE_JOIN)
-          done()
-        }
-        ws.onerror = err => done.fail(err.message)
-        ws.send(JSON.stringify({data: 'something'}))
       })
     })
   })

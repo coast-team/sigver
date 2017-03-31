@@ -1,5 +1,6 @@
 import WsServer from './WsServer'
-import SseServer from './SseServer'
+// import SseServer from './SseServer'
+import ServerCore from './ServerCore'
 const program = require('commander')
 
 let host = process.env.NODE_IP || '0.0.0.0'
@@ -36,19 +37,23 @@ if (program.port) port = program.port
 if (program.type) type = program.type
 if (program.wsLib) wsLib = program.wsLib
 
+const core = new ServerCore()
+
 switch (type) {
   case 'ws': {
     const wsServer = new WsServer()
+    wsServer.onChannel.subscribe(channel => core.init(channel),
+      (err) => console.log('my errorerlsj: ' + err))
     wsServer.start({host, port}, () => {
       console.log(`WebSocket server is listening on: ws://${host}:${port}`)
     }, {wsLib})
     break
   }
-  case 'sse': {
-    const sseServer = new SseServer()
-    sseServer.start({host, port}, () => {
-      console.log(`EventSource server is listening on: http://${host}:${port}`)
-    })
-    break
-  }
+  // case 'sse': {
+  //   const sseServer = new SseServer()
+  //   sseServer.start({host, port}, () => {
+  //     console.log(`EventSource server is listening on: http://${host}:${port}`)
+  //   })
+  //   break
+  // }
 }

@@ -1,10 +1,15 @@
 import IOJsonString from './IOJsonString'
-import ServerCore from './ServerCore'
+import Channel from './Channel'
 
 /**
  * WebSocket server able to use ws or uws modules.
  */
-export default class WsServer extends ServerCore {
+export default class WsServer {
+  constructor () {
+    const Subject = require('rxjs/Rx').Subject
+    this.onChannel = new Subject()
+  }
+
   /**
    * Start the server.
    * @param {Object} options Options to be passed to ws or uws module
@@ -35,25 +40,39 @@ export default class WsServer extends ServerCore {
     // Starting server
     this.server = new WebSocketServer(settings, cb)
 
-    this.server.on('error', err => console.error(`Server error: ${err}`))
+    this.server.on('error', err => {
+      console.error(`Server error: ${err}`)
+      this.onChannel.error(err)
+    })
 
     this.server.on('connection', socket => {
-      socket.onerror = err => {
-        console.log(`Socket error while sending ${err.code}: ${err.reason}`)
-      }
-      socket.onmessage = msgEvent => {
+      const channel = new Channel(socket)
+      socket.onmessage = evt => {
         try {
-          // Handle client message
-          super.handleMessage(socket, new IOJsonString(msgEvent.data))
+          channel.next(new IOJsonString(evt.data))
         } catch (err) {
-          if (err.name !== 'SigverError') {
-            console.log(`WebSocketServer: Error which not a SigverError instance: : ${err.message}`, err.stack)
-          } else {
-            console.log(err.message)
-            socket.close(err.code, err.message)
-          }
+          socket.close(err.code, err.message)
         }
       }
+      socket.onerror = err => channel.error(err)
+      socket.onclose = closeEvt => {
+        if (closeEvt.code === 1000) {
+          channel.complete()
+        } else {
+          channel.error(new Error(`${closeEvt.code}: ${closeEvt.reason}`))
+        }
+      }
+      channel.send = msg => socket.send(msg)
+      channel.close = (code, reason) => socket.close(code, reason)
+      this.onChannel.next(channel)
     })
+  }
+
+  close (cb) {
+    if (this.server !== null) {
+      console.log('Server has stopped successfully')
+      this.server.close(cb)
+      this.onChannel.complete()
+    }
   }
 }
