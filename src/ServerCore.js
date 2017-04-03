@@ -1,6 +1,7 @@
 import IOJsonString from './IOJsonString'
+import log from './log'
 
-const openersMap = new Map()
+const openersByKey = new Map()
 
 /**
  * The core of the signaling server (WebSocket and SSE) containing the main logic
@@ -13,10 +14,14 @@ export default class ServerCore {
           this.open(channel, ioMsg)
         } else if (ioMsg.isToJoin()) {
           this.join(channel, ioMsg)
+        } else if (ioMsg.isPing()) {
+          channel.send(IOJsonString.msgPong())
+        } else if (ioMsg.isPong()) {
+          channel.pongReceived = true
         }
       },
       err => {
-        console.log('ServerCore init: ' + channel.id + ' | ' + err.message)
+        log.error('ServerCore', { id: channel.id, isOpener: channel.key !== undefined, err })
         this.clean(channel)
       },
       () => this.clean(channel)
@@ -25,16 +30,17 @@ export default class ServerCore {
 
   open (channel, ioMsg) {
     channel.key = ioMsg.key
-    const openers = openersMap.get(ioMsg.key)
+    let openers = openersByKey.get(ioMsg.key)
     if (openers !== undefined) {
       openers.add(channel)
-      channel.send(IOJsonString.msgFirst(false))
     } else {
-      const setOfOpeners = new Set()
-      setOfOpeners.add(channel)
-      openersMap.set(ioMsg.key, setOfOpeners)
-      channel.send(IOJsonString.msgFirst(true))
+      openers = new Set()
+      openers.add(channel)
+      openersByKey.set(ioMsg.key, openers)
     }
+    log.info('ADD Opener', {op: 'add', id: channel.id, key: channel.key, size: openers.size})
+    channel.send(IOJsonString.msgFirst(true))
+    channel.startPingInterval()
   }
 
   join (channel, ioMsg) {
@@ -49,17 +55,20 @@ export default class ServerCore {
   }
 
   clean (channel) {
+    channel.stopPingInterval()
     if (channel.key !== undefined) {
-      const setOfOpeners = openersMap.get(channel.key)
-      setOfOpeners.delete(channel)
-      if (setOfOpeners.size === 0) {
-        openersMap.delete(channel.key)
+      const openers = openersByKey.get(channel.key)
+      if (openers.size === 1) {
+        openersByKey.delete(channel.key)
+      } else {
+        openers.delete(channel)
       }
+      log.info('DELETE Opener', {op: 'delete', id: channel.id, key: channel.key, size: openers.size})
     }
   }
 
   selectOpener (key) {
-    const openers = openersMap.get(key)
+    const openers = openersByKey.get(key)
     if (openers === undefined) {
       return undefined
     }

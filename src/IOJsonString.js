@@ -13,6 +13,8 @@ export default class IOJsonString {
 
     this._openKey = undefined
     this._joinKey = undefined
+    this.ping = false
+    this.pong = false
     let msg
     try {
       msg = JSON.parse(data)
@@ -34,6 +36,10 @@ export default class IOJsonString {
       } else if (keysNb !== 1) {
         throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message: ' + data)
       }
+    } else if ('ping' in msg && msg.ping && keysNb === 1) {
+      this.ping = true
+    } else if ('pong' in msg && msg.pong && keysNb === 1) {
+      this.pong = true
     } else {
       throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message: ' + data)
     }
@@ -45,6 +51,10 @@ export default class IOJsonString {
 
   isToTransmit () { return this.data !== undefined }
 
+  isPing () { return this.ping }
+
+  isPong () { return this.pong }
+
   get key () { return this._openKey ? this._openKey : this._joinKey }
 
   static msgUnavailable (id) {
@@ -53,6 +63,14 @@ export default class IOJsonString {
 
   static msgFirst (first) {
     return `{"first":${first}}`
+  }
+
+  static msgPing () {
+    return '{"ping":true}'
+  }
+
+  static msgPong () {
+    return '{"pong":true}'
   }
 
   msgTransmit (id) {

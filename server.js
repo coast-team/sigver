@@ -2,11 +2,12 @@
 (function () {
 'use strict';
 
-class SigverError {
-  constructor (code, message) {
+class SigverError extends Error {
+  constructor (code, message = '') {
+    super();
     Error.captureStackTrace(this, this.constructor);
     this.code = code;
-    this.message = `${this.getCodeText()}=${this.code}: ${message}`;
+    this.message = `${this.getCodeText()}: ${message}`;
     this.name = this.constructor.name;
   }
 
@@ -15,6 +16,11 @@ class SigverError {
 
   // Unapropriate key format (e.g. key too long).
   static get KEY_ERROR () { return 4001 }
+
+  // Pong message is not received during a certain delay.
+  static get PING_ERROR () { return 4002 }
+
+  static get RESPONSE_TIMEOUT_ERROR () { return 4003 }
 
   /*
    The Cross-Origin Resource Sharing error. Occurs when the request
@@ -32,8 +38,8 @@ class SigverError {
     switch (this.code) {
       case SigverError.MESSAGE_ERROR: return 'MESSAGE_ERROR'
       case SigverError.KEY_ERROR: return 'KEY_ERROR'
-      case SigverError.TRANSMIT_BEFORE_OPEN: return 'TRANSMIT_BEFORE_OPEN'
-      case SigverError.TRANSMIT_BEFORE_JOIN: return 'TRANSMIT_BEFORE_JOIN'
+      case SigverError.PING_ERROR: return 'PING_ERROR'
+      case SigverError.RESPONSE_TIMEOUT_ERROR: return 'RESPONSE_TIMEOUT_ERROR'
       case SigverError.CROS_ERROR: return 'CROSS_ORIGIN_RESOURCE_SHARING_ERROR'
       case SigverError.AUTH_ERROR: return 'AUTHENTICATION_ERROR'
       default: throw new Error('Unknown SigverError code')
@@ -54,6 +60,8 @@ class IOJsonString {
 
     this._openKey = undefined;
     this._joinKey = undefined;
+    this.ping = false;
+    this.pong = false;
     let msg;
     try {
       msg = JSON.parse(data);
@@ -75,6 +83,10 @@ class IOJsonString {
       } else if (keysNb !== 1) {
         throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message: ' + data)
       }
+    } else if ('ping' in msg && msg.ping && keysNb === 1) {
+      this.ping = true;
+    } else if ('pong' in msg && msg.pong && keysNb === 1) {
+      this.pong = true;
     } else {
       throw new SigverError(SigverError.MESSAGE_ERROR, 'Unknown message: ' + data)
     }
@@ -86,6 +98,10 @@ class IOJsonString {
 
   isToTransmit () { return this.data !== undefined }
 
+  isPing () { return this.ping }
+
+  isPong () { return this.pong }
+
   get key () { return this._openKey ? this._openKey : this._joinKey }
 
   static msgUnavailable (id) {
@@ -94,6 +110,14 @@ class IOJsonString {
 
   static msgFirst (first) {
     return `{"first":${first}}`
+  }
+
+  static msgPing () {
+    return '{"ping":true}'
+  }
+
+  static msgPong () {
+    return '{"pong":true}'
   }
 
   msgTransmit (id) {
@@ -121,6 +145,11 @@ class IOJsonString {
   }
 }
 
+const bunyan = require('bunyan');
+
+const log = bunyan.createLogger({name: 'sigver'});
+
+const PING_INTERVAL = 5000;
 const shortid = require('shortid');
 
 class Channel extends require('rxjs/Rx').Subject {
@@ -129,6 +158,27 @@ class Channel extends require('rxjs/Rx').Subject {
     this.id = shortid.generate();
     this.key = undefined;
     this.send = undefined;
+    this.timeout = undefined;
+    this.pongReceived = false;
+  }
+
+  startPingInterval () {
+    this.send(IOJsonString.msgPing());
+    const timeout = setInterval(() => {
+      if (!this.pongReceived) {
+        this.error(new SigverError(SigverError.PING_ERROR));
+        clearInterval(timeout);
+      } else {
+        this.pongReceived = false;
+        this.send(IOJsonString.msgPing());
+      }
+    }, PING_INTERVAL);
+  }
+
+  stopPingInterval () {
+    if (this.timeout !== undefined) {
+      clearInterval(this.timeout);
+    }
   }
 
   pipe (channel) {
@@ -137,18 +187,24 @@ class Channel extends require('rxjs/Rx').Subject {
         .subscribe(
           ioMsg => this.send(ioMsg.msgTransmit()),
           err => {
-            console.log('Channel Opener: ' + err.message);
+            log.error('Channel', { subscriberId: this.id, isOpener: false, subscribedToId: channel.id, err: err.message });
             this.send(IOJsonString.msgUnavailable(channel.id));
-          }
+          },
+          () => this.send(IOJsonString.msgUnavailable(channel.id))
         );
     } else {
       channel.filter(ioMsg => ioMsg.isToTransmit())
         .subscribe(
           ioMsg => this.send(ioMsg.msgTransmit(channel.id)),
           err => {
-            console.log('Channel Joining: ' + err.message);
-            this.send(IOJsonString.msgUnavailable(channel.id));
-          }
+            log.error('Channel', { subscriberId: this.id, isOpener: false, subscribedToId: channel.id, err: err.message });
+            if (err.code && err.code === SigverError.RESPONSE_TIMEOUT_ERROR) {
+              this.error(err);
+            } else {
+              this.send(IOJsonString.msgUnavailable(channel.id));
+            }
+          },
+          () => this.send(IOJsonString.msgUnavailable(channel.id))
         );
     }
   }
@@ -212,7 +268,7 @@ class WsServer {
         if (closeEvt.code === 1000) {
           channel.complete();
         } else {
-          channel.error(new Error(`${closeEvt.code}: ${closeEvt.reason}`));
+          channel.error(new SigverError(closeEvt.code, closeEvt.reason));
         }
       };
       channel.send = msg => socket.send(msg);
@@ -230,7 +286,7 @@ class WsServer {
   }
 }
 
-const openersMap = new Map();
+const openersByKey = new Map();
 
 /**
  * The core of the signaling server (WebSocket and SSE) containing the main logic
@@ -243,10 +299,14 @@ class ServerCore {
           this.open(channel, ioMsg);
         } else if (ioMsg.isToJoin()) {
           this.join(channel, ioMsg);
+        } else if (ioMsg.isPing()) {
+          channel.send(IOJsonString.msgPong());
+        } else if (ioMsg.isPong()) {
+          channel.pongReceived = true;
         }
       },
       err => {
-        console.log('ServerCore init: ' + channel.id + ' | ' + err.message);
+        log.error('ServerCore', { id: channel.id, isOpener: channel.key !== undefined, err });
         this.clean(channel);
       },
       () => this.clean(channel)
@@ -255,16 +315,17 @@ class ServerCore {
 
   open (channel, ioMsg) {
     channel.key = ioMsg.key;
-    const openers = openersMap.get(ioMsg.key);
+    let openers = openersByKey.get(ioMsg.key);
     if (openers !== undefined) {
       openers.add(channel);
-      channel.send(IOJsonString.msgFirst(false));
     } else {
-      const setOfOpeners = new Set();
-      setOfOpeners.add(channel);
-      openersMap.set(ioMsg.key, setOfOpeners);
-      channel.send(IOJsonString.msgFirst(true));
+      openers = new Set();
+      openers.add(channel);
+      openersByKey.set(ioMsg.key, openers);
     }
+    log.info('ADD Opener', {op: 'add', id: channel.id, key: channel.key, size: openers.size});
+    channel.send(IOJsonString.msgFirst(true));
+    channel.startPingInterval();
   }
 
   join (channel, ioMsg) {
@@ -279,17 +340,20 @@ class ServerCore {
   }
 
   clean (channel) {
+    channel.stopPingInterval();
     if (channel.key !== undefined) {
-      const setOfOpeners = openersMap.get(channel.key);
-      setOfOpeners.delete(channel);
-      if (setOfOpeners.size === 0) {
-        openersMap.delete(channel.key);
+      const openers = openersByKey.get(channel.key);
+      if (openers.size === 1) {
+        openersByKey.delete(channel.key);
+      } else {
+        openers.delete(channel);
       }
+      log.info('DELETE Opener', {op: 'delete', id: channel.id, key: channel.key, size: openers.size});
     }
   }
 
   selectOpener (key) {
-    const openers = openersMap.get(key);
+    const openers = openersByKey.get(key);
     if (openers === undefined) {
       return undefined
     }

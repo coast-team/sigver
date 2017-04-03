@@ -12,10 +12,11 @@
   },
   "scripts": {
     "start": "node server.js",
+    "dev": " npm run build && node server.js | bunyan",
     "lint": "eslint ./",
     "sse": "npm run build && node server.js -h localhost -t sse",
     "build": "rollup -c rollup.config_ws.js && rollup -c rollup.config.js",
-    "pretest": "npm run build && pm2 startOrReload process.yml",
+    "pretest": "npm run build && pm2 gracefulReload process.yml",
     "test": "karma start karma.conf.js",
     "precommit": "npm test -- --no-auto-watch --single-run",
     "commitmsg": "validate-commit-msg",
@@ -36,6 +37,7 @@
     "url": "https://github.com/coast-team/sigver.git"
   },
   "dependencies": {
+    "bunyan": "^1.8.9",
     "commander": "^2.9.0",
     "rxjs": "^5.2.0",
     "shortid": "^2.2.8",

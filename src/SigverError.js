@@ -1,8 +1,9 @@
-export default class SigverError {
-  constructor (code, message) {
+export default class SigverError extends Error {
+  constructor (code, message = '') {
+    super()
     Error.captureStackTrace(this, this.constructor)
     this.code = code
-    this.message = `${this.getCodeText()}=${this.code}: ${message}`
+    this.message = `${this.getCodeText()}: ${message}`
     this.name = this.constructor.name
   }
 
@@ -11,6 +12,11 @@ export default class SigverError {
 
   // Unapropriate key format (e.g. key too long).
   static get KEY_ERROR () { return 4001 }
+
+  // Pong message is not received during a certain delay.
+  static get PING_ERROR () { return 4002 }
+
+  static get RESPONSE_TIMEOUT_ERROR () { return 4003 }
 
   /*
    The Cross-Origin Resource Sharing error. Occurs when the request
@@ -28,8 +34,8 @@ export default class SigverError {
     switch (this.code) {
       case SigverError.MESSAGE_ERROR: return 'MESSAGE_ERROR'
       case SigverError.KEY_ERROR: return 'KEY_ERROR'
-      case SigverError.TRANSMIT_BEFORE_OPEN: return 'TRANSMIT_BEFORE_OPEN'
-      case SigverError.TRANSMIT_BEFORE_JOIN: return 'TRANSMIT_BEFORE_JOIN'
+      case SigverError.PING_ERROR: return 'PING_ERROR'
+      case SigverError.RESPONSE_TIMEOUT_ERROR: return 'RESPONSE_TIMEOUT_ERROR'
       case SigverError.CROS_ERROR: return 'CROSS_ORIGIN_RESOURCE_SHARING_ERROR'
       case SigverError.AUTH_ERROR: return 'AUTHENTICATION_ERROR'
       default: throw new Error('Unknown SigverError code')

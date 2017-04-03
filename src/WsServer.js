@@ -1,5 +1,6 @@
 import IOJsonString from './IOJsonString'
 import Channel from './Channel'
+import SigverError from './SigverError'
 
 /**
  * WebSocket server able to use ws or uws modules.
@@ -59,7 +60,7 @@ export default class WsServer {
         if (closeEvt.code === 1000) {
           channel.complete()
         } else {
-          channel.error(new Error(`${closeEvt.code}: ${closeEvt.reason}`))
+          channel.error(new SigverError(closeEvt.code, closeEvt.reason))
         }
       }
       channel.send = msg => socket.send(msg)
