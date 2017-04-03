@@ -5,7 +5,6 @@
 class SigverError extends Error {
   constructor (code, message = '') {
     super();
-    Error.captureStackTrace(this, this.constructor);
     this.code = code;
     this.message = `${this.getCodeText()}: ${message}`;
     this.name = this.constructor.name;
@@ -42,7 +41,7 @@ class SigverError extends Error {
       case SigverError.RESPONSE_TIMEOUT_ERROR: return 'RESPONSE_TIMEOUT_ERROR'
       case SigverError.CROS_ERROR: return 'CROSS_ORIGIN_RESOURCE_SHARING_ERROR'
       case SigverError.AUTH_ERROR: return 'AUTHENTICATION_ERROR'
-      default: throw new Error('Unknown SigverError code')
+      default: return this.code
     }
   }
 }
