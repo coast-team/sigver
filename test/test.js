@@ -217,16 +217,30 @@ function test (Source) {
       .then(ws => new Promise((resolve, reject) => {
         ws.onclose = resolve
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
-          ws.close(1000)
+          const msg = JSON.parse(msgEvt.data)
+          if ('first' in msg) {
+            expect(msg.first).toBeTruthy()
+            ws.close(1000)
+          } else if ('ping' in msg) {
+            ws.send(JSON.stringify({pong: true}))
+          } else {
+            done.fail(msg)
+          }
         }
         ws.send(JSON.stringify({join: key}))
       }))
       .then(() => wsReady(done.fail))
       .then(ws => {
         ws.onmessage = msgEvt => {
-          expect(JSON.parse(msgEvt.data)).toEqual({first: true})
-          done()
+          const msg = JSON.parse(msgEvt.data)
+          if ('first' in msg) {
+            expect(msg.first).toBeTruthy()
+            done()
+          } else if ('ping' in msg) {
+            ws.send(JSON.stringify({pong: true}))
+          } else {
+            done.fail(msg)
+          }
         }
         ws.send(JSON.stringify({join: key}))
       })

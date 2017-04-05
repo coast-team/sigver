@@ -26,10 +26,11 @@ export default class ServerCore {
       },
       () => this.clean(channel)
     )
+    channel.startPing()
   }
 
   open (channel, ioMsg) {
-    channel.key = ioMsg.key
+    channel.init(ioMsg.key)
     let openers = openersByKey.get(ioMsg.key)
     if (openers !== undefined) {
       openers.add(channel)
@@ -40,7 +41,6 @@ export default class ServerCore {
     }
     log.info('ADD Opener', {op: 'add', id: channel.id, key: channel.key, size: openers.size})
     channel.send(IOJsonString.msgFirst(true))
-    channel.startPingInterval()
   }
 
   join (channel, ioMsg) {
@@ -55,7 +55,7 @@ export default class ServerCore {
   }
 
   clean (channel) {
-    channel.stopPingInterval()
+    channel.stopPing()
     if (channel.key !== undefined) {
       const openers = openersByKey.get(channel.key)
       if (openers.size === 1) {

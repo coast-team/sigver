@@ -9,13 +9,22 @@ export default class Channel extends require('rxjs/Rx').Subject {
   constructor () {
     super()
     this.id = shortid.generate()
+    this.subscriptionToOpener = undefined
     this.key = undefined
     this.send = undefined
     this.timeout = undefined
     this.pongReceived = false
   }
 
-  startPingInterval () {
+  init (key) {
+    this.key = key
+    if (this.subscriptionToOpener) {
+      this.subscriptionToOpener.unsubscribe()
+      this.subscriptionToOpener = undefined
+    }
+  }
+
+  startPing () {
     this.send(IOJsonString.msgPing())
     const timeout = setInterval(() => {
       if (!this.pongReceived) {
@@ -28,7 +37,7 @@ export default class Channel extends require('rxjs/Rx').Subject {
     }, PING_INTERVAL)
   }
 
-  stopPingInterval () {
+  stopPing () {
     if (this.timeout !== undefined) {
       clearInterval(this.timeout)
     }
@@ -36,11 +45,11 @@ export default class Channel extends require('rxjs/Rx').Subject {
 
   pipe (channel) {
     if (this.key === undefined) {
-      channel.filter(ioMsg => ioMsg.isToTransmit() && ioMsg.id === this.id)
+      this.subscriptionToOpener = channel.filter(ioMsg => ioMsg.isToTransmit() && ioMsg.id === this.id)
         .subscribe(
           ioMsg => this.send(ioMsg.msgTransmit()),
           err => {
-            log.error('Channel', { subscriberId: this.id, isOpener: false, subscribedToId: channel.id, err: err.message })
+            log.error('Channel', { id: this.id, isOpener: false, subscribedToId: channel.id, err: err.message })
             this.send(IOJsonString.msgUnavailable(channel.id))
           },
           () => this.send(IOJsonString.msgUnavailable(channel.id))
@@ -50,7 +59,7 @@ export default class Channel extends require('rxjs/Rx').Subject {
         .subscribe(
           ioMsg => this.send(ioMsg.msgTransmit(channel.id)),
           err => {
-            log.error('Channel', { subscriberId: this.id, isOpener: false, subscribedToId: channel.id, err: err.message })
+            log.error('Channel', { id: this.id, isOpener: true, subscribedToId: channel.id, err: err.message })
             if (err.code && err.code === SigverError.RESPONSE_TIMEOUT_ERROR) {
               this.error(err)
             } else {

@@ -155,13 +155,22 @@ class Channel extends require('rxjs/Rx').Subject {
   constructor () {
     super();
     this.id = shortid.generate();
+    this.subscriptionToOpener = undefined;
     this.key = undefined;
     this.send = undefined;
     this.timeout = undefined;
     this.pongReceived = false;
   }
 
-  startPingInterval () {
+  init (key) {
+    this.key = key;
+    if (this.subscriptionToOpener) {
+      this.subscriptionToOpener.unsubscribe();
+      this.subscriptionToOpener = undefined;
+    }
+  }
+
+  startPing () {
     this.send(IOJsonString.msgPing());
     const timeout = setInterval(() => {
       if (!this.pongReceived) {
@@ -174,7 +183,7 @@ class Channel extends require('rxjs/Rx').Subject {
     }, PING_INTERVAL);
   }
 
-  stopPingInterval () {
+  stopPing () {
     if (this.timeout !== undefined) {
       clearInterval(this.timeout);
     }
@@ -182,11 +191,11 @@ class Channel extends require('rxjs/Rx').Subject {
 
   pipe (channel) {
     if (this.key === undefined) {
-      channel.filter(ioMsg => ioMsg.isToTransmit() && ioMsg.id === this.id)
+      this.subscriptionToOpener = channel.filter(ioMsg => ioMsg.isToTransmit() && ioMsg.id === this.id)
         .subscribe(
           ioMsg => this.send(ioMsg.msgTransmit()),
           err => {
-            log.error('Channel', { subscriberId: this.id, isOpener: false, subscribedToId: channel.id, err: err.message });
+            log.error('Channel', { id: this.id, isOpener: false, subscribedToId: channel.id, err: err.message });
             this.send(IOJsonString.msgUnavailable(channel.id));
           },
           () => this.send(IOJsonString.msgUnavailable(channel.id))
@@ -196,7 +205,7 @@ class Channel extends require('rxjs/Rx').Subject {
         .subscribe(
           ioMsg => this.send(ioMsg.msgTransmit(channel.id)),
           err => {
-            log.error('Channel', { subscriberId: this.id, isOpener: false, subscribedToId: channel.id, err: err.message });
+            log.error('Channel', { id: this.id, isOpener: true, subscribedToId: channel.id, err: err.message });
             if (err.code && err.code === SigverError.RESPONSE_TIMEOUT_ERROR) {
               this.error(err);
             } else {
@@ -310,10 +319,11 @@ class ServerCore {
       },
       () => this.clean(channel)
     );
+    channel.startPing();
   }
 
   open (channel, ioMsg) {
-    channel.key = ioMsg.key;
+    channel.init(ioMsg.key);
     let openers = openersByKey.get(ioMsg.key);
     if (openers !== undefined) {
       openers.add(channel);
@@ -324,7 +334,6 @@ class ServerCore {
     }
     log.info('ADD Opener', {op: 'add', id: channel.id, key: channel.key, size: openers.size});
     channel.send(IOJsonString.msgFirst(true));
-    channel.startPingInterval();
   }
 
   join (channel, ioMsg) {
@@ -339,7 +348,7 @@ class ServerCore {
   }
 
   clean (channel) {
-    channel.stopPingInterval();
+    channel.stopPing();
     if (channel.key !== undefined) {
       const openers = openersByKey.get(channel.key);
       if (openers.size === 1) {
