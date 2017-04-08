@@ -46,8 +46,7 @@ export default class ServerCore {
   join (channel, ioMsg) {
     const opener = this.selectOpener(ioMsg.key)
     if (opener !== undefined) {
-      opener.pipe(channel)
-      channel.pipe(opener)
+      channel.connect(opener)
       channel.send(IOJsonString.msgFirst(false))
     } else {
       channel.send(IOJsonString.msgFirst(true))
