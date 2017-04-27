@@ -6,7 +6,10 @@ import SigverError from './SigverError'
  * WebSocket server able to use ws or uws modules.
  */
 export default class WsServer {
-  constructor () {
+  constructor (httpServer, host, port) {
+    this.httpServer = httpServer
+    this.host = host
+    this.port = port
     const Subject = require('rxjs/Rx').Subject
     this.onChannel = new Subject()
   }
@@ -18,11 +21,8 @@ export default class WsServer {
    * @param {Object} [extraOptions]
    * @param {string} extraOptions.wsLib Specify which module to use (ws or uws)
    */
-  start (options, cb = () => {}, extraOptions) {
-    const defaultOptions = {
-      perMessageDeflate: false
-    }
-    const settings = Object.assign({}, defaultOptions, options)
+  start (cb = () => {}, extraOptions) {
+    this.httpServer.listen(this.port, this.host, cb)
     let WebSocket = {}
     try {
       WebSocket = require(extraOptions.wsLib)
@@ -39,7 +39,10 @@ export default class WsServer {
     const WebSocketServer = WebSocket.Server
 
     // Starting server
-    this.server = new WebSocketServer(settings, cb)
+    this.server = new WebSocketServer({
+      perMessageDeflate: false,
+      server: this.httpServer
+    })
 
     this.server.on('error', err => {
       console.error(`Server error: ${err}`)
