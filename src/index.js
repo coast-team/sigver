@@ -11,7 +11,8 @@ const defaults = {
   wsLib: 'uws',
   secure: false,
   key: '',
-  cert: ''
+  cert: '',
+  ca: ''
 }
 
 program
@@ -25,9 +26,11 @@ program
   .option('-s, --secure',
     `If present, server is listening on WSS instead of WS`)
   .option('-k, --key <value>',
-    `Certificate key`)
+    `Private key for the certificate`)
   .option('-c, --cert <value>',
-    `Certificate`)
+    `The server certificate`)
+  .option('-a, --ca <value>',
+    `The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.`)
   .on('--help', () => {
     console.log(
 `  Examples:
@@ -39,7 +42,7 @@ program
   })
   .parse(process.argv)
 
-const {host, port, wsLib, secure, key, cert} = program
+const {host, port, wsLib, secure, key, cert, ca} = program
 
 const core = new ServerCore()
 
@@ -48,7 +51,8 @@ if (secure) {
   const fs = require('fs')
   httpServer = require('https').createServer({
     key: fs.readFileSync(key),
-    cert: fs.readFileSync(cert)
+    cert: fs.readFileSync(cert),
+    ca: fs.readFileSync(ca)
   })
 } else {
   httpServer = require('http').createServer()
