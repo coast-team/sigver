@@ -26,13 +26,13 @@ export default class Channel extends require('rxjs/Rx').Subject {
 
   startPing () {
     this.send(IOJsonString.msgPing())
-    const timeout = setInterval(() => {
+    this.timeout = setInterval(() => {
       if (!this.pongReceived) {
+        this.timeout = undefined
         this.error(new SigverError(SigverError.PING_ERROR))
-        clearInterval(timeout)
       } else {
         this.pongReceived = false
-        this.send(IOJsonString.msgPing())
+        this.startPing()
       }
     }, PING_INTERVAL)
   }

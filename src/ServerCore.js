@@ -57,12 +57,15 @@ export default class ServerCore {
     channel.stopPing()
     if (channel.key !== undefined) {
       const openers = openersByKey.get(channel.key)
+      let size
       if (openers.size === 1) {
         openersByKey.delete(channel.key)
+        size = 0
       } else {
         openers.delete(channel)
+        size = openers.size
       }
-      log.info('DELETE Opener', {op: 'delete', id: channel.id, key: channel.key, size: openers.size})
+      log.info('DELETE Opener', {op: 'delete', id: channel.id, key: channel.key, size})
     }
   }
 
