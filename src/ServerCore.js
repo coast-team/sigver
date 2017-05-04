@@ -11,12 +11,16 @@ export default class ServerCore {
     channel.subscribe(
       ioMsg => {
         if (ioMsg.isToOpen()) {
+          log.info(channel.id + ' message OPEN: ')
           this.open(channel, ioMsg)
         } else if (ioMsg.isToJoin()) {
+          log.info(channel.id + ' message JOIN: ')
           this.join(channel, ioMsg)
         } else if (ioMsg.isPing()) {
+          log.info(channel.id + ' message PING: ')
           channel.send(IOJsonString.msgPong())
         } else if (ioMsg.isPong()) {
+          log.info(channel.id + ' message PONG: ')
           channel.pongReceived = true
         }
       },

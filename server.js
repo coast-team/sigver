@@ -171,13 +171,13 @@ class Channel extends require('rxjs/Rx').Subject {
   }
 
   startPing () {
+    this.pongReceived = false;
     this.send(IOJsonString.msgPing());
-    this.timeout = setInterval(() => {
+    this.timeout = setTimeout(() => {
       if (!this.pongReceived) {
         this.timeout = undefined;
         this.error(new SigverError(SigverError.PING_ERROR));
       } else {
-        this.pongReceived = false;
         this.startPing();
       }
     }, PING_INTERVAL);
@@ -185,7 +185,7 @@ class Channel extends require('rxjs/Rx').Subject {
 
   stopPing () {
     if (this.timeout !== undefined) {
-      clearInterval(this.timeout);
+      clearTimeout(this.timeout);
     }
   }
 
@@ -312,12 +312,16 @@ class ServerCore {
     channel.subscribe(
       ioMsg => {
         if (ioMsg.isToOpen()) {
+          log.info(channel.id + ' message OPEN: ');
           this.open(channel, ioMsg);
         } else if (ioMsg.isToJoin()) {
+          log.info(channel.id + ' message JOIN: ');
           this.join(channel, ioMsg);
         } else if (ioMsg.isPing()) {
+          log.info(channel.id + ' message PING: ');
           channel.send(IOJsonString.msgPong());
         } else if (ioMsg.isPong()) {
+          log.info(channel.id + ' message PONG: ');
           channel.pongReceived = true;
         }
       },
