@@ -76,7 +76,13 @@ module.exports = function(config) {
    * Travis options
    */
   if (process.env.TRAVIS) {
-    config.browsers = ['Firefox']
+    config.browsers = ['Chrome_travis_ci', 'Firefox']
+    config.customLaunchers: {
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      }
+    }
     config.autoWatch = false
     config.singleRun = true
   }
