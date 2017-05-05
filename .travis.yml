@@ -1,30 +1,27 @@
 sudo: required
 dist: trusty
-language: node_js
 notifications:
   email: false
 branches:
   only:
     - master
-    - ws
     - /^greenkeeper-.*$/
 addons:
   firefox: "latest"
   apt:
-    sources:
-      - google-chrome
     packages:
       - google-chrome-stable
+language: node_js
 node_js:
   - '7'
-before_install:
-  - npm -g update
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sleep 3
 after_success:
   - npm run semantic-release
+after_script:
+  - kill -9 $(ps aux | grep 'pm2')
 branches:
   except:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
