@@ -16,27 +16,11 @@ export default class WsServer {
 
   /**
    * Start the server.
-   * @param {Object} options Options to be passed to ws or uws module
    * @param {Function} cb Callback to execute after the server has been started
-   * @param {Object} [extraOptions]
-   * @param {string} extraOptions.wsLib Specify which module to use (ws or uws)
    */
-  start (cb = () => {}, extraOptions) {
+  start (cb = () => {}) {
     this.httpServer.listen(this.port, this.host, cb)
-    let WebSocket = {}
-    try {
-      WebSocket = require(extraOptions.wsLib)
-      console.log(`${extraOptions.wsLib} module is used for WebSocket server`)
-    } catch (err) {
-      const anotherLib = extraOptions.wsLib === 'uws' ? 'ws' : 'uws'
-      console.log(`INFO: ${err.message}. Will use ${anotherLib} instead`)
-      try {
-        WebSocket = require(anotherLib)
-      } catch (err2) {
-        console.log(`ERROR: ${err2.message}. Thus the WebSocket server cannot be run`)
-      }
-    }
-    const WebSocketServer = WebSocket.Server
+    const WebSocketServer = require('uws').Server
 
     // Starting server
     this.server = new WebSocketServer({

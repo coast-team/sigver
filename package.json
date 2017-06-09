@@ -42,9 +42,6 @@
     "rxjs": "^5.4.0",
     "shortid": "^2.2.8",
     "sse-channel": "^2.0.3",
-    "ws": "^3.0.0"
-  },
-  "optionalDependencies": {
     "uws": "^0.14.0"
   },
   "devDependencies": {

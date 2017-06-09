@@ -237,27 +237,11 @@ class WsServer {
 
   /**
    * Start the server.
-   * @param {Object} options Options to be passed to ws or uws module
    * @param {Function} cb Callback to execute after the server has been started
-   * @param {Object} [extraOptions]
-   * @param {string} extraOptions.wsLib Specify which module to use (ws or uws)
    */
-  start (cb = () => {}, extraOptions) {
+  start (cb = () => {}) {
     this.httpServer.listen(this.port, this.host, cb);
-    let WebSocket = {};
-    try {
-      WebSocket = require(extraOptions.wsLib);
-      console.log(`${extraOptions.wsLib} module is used for WebSocket server`);
-    } catch (err) {
-      const anotherLib = extraOptions.wsLib === 'uws' ? 'ws' : 'uws';
-      console.log(`INFO: ${err.message}. Will use ${anotherLib} instead`);
-      try {
-        WebSocket = require(anotherLib);
-      } catch (err2) {
-        console.log(`ERROR: ${err2.message}. Thus the WebSocket server cannot be run`);
-      }
-    }
-    const WebSocketServer = WebSocket.Server;
+    const WebSocketServer = require('uws').Server;
 
     // Starting server
     this.server = new WebSocketServer({
@@ -385,7 +369,6 @@ const program = require('commander');
 const defaults = {
   host: '0.0.0.0',
   port: 8000,
-  wsLib: 'uws',
   secure: false,
   key: '',
   cert: '',
@@ -396,10 +379,6 @@ program
   .version('13.1.0', '-v, --version')
   .option('-h, --host <n>', `Select host address to bind to. Default: ${defaults.host}\n`, defaults.host)
   .option('-p, --port <n>', `Select port to use, Default: process.env.NODE_PORT || 8000\n'`, defaults.port)
-  .option('-w, --wsLib <value>',
-`Specify the server module to use for WebSocket server. The possible values are:
-    ws - https://github.com/websockets/ws
-    uws - https://github.com/uWebSockets/uWebSockets. This is DEFAULT, if the module has not been installed properly or no binary is available for the current OS, then ws will be used instead`, defaults.wsLib)
   .option('-s, --secure',
     `If present, server is listening on WSS instead of WS`)
   .option('-k, --key <value>',
@@ -419,7 +398,7 @@ program
   })
   .parse(process.argv);
 
-const {host, port, wsLib, secure, key, cert, ca} = program;
+const {host, port, secure, key, cert, ca} = program;
 
 const core = new ServerCore();
 
@@ -443,7 +422,7 @@ wsServer.onChannel.subscribe(
 wsServer.start(() => {
   const address = httpServer.address();
   log.info(`WebSocket server is listening on ${address.address}:${address.port}`);
-}, {wsLib});
+});
   // case 'sse': {
   //   const sseServer = new SseServer()
   //   sseServer.start({host, port}, () => {
