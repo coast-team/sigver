@@ -12,7 +12,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": " npm run build && node server.js | bunyan",
+    "dev": " npm run build && node server.js --host 152.81.65.18 | bunyan",
     "lint": "eslint ./",
     "sse": "npm run build && node server.js -h localhost -t sse",
     "build": "rollup -c rollup.config_ws.js && rollup -c rollup.config.js",
@@ -47,7 +47,7 @@
   "devDependencies": {
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^2.0.0",
-    "eslint": "^3.14.1",
+    "eslint": "^4.0.0",
     "eslint-config-conaclos": "^1.2.0",
     "eslint-config-standard": "^10.0.0",
     "eslint-plugin-extra-rules": "0.8.0",
@@ -64,8 +64,8 @@
     "karma-jasmine": "^1.0.2",
     "karma-rollup-preprocessor": "^4.0.0",
     "karma-spec-reporter": "0.0.31",
-    "pm2": "^2.3.0",
-    "rollup": "^0.42.0",
+    "pm2": "^2.5.0",
+    "rollup": "^0.43.0",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-filesize": "^1.0.1",
     "rollup-plugin-node-resolve": "^3.0.0",
