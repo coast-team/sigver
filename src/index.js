@@ -15,9 +15,8 @@ const defaults = {
 }
 
 program
-  .version('13.1.0', '-v, --version')
   .option('-h, --host <n>', `Select host address to bind to. Default: ${defaults.host}\n`, defaults.host)
-  .option('-p, --port <n>', `Select port to use, Default: process.env.NODE_PORT || 8000\n'`, defaults.port)
+  .option('-p, --port <n>', `Select port to use, Default: 8000\n'`, defaults.port)
   .option('-s, --secure',
     `If present, server is listening on WSS instead of WS`)
   .option('-k, --key <value>',
@@ -28,7 +27,7 @@ program
     `The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.`)
   .on('--help', () => {
     console.log(
-`  Examples:
+      `  Examples:
 
      $ sigver                         # Server is listening on ws://0.0.0.0:8000
      $ sigver -h 192.168.0.1 -p 9000  # Server is listening on ws://192.168.0.1:9000
