@@ -1,7 +1,6 @@
 # <p align="center">Sigver</p>
 <p align="center">
-Signaling server for WebRTC.
-<br />Can listen on <strong style="font-weight: bold">WebSocket</strong> or <strong style="font-weight: bold">Server-Sent-Event</strong>.
+Signaling server for WebRTC listening on <strong style="font-weight: bold">WebSocket</strong>.
 <br />Used by <strong style="font-weight: bold">Netflux</strong>, Javascript client and server side transport API for creating a peer to peer network.
 <p>
 <p align="center">
@@ -27,20 +26,26 @@ Signaling server for WebRTC.
 npm install -g sigver
 sigver [options]
 ```
-### Options
-    --help              output usage information
-    -v, --version       output the version number
-    -h, --host <n>      select host address to bind to, DEFAULT: process.env.NODE_IP || "0.0.0.0"
-    -p, --port <n>      select port to use, DEFAULT: process.env.NODE_PORT || 8000
-    -t, --type <value>  specify the server type. The possible values are:
-      ws - for WebSocket only ("ws://host:port"). This is DEFAULT
-      sse - for Server-Sent-Event only ("http://host:port")
 
-### Examples
-```sh
-$ sigver                         # Server is listening on ws://0.0.0.0:8000
-$ sigver -h 192.168.0.1 -p 9000  # Server is listening on ws://192.168.0.1:9000
-$ sigver -t sse -p 9000          # Server is listening on http://0.0.0.0:9000
+```shell
+Options:
+
+    -h, --help          output usage information
+    -v, --version       output the version number
+    -h, --host <n>      Select host address to bind to. Default: 0.0.0.0
+
+    -p, --port <n>      Select port to use, Default: 8000
+
+    -s, --secure        If present, server is listening on WSS instead of WS
+    -k, --key <value>   Private key for the certificate
+    -c, --cert <value>  The server certificate
+    -a, --ca <value>    The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.
+
+Examples:
+
+     $ sigver                         # Server is listening on ws://0.0.0.0:8000
+     $ sigver -h 192.168.0.1 -p 9000  # Server is listening on ws://192.168.0.1:9000
+     $ sigver -p 9000                 # Server is listening on http://0.0.0.0:9000
 ```
 
 ## Protocol for WebSocket server
