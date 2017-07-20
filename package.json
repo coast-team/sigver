@@ -8,7 +8,7 @@
     "sigver": "server.js"
   },
   "engines": {
-    "node": ">=6.11.1"
+    "node": ">=8.1.4"
   },
   "scripts": {
     "start": "node server.js",
@@ -43,7 +43,7 @@
     "commander": "^2.9.0",
     "protobufjs": "^6.8.0",
     "rxjs": "^5.4.0",
-    "uws": "^0.14.0"
+    "uws": "^8.14.0"
   },
   "devDependencies": {
     "commitizen": "^2.5.0",
@@ -51,12 +51,12 @@
     "eslint": "^4.0.0",
     "eslint-config-conaclos": "^1.2.0",
     "eslint-config-standard": "^10.0.0",
-    "eslint-plugin-extra-rules": "0.8.0",
+    "eslint-plugin-extra-rules": "0.8.1",
     "eslint-plugin-import": "^2.3.0",
     "eslint-plugin-node": "^5.0.0",
     "eslint-plugin-promise": "^3.0.0",
     "eslint-plugin-standard": "^3.0.1",
-    "husky": "^0.13.4",
+    "husky": "^0.14.3",
     "jasmine": "^2.5.2",
     "jasmine-spec-reporter": "^4.0.0",
     "karma": "^1.7.0",
@@ -66,7 +66,7 @@
     "karma-rollup-preprocessor": "^4.0.0",
     "karma-spec-reporter": "0.0.31",
     "pm2": "^2.5.0",
-    "rollup": "^0.43.0",
+    "rollup": "^0.45.2",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-filesize": "^1.0.1",
