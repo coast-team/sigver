@@ -1,79 +1,92 @@
-import IOJsonString from './IOJsonString'
 import log from './log'
 
-const openersByKey = new Map()
+const networks = new Map()
 
 /**
  * The core of the signaling server (WebSocket and SSE) containing the main logic
  */
 export default class ServerCore {
-  init (channel) {
-    channel.subscribe(
-      ioMsg => {
-        if (ioMsg.isToOpen()) {
-          this.open(channel, ioMsg)
-        } else if (ioMsg.isToJoin()) {
-          this.join(channel, ioMsg)
-        } else if (ioMsg.isPing()) {
-          channel.send(IOJsonString.msgPong())
-        } else if (ioMsg.isPong()) {
-          channel.pongReceived = true
+  init ({ peer, key }) {
+    const net = networks.get(key)
+
+    // Check whether the first peer or not in the network identified by the key
+    if (net !== undefined) {
+      console.log('IS not FIRST')
+      peer.connect(net.selectMember())
+      peer.send({ isFirst: false })
+    } else {
+      const net = new Network(key, peer)
+      networks.set(key, net)
+      peer.send({ isFirst: true })
+    }
+
+    // Subscribe to peer messages
+    peer.subscribe(
+      msg => {
+        switch (msg.type) {
+          case 'joined':
+            this.becomeMember(peer, msg)
+            break
+          case 'ping':
+            peer.send({ pong: true })
+            break
+          case 'pong':
+            peer.pongReceived = true
+            break
         }
       },
       err => {
-        log.error('ServerCore', { id: channel.id, isOpener: channel.key !== undefined, err })
-        this.clean(channel)
+        log.error('ServerCore', { id: peer.id, isOpener: peer.network !== undefined, err })
+        peer.clean()
       },
-      () => this.clean(channel)
+      () => peer.clean()
     )
-    channel.startPing()
+
+    // Start ping
+    peer.startPing()
   }
 
-  open (channel, ioMsg) {
-    channel.init(ioMsg.key)
-    let openers = openersByKey.get(ioMsg.key)
-    if (openers !== undefined) {
-      openers.add(channel)
-    } else {
-      openers = new Set()
-      openers.add(channel)
-      openersByKey.set(ioMsg.key, openers)
-    }
-    log.info('ADD Opener', {op: 'add', id: channel.id, key: channel.key, size: openers.size})
-    channel.send(IOJsonString.msgFirst(true))
-  }
-
-  join (channel, ioMsg) {
-    const opener = this.selectOpener(ioMsg.key)
-    if (opener !== undefined) {
-      channel.connect(opener)
-      channel.send(IOJsonString.msgFirst(false))
-    } else {
-      channel.send(IOJsonString.msgFirst(true))
-    }
-  }
-
-  clean (channel) {
-    channel.stopPing()
-    if (channel.key !== undefined) {
-      const openers = openersByKey.get(channel.key)
-      let size
-      if (openers.size === 1) {
-        openersByKey.delete(channel.key)
-        size = 0
+  becomeMember (peer) {
+    if (peer.network === undefined) {
+      const net = networks.get(peer.key)
+      if (net !== undefined) {
+        net.addMember(peer)
       } else {
-        openers.delete(channel)
-        size = openers.size
+        log.warn('Uncommon Open; create new Network', { id: peer.id, key: peer.key })
+        const net = new Network(peer.key, peer)
+        networks.add(peer.key, net)
       }
-      log.info('DELETE Opener', {op: 'delete', id: channel.id, key: channel.key, size})
+      peer.send({ isFirst: true })
+    } else {
+      peer.send({ isFirst: false })
     }
   }
+}
 
-  selectOpener (key) {
-    const openers = openersByKey.get(key)
-    if (openers === undefined) {
-      return undefined
+class Network {
+  constructor (key, peer) {
+    this.key = key
+    this.members = new Set()
+    this.addMember(peer)
+  }
+
+  selectMember () {
+    return this.members.values().next().value
+  }
+
+  addMember (peer) {
+    peer.network = this
+    this.members.add(peer)
+    log.info('ADD Member', {id: peer.id, key: this.key, size: this.members.size})
+  }
+
+  removeMember (peer) {
+    if (this.members.size === 1) {
+      networks.delete(this.key)
+      log.info('REMOVE Network', { id: peer.id, key: peer.key })
+    } else {
+      this.members.delete(peer)
+      log.info('DELETE Member', { id: peer.id, key: peer.key })
     }
-    return openers.values().next().value
   }
 }

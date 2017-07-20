@@ -53,18 +53,11 @@ if (secure) {
 }
 
 const wsServer = new WsServer(httpServer, host, port)
-wsServer.onChannel.subscribe(
+wsServer.peers.subscribe(
   channel => core.init(channel),
-  err => log.fatal('WebSocket server onChannel error', err)
+  err => log.fatal('WebSocket server peers error', err)
 )
 wsServer.start(() => {
   const address = httpServer.address()
   log.info(`WebSocket server is listening on ${address.address}:${address.port}`)
 })
-  // case 'sse': {
-  //   const sseServer = new SseServer()
-  //   sseServer.start({host, port}, () => {
-  //     console.log(`EventSource server is listening on: http://${host}:${port}`)
-  //   })
-  //   break
-  // }

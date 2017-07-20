@@ -8,16 +8,18 @@
     "sigver": "server.js"
   },
   "engines": {
-    "node": ">=6.9.5"
+    "node": ">=6.11.1"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": " npm run build && node server.js --host 152.81.65.18 | bunyan",
+    "dev": " npm run build && node server.js --host 0.0.0.0 | bunyan",
     "lint": "eslint ./",
     "sse": "npm run build && node server.js -h localhost -t sse",
-    "build": "rollup -c rollup.config_ws.js && rollup -c rollup.config.js",
+    "build": "rollup -c",
+    "pbjs": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-comments --no-convert -o src/Protobuf.js src/message.proto",
     "pretest": "npm run build && pm2 gracefulReload process.yml",
     "test": "karma start karma.conf.js",
+    "test:chrome": "npm run test -- --browsers Chrome",
     "precommit": "npm test -- --no-auto-watch --single-run",
     "commitmsg": "validate-commit-msg",
     "cz": "git-cz",
@@ -39,9 +41,8 @@
   "dependencies": {
     "bunyan": "^1.8.9",
     "commander": "^2.9.0",
+    "protobufjs": "^6.8.0",
     "rxjs": "^5.4.0",
-    "shortid": "^2.2.8",
-    "sse-channel": "^2.0.3",
     "uws": "^0.14.0"
   },
   "devDependencies": {
@@ -67,6 +68,7 @@
     "pm2": "^2.5.0",
     "rollup": "^0.43.0",
     "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-filesize": "^1.0.1",
     "rollup-plugin-node-resolve": "^3.0.0",
     "semantic-release": "^6.3.2",

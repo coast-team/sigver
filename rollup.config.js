@@ -1,5 +1,6 @@
 import filesize from 'rollup-plugin-filesize'
-import nodeResolve from 'rollup-plugin-node-resolve'
+import resolve from 'rollup-plugin-node-resolve'
+import commonjs from 'rollup-plugin-commonjs'
 
 export default {
   entry: 'src/index.js',
@@ -7,9 +8,10 @@ export default {
   format: 'iife',
   banner: '#!/usr/bin/env node',
   plugins: [
-    nodeResolve({
-      module: true,
-      jsnext: true
+    resolve({}),
+    commonjs({
+      include: 'node_modules/**',
+      namedExports: { 'node_modules/protobufjs/minimal.js': [ 'Reader', 'Writer', 'util', 'roots' ] }
     }),
     filesize()
   ]

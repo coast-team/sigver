@@ -1,6 +1,10 @@
-import IOJsonString from './IOJsonString'
-import Channel from './Channel'
+import { Incoming, Outcoming } from './Protobuf'
+import Peer from './Peer'
 import SigverError from './SigverError'
+import log from './log'
+
+const url = require('url')
+const KEY_LENGTH_LIMIT = 512
 
 /**
  * WebSocket server able to use ws or uws modules.
@@ -11,7 +15,7 @@ export default class WsServer {
     this.host = host
     this.port = port
     const Subject = require('rxjs/Rx').Subject
-    this.onChannel = new Subject()
+    this.peers = new Subject()
   }
 
   /**
@@ -29,38 +33,64 @@ export default class WsServer {
     })
 
     this.server.on('error', err => {
-      console.error(`Server error: ${err}`)
-      this.onChannel.error(err)
+      log.error('Server error', err)
+      this.peers.error(err)
     })
 
     this.server.on('connection', socket => {
-      const channel = new Channel(socket)
+      const { pathname } = url.parse(socket.upgradeReq.url, true)
+
+      // Check key
+      const key = pathname.substr(1)
+      try {
+        this.validateKey(key)
+      } catch (err) {
+        socket.close(err.code, err.message)
+      }
+
+      // Initialize peer
+      const peer = new Peer(key)
+      socket.binaryType = 'arraybuffer'
       socket.onmessage = evt => {
         try {
-          channel.next(new IOJsonString(evt.data))
+          peer.next(Incoming.decode(new Uint8Array(evt.data)))
         } catch (err) {
           socket.close(err.code, err.message)
         }
       }
-      socket.onerror = err => channel.error(err)
+      socket.onerror = err => peer.error(err)
       socket.onclose = closeEvt => {
         if (closeEvt.code === 1000) {
-          channel.complete()
+          peer.complete()
         } else {
-          channel.error(new SigverError(closeEvt.code, closeEvt.reason))
+          peer.error(new SigverError(closeEvt.code, closeEvt.reason))
         }
       }
-      channel.send = msg => socket.send(msg)
-      channel.close = (code, reason) => socket.close(code, reason)
-      this.onChannel.next(channel)
+      peer.send = msg => {
+        const bytes = Outcoming.encode(Outcoming.create(msg)).finish()
+        socket.send(bytes, {binary: true})
+      }
+      peer.close = (code, reason) => socket.close(code, reason)
+      this.peers.next({ peer, key })
     })
+  }
+
+  validateKey (key) {
+    if (key === '') {
+      throw new SigverError(SigverError.KEY_ERROR, `The key ${key} is an empty string`)
+    }
+    if (key.length > KEY_LENGTH_LIMIT) {
+      throw new SigverError(SigverError.KEY_ERROR,
+        `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
+      )
+    }
   }
 
   close (cb) {
     if (this.server !== null) {
       console.log('Server has stopped successfully')
       this.server.close(cb)
-      this.onChannel.complete()
+      this.peers.complete()
     }
   }
 }

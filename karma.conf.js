@@ -32,7 +32,14 @@ module.exports = function(config) {
 
     rollupPreprocessor: {
       format: 'iife',
-      moduleName: 'sigver'
+      moduleName: 'sigver',
+      plugins: [
+        require('rollup-plugin-node-resolve')({}),
+        require('rollup-plugin-commonjs')({
+          include: 'node_modules/**',
+          namedExports: { 'node_modules/protobufjs/minimal.js': [ 'Reader', 'Writer', 'util', 'roots' ] }
+        }),
+      ]
     },
 
 
