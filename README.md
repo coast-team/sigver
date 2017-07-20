@@ -49,59 +49,36 @@ Examples:
 ```
 
 ## Protocol for WebSocket server
-Message is a JSON string. We call **Opener** a client who is waiting for
-a WebRTC offer. He provides a key to the server and maintains the socket connection with him. And we call **Joining** a client who provides a key to the server as **Opener** does and the offer. If the key is valid (corresponds to one of the **Opener**'s keys), then **Opener** receives
-the **Joining**'s offer and sends him the answer. Then **Opener** and **Joining**
-transmit each other a few ice candidates via the server. Normally after the RTCDataChannel has been established between the **Opener** and the **Joining**, **Joining** closes the socket connection with the server.
+Connect to the server as for example `ws://mydomain.com/:key`, where `key` could be any valid string less then 512 characters. The following protocol is described from server perspective ([more about Protocol Buffers](https://developers.google.com/protocol-buffers/)).
 
-### Server income messages
-#### From **Opener**
-- When you want to establish a connection with someone (you need to provide him the key and wait until he sends the `join` message to the server).
-```json
- { "open": "[some unique key]" }
+```protobufjs
+syntax = "proto3";
+
+message Incoming {
+  oneof type {
+    Content content = 1;
+    bool joined = 2;
+    bool ping = 3;
+    bool pong = 4;
+  }
+}
+
+message Outcoming {
+  oneof type {
+    Content content = 1;
+    bool isFirst = 2;
+    bool ping = 3;
+    bool pong = 4;
+  }
+}
+
+message Content {
+  uint32 id = 1;
+  oneof type {
+    bytes data = 2;
+    bool isError = 3;
+    bool isEnd = 4;
+  }
+}
+
 ```
-- When you want to forward `data` to the **Joining** identified by `id`.
-```json
-{ "id": "[identifier]", "data": "[answer, candidate...]" }
-```
-
-
-#### From **Joining**
-- When you want to interchange WebRTC data with the **Opener** in order to establish an RTCDataChannel.
-```json
-{ "join": "[key provided by the peer who triggered connection]" }
-```
-- When you want to forward `data` to the **Opener**.
-```json
- { "data": "[offer, candidate...]" }
-```
-
-### Server outcome messages
-#### To **Opener** & **Joining**
-- Response to ̀`{"open":...}` and `{"join":...}` messages.
-```json
- { "isKeyOk": "[true|false]" }
-```
-
-#### To **Opener**
-- Server forwards `data` from the **Joining** identified by `id`.
-```json
- { "id": "[identifier of the peer wishing to join]",
-   "data": "[offer, candidate]" }
-```
-- Server notifies **Opener** that the **Joining** identified by `id` is no longer available.
-```json
- { "id": "[identifier of the unavailable peer]", "unavailable": "true" }
-```
-
-#### To **Joining**
-- Server forwards `data` from the **Opener**.
-```json
- { "data": "[answer, candidate]" }
-```
-
-## Protocol for Server-Sent-Event server
-
-  Very similar to the WebSocket protocol, but has some significant differences.
-
-  Discription to come...
