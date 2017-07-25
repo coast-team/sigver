@@ -87,7 +87,7 @@ module.exports = function(config) {
     config.customLaunchers = {
       Chrome_travis_ci: {
         base: 'Chrome',
-        flags: ['--no-sandbox']
+        flags: ['--headless']
       }
     }
     config.autoWatch = false
