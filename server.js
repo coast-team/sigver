@@ -2807,13 +2807,6 @@ class SigverError extends Error {
   }
 }
 
-const bunyan = require('bunyan');
-
-const log = bunyan.createLogger({
-  name: 'sigver',
-  level: 'trace'
-});
-
 const PING_INTERVAL = 5000;
 const ID_MAX_VALUE = 4294967295;
 
@@ -2884,11 +2877,8 @@ class Peer extends require('rxjs/Rx').ReplaySubject {
         content => {
           member.send({ content: { id: this.id, data: content.data } });
           if (content.isEnd) {
-            log.debug(this.id + ' transmitting to ' + member.id + ' END_______________');
             joiningEnded = true;
             subToJoining.unsubscribe();
-          } else {
-            log.debug(this.id + ' transmitting to ' + member.id + ' byteLength: ' + content.data.byteLength);
           }
         },
         () => {
@@ -2904,6 +2894,13 @@ class Peer extends require('rxjs/Rx').ReplaySubject {
       );
   }
 }
+
+const bunyan = require('bunyan');
+
+const log = bunyan.createLogger({
+  name: 'sigver',
+  level: 'trace'
+});
 
 const url = require('url');
 const KEY_LENGTH_LIMIT = 512;
