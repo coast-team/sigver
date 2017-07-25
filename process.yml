@@ -1,4 +1,4 @@
 apps:
   - script : server.js
-    name: 'sigver-ws-test'
+    name: 'sigver-test'
     args: '--port 8034'
