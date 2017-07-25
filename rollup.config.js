@@ -8,9 +8,8 @@ export default {
   format: 'iife',
   banner: '#!/usr/bin/env node',
   plugins: [
-    resolve({}),
+    resolve(),
     commonjs({
-      include: 'node_modules/**',
       namedExports: { 'node_modules/protobufjs/minimal.js': [ 'Reader', 'Writer', 'util', 'roots' ] }
     }),
     filesize()
