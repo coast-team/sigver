@@ -51,34 +51,44 @@ Examples:
 ## Protocol for WebSocket server
 Connect to the server as for example `ws://mydomain.com/:key`, where `key` could be any valid string less then 512 characters. The following protocol is described from server perspective ([more about Protocol Buffers](https://developers.google.com/protocol-buffers/)).
 
-```protobufjs
+```
 syntax = "proto3";
 
-message Incoming {
+message Message {
   oneof type {
     Content content = 1;
-    bool joined = 2;
-    bool ping = 3;
-    bool pong = 4;
-  }
-}
 
-message Outcoming {
-  oneof type {
-    Content content = 1;
-    bool isFirst = 2;
-    bool ping = 3;
-    bool pong = 4;
+    // Server response to the peer wanted to join a peer to peer network.
+    // True if the first peer in the network.
+    bool isFirst = 2; // Only outcoming message
+
+    // Peer response to the server when he joined the peer to peer network
+    // successfully and is ready to help other peers to join this network.
+    bool joined = 3; // Only incoming
+
+    // Server send `pong` if reseives a `ping`. In addition the server
+    // sends `ping` periodically and expects to get `pong` response, otherwise
+    // closes the socket with this peer.
+    bool ping = 4;
+    bool pong = 5;
   }
 }
 
 message Content {
+  // Peer id to route data.
   uint32 id = 1;
+
+  // True if all WebRTC data has been transmitted.
+  bool isEnd = 2;
+
+  // WebRTC data (in fact could be any array of bytes)
+  // or error when the socket with one of the peer has
+  // closed before `isEnd` message has been received.
   oneof type {
-    bytes data = 2;
-    bool isError = 3;
-    bool isEnd = 4;
+    bytes data = 3;
+    bool isError = 4;
   }
 }
+
 
 ```
