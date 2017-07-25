@@ -2640,118 +2640,52 @@ const $util = minimal_3;
 
 const $root = minimal_4["default"] || (minimal_4["default"] = {});
 
-const Incoming = $root.Incoming = (() => {
+const Message = $root.Message = (() => {
 
-    function Incoming(properties) {
+    function Message(properties) {
         if (properties)
             for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
                     this[keys[i]] = properties[keys[i]];
     }
 
-    Incoming.prototype.content = null;
-    Incoming.prototype.joined = false;
-    Incoming.prototype.ping = false;
-    Incoming.prototype.pong = false;
+    Message.prototype.content = null;
+    Message.prototype.isFirst = false;
+    Message.prototype.joined = false;
+    Message.prototype.ping = false;
+    Message.prototype.pong = false;
 
     let $oneOfFields;
 
-    Object.defineProperty(Incoming.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "joined", "ping", "pong"]),
+    Object.defineProperty(Message.prototype, "type", {
+        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "joined", "ping", "pong"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
-    Incoming.create = function create(properties) {
-        return new Incoming(properties);
+    Message.create = function create(properties) {
+        return new Message(properties);
     };
 
-    Incoming.encode = function encode(message, writer) {
-        if (!writer)
-            writer = $Writer.create();
-        if (message.content != null && message.hasOwnProperty("content"))
-            $root.Content.encode(message.content, writer.uint32(10).fork()).ldelim();
-        if (message.joined != null && message.hasOwnProperty("joined"))
-            writer.uint32(16).bool(message.joined);
-        if (message.ping != null && message.hasOwnProperty("ping"))
-            writer.uint32(24).bool(message.ping);
-        if (message.pong != null && message.hasOwnProperty("pong"))
-            writer.uint32(32).bool(message.pong);
-        return writer;
-    };
-
-    Incoming.decode = function decode(reader, length) {
-        if (!(reader instanceof $Reader))
-            reader = $Reader.create(reader);
-        let end = length === undefined ? reader.len : reader.pos + length, message = new $root.Incoming();
-        while (reader.pos < end) {
-            let tag = reader.uint32();
-            switch (tag >>> 3) {
-            case 1:
-                message.content = $root.Content.decode(reader, reader.uint32());
-                break;
-            case 2:
-                message.joined = reader.bool();
-                break;
-            case 3:
-                message.ping = reader.bool();
-                break;
-            case 4:
-                message.pong = reader.bool();
-                break;
-            default:
-                reader.skipType(tag & 7);
-                break;
-            }
-        }
-        return message;
-    };
-
-    return Incoming;
-})();
-
-const Outcoming = $root.Outcoming = (() => {
-
-    function Outcoming(properties) {
-        if (properties)
-            for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                if (properties[keys[i]] != null)
-                    this[keys[i]] = properties[keys[i]];
-    }
-
-    Outcoming.prototype.content = null;
-    Outcoming.prototype.isFirst = false;
-    Outcoming.prototype.ping = false;
-    Outcoming.prototype.pong = false;
-
-    let $oneOfFields;
-
-    Object.defineProperty(Outcoming.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "ping", "pong"]),
-        set: $util.oneOfSetter($oneOfFields)
-    });
-
-    Outcoming.create = function create(properties) {
-        return new Outcoming(properties);
-    };
-
-    Outcoming.encode = function encode(message, writer) {
+    Message.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
         if (message.content != null && message.hasOwnProperty("content"))
             $root.Content.encode(message.content, writer.uint32(10).fork()).ldelim();
         if (message.isFirst != null && message.hasOwnProperty("isFirst"))
             writer.uint32(16).bool(message.isFirst);
+        if (message.joined != null && message.hasOwnProperty("joined"))
+            writer.uint32(24).bool(message.joined);
         if (message.ping != null && message.hasOwnProperty("ping"))
-            writer.uint32(24).bool(message.ping);
+            writer.uint32(32).bool(message.ping);
         if (message.pong != null && message.hasOwnProperty("pong"))
-            writer.uint32(32).bool(message.pong);
+            writer.uint32(40).bool(message.pong);
         return writer;
     };
 
-    Outcoming.decode = function decode(reader, length) {
+    Message.decode = function decode(reader, length) {
         if (!(reader instanceof $Reader))
             reader = $Reader.create(reader);
-        let end = length === undefined ? reader.len : reader.pos + length, message = new $root.Outcoming();
+        let end = length === undefined ? reader.len : reader.pos + length, message = new $root.Message();
         while (reader.pos < end) {
             let tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2762,9 +2696,12 @@ const Outcoming = $root.Outcoming = (() => {
                 message.isFirst = reader.bool();
                 break;
             case 3:
-                message.ping = reader.bool();
+                message.joined = reader.bool();
                 break;
             case 4:
+                message.ping = reader.bool();
+                break;
+            case 5:
                 message.pong = reader.bool();
                 break;
             default:
@@ -2775,7 +2712,7 @@ const Outcoming = $root.Outcoming = (() => {
         return message;
     };
 
-    return Outcoming;
+    return Message;
 })();
 
 const Content = $root.Content = (() => {
@@ -2788,14 +2725,14 @@ const Content = $root.Content = (() => {
     }
 
     Content.prototype.id = 0;
+    Content.prototype.isEnd = false;
     Content.prototype.data = $util.newBuffer([]);
     Content.prototype.isError = false;
-    Content.prototype.isEnd = false;
 
     let $oneOfFields;
 
     Object.defineProperty(Content.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["data", "isError", "isEnd"]),
+        get: $util.oneOfGetter($oneOfFields = ["data", "isError"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -2808,12 +2745,12 @@ const Content = $root.Content = (() => {
             writer = $Writer.create();
         if (message.id != null && message.hasOwnProperty("id"))
             writer.uint32(8).uint32(message.id);
-        if (message.data != null && message.hasOwnProperty("data"))
-            writer.uint32(18).bytes(message.data);
-        if (message.isError != null && message.hasOwnProperty("isError"))
-            writer.uint32(24).bool(message.isError);
         if (message.isEnd != null && message.hasOwnProperty("isEnd"))
-            writer.uint32(32).bool(message.isEnd);
+            writer.uint32(16).bool(message.isEnd);
+        if (message.data != null && message.hasOwnProperty("data"))
+            writer.uint32(26).bytes(message.data);
+        if (message.isError != null && message.hasOwnProperty("isError"))
+            writer.uint32(32).bool(message.isError);
         return writer;
     };
 
@@ -2828,13 +2765,13 @@ const Content = $root.Content = (() => {
                 message.id = reader.uint32();
                 break;
             case 2:
-                message.data = reader.bytes();
+                message.isEnd = reader.bool();
                 break;
             case 3:
-                message.isError = reader.bool();
+                message.data = reader.bytes();
                 break;
             case 4:
-                message.isEnd = reader.bool();
+                message.isError = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -2870,10 +2807,17 @@ class SigverError extends Error {
   }
 }
 
+const bunyan = require('bunyan');
+
+const log = bunyan.createLogger({
+  name: 'sigver',
+  level: 'trace'
+});
+
 const PING_INTERVAL = 5000;
 const ID_MAX_VALUE = 4294967295;
 
-class Peer extends require('rxjs/Rx').Subject {
+class Peer extends require('rxjs/Rx').ReplaySubject {
   constructor (key) {
     super();
     this.key = key;
@@ -2913,7 +2857,7 @@ class Peer extends require('rxjs/Rx').Subject {
       .map(({ content }) => content)
       .subscribe(
         content => {
-          this.send({ content: Object.assign(content, { id: 0 }) });
+          this.send({ content: { id: 0, data: content.data } });
           if (content.isEnd) {
             memberEnded = true;
             subToMember.unsubscribe();
@@ -2938,10 +2882,13 @@ class Peer extends require('rxjs/Rx').Subject {
       .map(({ content }) => content)
       .subscribe(
         content => {
-          member.send({ content: Object.assign(content, { id: this.id }) });
+          member.send({ content: { id: this.id, data: content.data } });
           if (content.isEnd) {
+            log.debug(this.id + ' transmitting to ' + member.id + ' END_______________');
             joiningEnded = true;
             subToJoining.unsubscribe();
+          } else {
+            log.debug(this.id + ' transmitting to ' + member.id + ' byteLength: ' + content.data.byteLength);
           }
         },
         () => {
@@ -2957,13 +2904,6 @@ class Peer extends require('rxjs/Rx').Subject {
       );
   }
 }
-
-const bunyan = require('bunyan');
-
-const log = bunyan.createLogger({
-  name: 'sigver',
-  level: 'trace'
-});
 
 const url = require('url');
 const KEY_LENGTH_LIMIT = 512;
@@ -3015,8 +2955,9 @@ class WsServer {
       socket.binaryType = 'arraybuffer';
       socket.onmessage = evt => {
         try {
-          peer.next(Incoming.decode(new Uint8Array(evt.data)));
+          peer.next(Message.decode(new Uint8Array(evt.data)));
         } catch (err) {
+          log.error(err);
           socket.close(err.code, err.message);
         }
       };
@@ -3029,7 +2970,7 @@ class WsServer {
         }
       };
       peer.send = msg => {
-        const bytes = Outcoming.encode(Outcoming.create(msg)).finish();
+        const bytes = Message.encode(Message.create(msg)).finish();
         socket.send(bytes, {binary: true});
       };
       peer.close = (code, reason) => socket.close(code, reason);
@@ -3068,7 +3009,6 @@ class ServerCore {
 
     // Check whether the first peer or not in the network identified by the key
     if (net !== undefined) {
-      console.log('IS not FIRST');
       peer.connect(net.selectMember());
       peer.send({ isFirst: false });
     } else {

@@ -3,7 +3,7 @@ import SigverError from './SigverError'
 const PING_INTERVAL = 5000
 const ID_MAX_VALUE = 4294967295
 
-export default class Peer extends require('rxjs/Rx').Subject {
+export default class Peer extends require('rxjs/Rx').ReplaySubject {
   constructor (key) {
     super()
     this.key = key
@@ -43,7 +43,7 @@ export default class Peer extends require('rxjs/Rx').Subject {
       .map(({ content }) => content)
       .subscribe(
         content => {
-          this.send({ content: Object.assign(content, { id: 0 }) })
+          this.send({ content: { id: 0, data: content.data } })
           if (content.isEnd) {
             memberEnded = true
             subToMember.unsubscribe()
@@ -68,7 +68,7 @@ export default class Peer extends require('rxjs/Rx').Subject {
       .map(({ content }) => content)
       .subscribe(
         content => {
-          member.send({ content: Object.assign(content, { id: this.id }) })
+          member.send({ content: { id: this.id, data: content.data } })
           if (content.isEnd) {
             joiningEnded = true
             subToJoining.unsubscribe()

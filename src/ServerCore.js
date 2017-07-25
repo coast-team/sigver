@@ -11,7 +11,6 @@ export default class ServerCore {
 
     // Check whether the first peer or not in the network identified by the key
     if (net !== undefined) {
-      console.log('IS not FIRST')
       peer.connect(net.selectMember())
       peer.send({ isFirst: false })
     } else {

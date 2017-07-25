@@ -1,15 +1,15 @@
-import { Incoming, Outcoming } from '../src/Protobuf'
+import { Message } from '../src/Protobuf'
 
 export function randomKey () {
   return String(Math.ceil(Math.random() * 99999))
 }
 
 export function decode (bytes) {
-  return Outcoming.decode(new Uint8Array(bytes))
+  return Message.decode(new Uint8Array(bytes))
 }
 
 export function encode (msg) {
-  return Incoming.encode(Incoming.create(msg)).finish()
+  return Message.encode(Message.create(msg)).finish()
 }
 
 export function randomBytes () {

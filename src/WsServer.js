@@ -1,4 +1,4 @@
-import { Incoming, Outcoming } from './Protobuf'
+import { Message } from './Protobuf'
 import Peer from './Peer'
 import SigverError from './SigverError'
 import log from './log'
@@ -53,8 +53,9 @@ export default class WsServer {
       socket.binaryType = 'arraybuffer'
       socket.onmessage = evt => {
         try {
-          peer.next(Incoming.decode(new Uint8Array(evt.data)))
+          peer.next(Message.decode(new Uint8Array(evt.data)))
         } catch (err) {
+          log.error(err)
           socket.close(err.code, err.message)
         }
       }
@@ -67,7 +68,7 @@ export default class WsServer {
         }
       }
       peer.send = msg => {
-        const bytes = Outcoming.encode(Outcoming.create(msg)).finish()
+        const bytes = Message.encode(Message.create(msg)).finish()
         socket.send(bytes, {binary: true})
       }
       peer.close = (code, reason) => socket.close(code, reason)

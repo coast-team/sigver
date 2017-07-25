@@ -11,16 +11,14 @@
     "node": ">=8.1.4"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": " npm run build && node server.js --host 0.0.0.0 | bunyan",
+    "dev": "npm run pbjs && npm run build && node server.js --host 0.0.0.0 | bunyan",
     "lint": "eslint ./",
-    "sse": "npm run build && node server.js -h localhost -t sse",
     "build": "rollup -c",
     "pbjs": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-comments --no-convert -o src/Protobuf.js src/message.proto",
     "pretest": "npm run build && pm2 gracefulReload process.yml",
     "test": "karma start karma.conf.js",
     "test:chrome": "npm run test -- --browsers Chrome",
-    "precommit": "npm test -- --no-auto-watch --single-run",
+    "precommit": "npm run lint && npm test -- --no-auto-watch --single-run",
     "commitmsg": "validate-commit-msg",
     "cz": "git-cz",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
@@ -49,7 +47,7 @@
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^2.0.0",
     "eslint": "^4.0.0",
-    "eslint-config-conaclos": "^1.2.0",
+    "eslint-config-conaclos": "^2.2.0",
     "eslint-config-standard": "^10.0.0",
     "eslint-plugin-extra-rules": "0.8.1",
     "eslint-plugin-import": "^2.3.0",
