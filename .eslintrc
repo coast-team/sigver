@@ -1,5 +1,6 @@
 {
   "extends": [
+    "conaclos/esnext-base",
     "standard"
   ],
   "rules": {
