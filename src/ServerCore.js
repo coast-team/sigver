@@ -1,5 +1,3 @@
-import log from './log'
-
 const networks = new Map()
 
 /**

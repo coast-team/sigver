@@ -2895,13 +2895,6 @@ class Peer extends require('rxjs/Rx').ReplaySubject {
   }
 }
 
-const bunyan = require('bunyan');
-
-const log = bunyan.createLogger({
-  name: 'sigver',
-  level: 'trace'
-});
-
 const url = require('url');
 const KEY_LENGTH_LIMIT = 512;
 
@@ -3086,6 +3079,12 @@ class Network {
 }
 
 // import SseServer from './SseServer'
+// Config LOGGER
+global.log = require('bunyan').createLogger({
+  name: 'sigver',
+  level: 'trace'
+});
+
 const program = require('commander');
 
 const defaults = {

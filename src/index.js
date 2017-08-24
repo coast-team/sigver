@@ -1,7 +1,12 @@
 import WsServer from './WsServer'
 // import SseServer from './SseServer'
 import ServerCore from './ServerCore'
-import log from './log'
+
+// Config LOGGER
+global.log = require('bunyan').createLogger({
+  name: 'sigver',
+  level: 'trace'
+})
 
 const program = require('commander')
 

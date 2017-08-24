@@ -1,7 +1,6 @@
 import { Message } from './Protobuf'
 import Peer from './Peer'
 import SigverError from './SigverError'
-import log from './log'
 
 const url = require('url')
 const KEY_LENGTH_LIMIT = 512

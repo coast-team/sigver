@@ -16,6 +16,7 @@
     "no-process-env": 0
   },
   "globals": {
+    "log": true,
     "jasmine": true,
     "describe": true,
     "xdescribe": true,
