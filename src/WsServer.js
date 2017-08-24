@@ -88,7 +88,7 @@ export default class WsServer {
 
   close (cb) {
     if (this.server !== null) {
-      console.log('Server has stopped successfully')
+      log.info('Server has stopped successfully')
       this.server.close(cb)
       this.peers.complete()
     }
