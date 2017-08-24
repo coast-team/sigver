@@ -11,7 +11,7 @@
     "node": ">=8.1.4"
   },
   "scripts": {
-    "dev": "npm run pbjs && npm run build && node server.js --host 0.0.0.0 | bunyan",
+    "dev": "npm run pbjs && npm run build && node server.js --host 0.0.0.0 --port 8181 | bunyan",
     "lint": "eslint ./",
     "build": "rollup -c",
     "pbjs": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-comments --no-convert -o src/Protobuf.js src/message.proto",
@@ -37,16 +37,16 @@
     "url": "https://github.com/coast-team/sigver.git"
   },
   "dependencies": {
-    "bunyan": "^1.8.9",
+    "bunyan": "^1.8.12",
     "commander": "^2.9.0",
     "protobufjs": "^6.8.0",
-    "rxjs": "^5.4.0",
-    "uws": "^8.14.0"
+    "rxjs": "^5.4.3",
+    "uws": "^8.14.1"
   },
   "devDependencies": {
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^2.0.0",
-    "eslint": "^4.0.0",
+    "eslint": "^4.5.0",
     "eslint-config-conaclos": "^2.0.0",
     "eslint-config-standard": "^10.0.0",
     "eslint-plugin-extra-rules": "0.8.1",
@@ -55,22 +55,22 @@
     "eslint-plugin-promise": "^3.0.0",
     "eslint-plugin-standard": "^3.0.1",
     "husky": "^0.14.3",
-    "jasmine": "^2.5.2",
-    "jasmine-spec-reporter": "^4.0.0",
+    "jasmine": "^2.7.0",
+    "jasmine-spec-reporter": "^4.2.1",
     "karma": "^1.7.0",
     "karma-chrome-launcher": "^2.1.1",
     "karma-firefox-launcher": "^1.0.0",
     "karma-jasmine": "^1.0.2",
-    "karma-rollup-preprocessor": "^4.0.0",
+    "karma-rollup-preprocessor": "^4.0.4",
     "karma-spec-reporter": "0.0.31",
     "pm2": "^2.5.0",
-    "rollup": "^0.45.2",
-    "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup": "^0.48.2",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-commonjs": "^8.2.0",
     "rollup-plugin-filesize": "^1.0.1",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "semantic-release": "^6.3.2",
-    "validate-commit-msg": "^2.11.1"
+    "semantic-release": "^7.0.1",
+    "validate-commit-msg": "^2.14.0"
   },
   "config": {
     "commitizen": {

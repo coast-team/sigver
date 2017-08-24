@@ -12,7 +12,7 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-var index = asPromise;
+var aspromise = asPromise;
 
 /**
  * Callback as used by {@link util.asPromise}.
@@ -64,7 +64,7 @@ function asPromise(fn, ctx/*, varargs */) {
     });
 }
 
-var index$2 = createCommonjsModule(function (module, exports) {
+var base64_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 
 /**
@@ -206,7 +206,7 @@ base64.test = function test(string) {
 };
 });
 
-var index$4 = EventEmitter;
+var eventemitter = EventEmitter;
 
 /**
  * Constructs a new event emitter instance.
@@ -282,7 +282,7 @@ EventEmitter.prototype.emit = function emit(evt) {
     return this;
 };
 
-var index$6 = factory(factory);
+var float_1 = factory(factory);
 
 /**
  * Reads / writes floats / doubles from / to buffers.
@@ -616,7 +616,7 @@ function readUintBE(buf, pos) {
           | buf[pos + 3]) >>> 0;
 }
 
-var index$8 = inquire;
+var inquire_1 = inquire;
 
 /**
  * Requires a module only if available.
@@ -633,7 +633,7 @@ function inquire(moduleName) {
     return null;
 }
 
-var index$10 = createCommonjsModule(function (module, exports) {
+var utf8_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 
 /**
@@ -741,7 +741,7 @@ utf8.write = function utf8_write(string, buffer, offset) {
 };
 });
 
-var index$12 = pool;
+var pool_1 = pool;
 
 /**
  * An allocator as used by {@link util.pool}.
@@ -994,25 +994,25 @@ var minimal$2 = createCommonjsModule(function (module, exports) {
 var util = exports;
 
 // used to return a Promise where callback is omitted
-util.asPromise = index;
+util.asPromise = aspromise;
 
 // converts to / from base64 encoded strings
-util.base64 = index$2;
+util.base64 = base64_1;
 
 // base class of rpc.Service
-util.EventEmitter = index$4;
+util.EventEmitter = eventemitter;
 
 // float handling accross browsers
-util.float = index$6;
+util.float = float_1;
 
 // requires modules optionally and hides the call from bundlers
-util.inquire = index$8;
+util.inquire = inquire_1;
 
 // converts to / from utf8 encoded strings
-util.utf8 = index$10;
+util.utf8 = utf8_1;
 
 // provides a node-like buffer pool in the browser
-util.pool = index$12;
+util.pool = pool_1;
 
 // utility to work with the low and high bits of a 64 bit value
 util.LongBits = longbits;

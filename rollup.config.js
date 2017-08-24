@@ -3,10 +3,12 @@ import resolve from 'rollup-plugin-node-resolve'
 import commonjs from 'rollup-plugin-commonjs'
 
 export default {
-  entry: 'src/index.js',
-  dest: 'server.js',
-  format: 'iife',
-  banner: '#!/usr/bin/env node',
+  input: 'src/index.js',
+  output: {
+    file: 'server.js',
+    format: 'iife',
+    banner: '#!/usr/bin/env node'
+  },
   plugins: [
     resolve(),
     commonjs({
