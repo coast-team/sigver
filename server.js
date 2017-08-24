@@ -626,7 +626,7 @@ var inquire_1 = inquire;
  */
 function inquire(moduleName) {
     try {
-        var mod = eval("quire".replace(/^/,"re"))(moduleName); // eslint-disable-line no-eval
+        var mod = undefined; // eslint-disable-line no-eval
         if (mod && (mod.length || Object.keys(mod).length))
             return mod;
     } catch (e) {} // eslint-disable-line no-empty
@@ -2981,7 +2981,7 @@ class WsServer {
 
   close (cb) {
     if (this.server !== null) {
-      console.log('Server has stopped successfully');
+      log.info('Server has stopped successfully');
       this.server.close(cb);
       this.peers.complete();
     }

@@ -69,6 +69,7 @@
     "rollup-plugin-commonjs": "^8.2.0",
     "rollup-plugin-filesize": "^1.0.1",
     "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-re": "^1.0.6",
     "semantic-release": "^7.0.1",
     "validate-commit-msg": "^2.14.0"
   },
