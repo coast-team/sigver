@@ -32,7 +32,7 @@ module.exports = function(config) {
 
     rollupPreprocessor: {
       format: 'iife',
-      moduleName: 'sigver',
+      name: 'sigver',
       plugins: [
         require('rollup-plugin-node-resolve')({}),
         require('rollup-plugin-commonjs')({

@@ -12,6 +12,7 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
+"use strict";
 var aspromise = asPromise;
 
 /**
@@ -206,6 +207,7 @@ base64.test = function test(string) {
 };
 });
 
+"use strict";
 var eventemitter = EventEmitter;
 
 /**
@@ -281,6 +283,8 @@ EventEmitter.prototype.emit = function emit(evt) {
     }
     return this;
 };
+
+"use strict";
 
 var float_1 = factory(factory);
 
@@ -616,6 +620,7 @@ function readUintBE(buf, pos) {
           | buf[pos + 3]) >>> 0;
 }
 
+"use strict";
 var inquire_1 = inquire;
 
 /**
@@ -741,6 +746,7 @@ utf8.write = function utf8_write(string, buffer, offset) {
 };
 });
 
+"use strict";
 var pool_1 = pool;
 
 /**
@@ -789,6 +795,7 @@ function pool(alloc, slice, size) {
     };
 }
 
+"use strict";
 var longbits = LongBits$1;
 
 
@@ -1397,6 +1404,7 @@ util._configure = function() {
 };
 });
 
+"use strict";
 var writer = Writer;
 
 
@@ -1856,6 +1864,7 @@ Writer._configure = function(BufferWriter_) {
     BufferWriter = BufferWriter_;
 };
 
+"use strict";
 var writer_buffer = BufferWriter$1;
 
 // extends Writer
@@ -1937,6 +1946,7 @@ BufferWriter$1.prototype.string = function write_string_buffer(value) {
  * @returns {Buffer} Finished buffer
  */
 
+"use strict";
 var reader = Reader;
 
 
@@ -2344,6 +2354,7 @@ Reader._configure = function(BufferReader_) {
     });
 };
 
+"use strict";
 var reader_buffer = BufferReader$1;
 
 // extends Reader
@@ -2388,6 +2399,7 @@ BufferReader$1.prototype.string = function read_string_buffer() {
  * @returns {Buffer} Value read
  */
 
+"use strict";
 var service = Service;
 
 
@@ -2569,6 +2581,7 @@ var rpc = exports;
 rpc.Service = service;
 });
 
+"use strict";
 var roots = {};
 
 /**
@@ -2626,6 +2639,9 @@ protobuf.Writer._configure(protobuf.BufferWriter);
 configure();
 });
 
+// minimal library entry point.
+
+"use strict";
 var minimal = indexMinimal;
 
 var minimal_1 = minimal.Reader;
