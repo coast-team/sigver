@@ -2807,7 +2807,7 @@ class SigverError extends Error {
   }
 }
 
-const PING_INTERVAL = 5000;
+const PING_INTERVAL = 4000;
 const ID_MAX_VALUE = 4294967295;
 
 class Peer extends require('rxjs/Rx').ReplaySubject {
@@ -2827,6 +2827,7 @@ class Peer extends require('rxjs/Rx').ReplaySubject {
     if (this.network !== undefined) {
       this.network.removeMember(this);
     }
+    this.close(SigverError.PONG_TIMEOUT_ERROR, `Pong not received in ${PING_INTERVAL} seconds`);
   }
 
   startPing () {

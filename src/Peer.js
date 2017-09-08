@@ -1,6 +1,6 @@
 import SigverError from './SigverError'
 
-const PING_INTERVAL = 5000
+const PING_INTERVAL = 4000
 const ID_MAX_VALUE = 4294967295
 
 export default class Peer extends require('rxjs/Rx').ReplaySubject {
@@ -20,6 +20,7 @@ export default class Peer extends require('rxjs/Rx').ReplaySubject {
     if (this.network !== undefined) {
       this.network.removeMember(this)
     }
+    this.close(SigverError.PONG_TIMEOUT_ERROR, `Pong not received in ${PING_INTERVAL} seconds`)
   }
 
   startPing () {
