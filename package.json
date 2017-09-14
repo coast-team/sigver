@@ -11,7 +11,7 @@
     "node": ">=8.1.4"
   },
   "scripts": {
-    "dev": "npm run pbjs && npm run build && node server.js --host 0.0.0.0 --port 8181 | bunyan",
+    "dev": "npm run proto && npm run build && node server.js --host 0.0.0.0 --port 8010 | bunyan",
     "lint": "eslint ./",
     "build": "rollup -c",
     "proto": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-comments --no-convert -o src/Protobuf.js src/message.proto",
@@ -47,7 +47,7 @@
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^2.0.0",
     "eslint": "^4.6.1",
-    "eslint-config-conaclos": "^2.0.0",
+    "eslint-config-conaclos": "^2.1.0",
     "eslint-config-standard": "^10.0.0",
     "eslint-plugin-extra-rules": "0.8.1",
     "eslint-plugin-import": "^2.3.0",

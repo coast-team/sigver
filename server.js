@@ -2823,7 +2823,7 @@ class SigverError extends Error {
   }
 }
 
-const PING_INTERVAL = 4000;
+const PING_TIMEOUT = 5000;
 const ID_MAX_VALUE = 4294967295;
 
 class Peer extends require('rxjs/Rx').ReplaySubject {
@@ -2832,31 +2832,28 @@ class Peer extends require('rxjs/Rx').ReplaySubject {
     this.key = key;
     this.id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE);
     this.network = undefined;
-    this.pongTimeout = undefined;
+    this.pingTimer = undefined;
     this.pongReceived = false;
   }
 
   clean () {
-    if (this.pongTimeout !== undefined) {
-      clearTimeout(this.pongTimeout);
-    }
+    clearTimeout(this.pingTimer);
     if (this.network !== undefined) {
       this.network.removeMember(this);
     }
-    this.close(SigverError.PONG_TIMEOUT_ERROR, `Pong not received in ${PING_INTERVAL} seconds`);
+    this.close(SigverError.PONG_TIMEOUT_ERROR, `Signaling: pong not received in ${PING_TIMEOUT} milliseconds`);
   }
 
   startPing () {
     this.pongReceived = false;
     this.send({ ping: true });
-    this.pongTimeout = setTimeout(() => {
+    this.pingTimer = setTimeout(() => {
       if (!this.pongReceived) {
-        this.pongTimeout = undefined;
         this.error(new SigverError(SigverError.PONG_TIMEOUT_ERROR));
       } else {
         this.startPing();
       }
-    }, PING_INTERVAL);
+    }, PING_TIMEOUT);
   }
 
   connect (member) {
@@ -3045,9 +3042,6 @@ class ServerCore {
       },
       () => peer.clean()
     );
-
-    // Start ping
-    peer.startPing();
   }
 
   becomeMember (peer) {
@@ -3060,9 +3054,7 @@ class ServerCore {
         const net = new Network(peer.key, peer);
         networks.add(peer.key, net);
       }
-      peer.send({ isFirst: true });
-    } else {
-      peer.send({ isFirst: false });
+      peer.startPing();
     }
   }
 }

@@ -38,9 +38,6 @@ export default class ServerCore {
       },
       () => peer.clean()
     )
-
-    // Start ping
-    peer.startPing()
   }
 
   becomeMember (peer) {
@@ -53,9 +50,7 @@ export default class ServerCore {
         const net = new Network(peer.key, peer)
         networks.add(peer.key, net)
       }
-      peer.send({ isFirst: true })
-    } else {
-      peer.send({ isFirst: false })
+      peer.startPing()
     }
   }
 }
