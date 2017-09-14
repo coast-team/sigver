@@ -3019,6 +3019,7 @@ class ServerCore {
       const net = new Network(key, peer);
       networks.set(key, net);
       peer.send({ isFirst: true });
+      peer.startPing();
     }
 
     // Subscribe to peer messages
