@@ -3,7 +3,8 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 
 import SigverError from './SigverError'
 
-const PING_TIMEOUT = 5000
+const MAXIMUM_MISSED_HEARTBEAT = 3
+const HEARTBEAT_INTERVAL = 5000
 const ID_MAX_VALUE = 4294967295
 
 export default class Peer extends ReplaySubject {
@@ -12,28 +13,27 @@ export default class Peer extends ReplaySubject {
     this.key = key
     this.id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE)
     this.network = undefined
-    this.pingTimer = undefined
-    this.pongReceived = false
+    this.heartbeatInterval = undefined
+    this.missedHeartbeat = 0
   }
 
   clean () {
-    clearTimeout(this.pingTimer)
+    clearTimeout(this.heartbeatInterval)
     if (this.network !== undefined) {
       this.network.removeMember(this)
     }
-    this.close(SigverError.PONG_TIMEOUT_ERROR, `Signaling: pong not received in ${PING_TIMEOUT} milliseconds`)
   }
 
-  startPing () {
-    this.pongReceived = false
-    this.send({ ping: true })
-    this.pingTimer = setTimeout(() => {
-      if (!this.pongReceived) {
-        this.error(new SigverError(SigverError.PONG_TIMEOUT_ERROR))
-      } else {
-        this.startPing()
+  startHeartbeat () {
+    this.missedHeartbeat = 0
+    this.heartbeatInterval = setInterval(() => {
+      this.missedHeartbeat++
+      if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
+        clearInterval(this.heartbeatInterval)
+        this.error(new SigverError(SigverError.HEARTBEAT_ERROR_CODE))
       }
-    }, PING_TIMEOUT)
+      this.heartbeat()
+    }, HEARTBEAT_INTERVAL)
   }
 
   connect (member) {

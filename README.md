@@ -66,11 +66,10 @@ message Message {
     // successfully and is ready to help other peers to join this network.
     bool joined = 3; // Only incoming
 
-    // Server send `pong` if reseives a `ping`. In addition the server
-    // sends `ping` periodically and expects to get `pong` response, otherwise
-    // closes the socket with this peer.
-    bool ping = 4;
-    bool pong = 5;
+    // Server sends `heartbeat` message each 5 seconds and expects getting the
+    // same message back. If after 3 tentatives still no response then close the
+    // connection.
+    bool heartbeat = 4;
   }
 }
 

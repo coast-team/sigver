@@ -6,6 +6,7 @@ import SigverError from './SigverError'
 
 const url = require('url')
 const KEY_LENGTH_LIMIT = 512
+const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
 
 /**
  * WebSocket server able to use ws or uws modules.
@@ -68,10 +69,10 @@ export default class WsServer {
         }
       }
       peer.send = msg => {
-        const bytes = Message.encode(Message.create(msg)).finish()
-        socket.send(bytes, {binary: true})
+        socket.send(Message.encode(Message.create(msg)).finish(), {binary: true})
       }
       peer.close = (code, reason) => socket.close(code, reason)
+      peer.heartbeat = () => socket.send(heartBeatMsg, {binary: true})
       this.peers.next({ peer, key })
     })
   }

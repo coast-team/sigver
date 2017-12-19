@@ -15,7 +15,7 @@ export default class ServerCore {
       const net = new Network(key, peer)
       networks.set(key, net)
       peer.send({ isFirst: true })
-      peer.startPing()
+      peer.startHeartbeat()
     }
 
     // Subscribe to peer messages
@@ -25,11 +25,8 @@ export default class ServerCore {
           case 'joined':
             this.becomeMember(peer)
             break
-          case 'ping':
-            peer.send({ pong: true })
-            break
-          case 'pong':
-            peer.pongReceived = true
+          case 'heartbeat':
+            peer.missedHeartbeat = 0
             break
         }
       },
@@ -51,7 +48,7 @@ export default class ServerCore {
         const net = new Network(peer.key, peer)
         networks.add(peer.key, net)
       }
-      peer.startPing()
+      peer.startHeartbeat()
     }
   }
 }

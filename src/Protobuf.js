@@ -17,13 +17,12 @@ export const Message = $root.Message = (() => {
     Message.prototype.content = null;
     Message.prototype.isFirst = false;
     Message.prototype.joined = false;
-    Message.prototype.ping = false;
-    Message.prototype.pong = false;
+    Message.prototype.heartbeat = false;
 
     let $oneOfFields;
 
     Object.defineProperty(Message.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "joined", "ping", "pong"]),
+        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "joined", "heartbeat"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -40,10 +39,8 @@ export const Message = $root.Message = (() => {
             writer.uint32(16).bool(message.isFirst);
         if (message.joined != null && message.hasOwnProperty("joined"))
             writer.uint32(24).bool(message.joined);
-        if (message.ping != null && message.hasOwnProperty("ping"))
-            writer.uint32(32).bool(message.ping);
-        if (message.pong != null && message.hasOwnProperty("pong"))
-            writer.uint32(40).bool(message.pong);
+        if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
+            writer.uint32(32).bool(message.heartbeat);
         return writer;
     };
 
@@ -64,10 +61,7 @@ export const Message = $root.Message = (() => {
                 message.joined = reader.bool();
                 break;
             case 4:
-                message.ping = reader.bool();
-                break;
-            case 5:
-                message.pong = reader.bool();
+                message.heartbeat = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);

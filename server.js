@@ -3152,14 +3152,6 @@ BufferWriter$1.prototype.string = function write_string_buffer(value) {
     return this;
 };
 
-
-/**
- * Finishes the write operation.
- * @name BufferWriter#finish
- * @function
- * @returns {Buffer} Finished buffer
- */
-
 var reader = Reader;
 
 
@@ -3604,13 +3596,6 @@ BufferReader$1.prototype.string = function read_string_buffer() {
     return this.buf.utf8Slice(this.pos, this.pos = Math.min(this.pos + len, this.len));
 };
 
-/**
- * Reads a sequence of bytes preceeded by its length as a varint.
- * @name BufferReader#bytes
- * @function
- * @returns {Buffer} Value read
- */
-
 var service = Service;
 
 
@@ -3788,22 +3773,6 @@ rpc.Service = service;
 
 var roots = {};
 
-/**
- * Named roots.
- * This is where pbjs stores generated structures (the option `-r, --root` specifies a name).
- * Can also be used manually to make roots available accross modules.
- * @name roots
- * @type {Object.<string,Root>}
- * @example
- * // pbjs -r myroot -o compiled.js ...
- *
- * // in another module:
- * require("./compiled.js");
- *
- * // in any subsequent module:
- * var root = protobuf.roots["myroot"];
- */
-
 var indexMinimal = createCommonjsModule(function (module, exports) {
 var protobuf = exports;
 
@@ -3868,13 +3837,12 @@ const Message = $root.Message = (() => {
     Message.prototype.content = null;
     Message.prototype.isFirst = false;
     Message.prototype.joined = false;
-    Message.prototype.ping = false;
-    Message.prototype.pong = false;
+    Message.prototype.heartbeat = false;
 
     let $oneOfFields;
 
     Object.defineProperty(Message.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "joined", "ping", "pong"]),
+        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "joined", "heartbeat"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -3891,10 +3859,8 @@ const Message = $root.Message = (() => {
             writer.uint32(16).bool(message.isFirst);
         if (message.joined != null && message.hasOwnProperty("joined"))
             writer.uint32(24).bool(message.joined);
-        if (message.ping != null && message.hasOwnProperty("ping"))
-            writer.uint32(32).bool(message.ping);
-        if (message.pong != null && message.hasOwnProperty("pong"))
-            writer.uint32(40).bool(message.pong);
+        if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
+            writer.uint32(32).bool(message.heartbeat);
         return writer;
     };
 
@@ -3915,10 +3881,7 @@ const Message = $root.Message = (() => {
                 message.joined = reader.bool();
                 break;
             case 4:
-                message.ping = reader.bool();
-                break;
-            case 5:
-                message.pong = reader.bool();
+                message.heartbeat = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -11181,18 +11144,19 @@ class SigverError extends Error {
   static get KEY_ERROR () { return 4001 }
 
   // Pong message is not received during a certain delay.
-  static get PONG_TIMEOUT_ERROR () { return 4002 }
+  static get HEARTBEAT_ERROR_CODE () { return 4002 }
 
   getCodeText () {
     switch (this.code) {
       case SigverError.KEY_ERROR: return 'KEY_ERROR'
-      case SigverError.PONG_TIMEOUT_ERROR: return 'PONG_TIMEOUT_ERROR'
+      case SigverError.HEARTBEAT_ERROR_CODE: return 'HEARTBEAT_ERROR_CODE'
       default: return this.code
     }
   }
 }
 
-const PING_TIMEOUT = 5000;
+const MAXIMUM_MISSED_HEARTBEAT = 3;
+const HEARTBEAT_INTERVAL = 5000;
 const ID_MAX_VALUE = 4294967295;
 
 class Peer extends ReplaySubject_2 {
@@ -11201,28 +11165,27 @@ class Peer extends ReplaySubject_2 {
     this.key = key;
     this.id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE);
     this.network = undefined;
-    this.pingTimer = undefined;
-    this.pongReceived = false;
+    this.heartbeatInterval = undefined;
+    this.missedHeartbeat = 0;
   }
 
   clean () {
-    clearTimeout(this.pingTimer);
+    clearTimeout(this.heartbeatInterval);
     if (this.network !== undefined) {
       this.network.removeMember(this);
     }
-    this.close(SigverError.PONG_TIMEOUT_ERROR, `Signaling: pong not received in ${PING_TIMEOUT} milliseconds`);
   }
 
-  startPing () {
-    this.pongReceived = false;
-    this.send({ ping: true });
-    this.pingTimer = setTimeout(() => {
-      if (!this.pongReceived) {
-        this.error(new SigverError(SigverError.PONG_TIMEOUT_ERROR));
-      } else {
-        this.startPing();
+  startHeartbeat () {
+    this.missedHeartbeat = 0;
+    this.heartbeatInterval = setInterval(() => {
+      this.missedHeartbeat++;
+      if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
+        clearInterval(this.heartbeatInterval);
+        this.error(new SigverError(SigverError.HEARTBEAT_ERROR_CODE));
       }
-    }, PING_TIMEOUT);
+      this.heartbeat();
+    }, HEARTBEAT_INTERVAL);
   }
 
   connect (member) {
@@ -11310,6 +11273,7 @@ class Peer extends ReplaySubject_2 {
 
 const url = require('url');
 const KEY_LENGTH_LIMIT = 512;
+const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish();
 
 /**
  * WebSocket server able to use ws or uws modules.
@@ -11372,10 +11336,10 @@ class WsServer {
         }
       };
       peer.send = msg => {
-        const bytes = Message.encode(Message.create(msg)).finish();
-        socket.send(bytes, {binary: true});
+        socket.send(Message.encode(Message.create(msg)).finish(), {binary: true});
       };
       peer.close = (code, reason) => socket.close(code, reason);
+      peer.heartbeat = () => socket.send(heartBeatMsg, {binary: true});
       this.peers.next({ peer, key });
     });
   }
@@ -11417,7 +11381,7 @@ class ServerCore {
       const net = new Network(key, peer);
       networks.set(key, net);
       peer.send({ isFirst: true });
-      peer.startPing();
+      peer.startHeartbeat();
     }
 
     // Subscribe to peer messages
@@ -11427,11 +11391,8 @@ class ServerCore {
           case 'joined':
             this.becomeMember(peer);
             break
-          case 'ping':
-            peer.send({ pong: true });
-            break
-          case 'pong':
-            peer.pongReceived = true;
+          case 'heartbeat':
+            peer.missedHeartbeat = 0;
             break
         }
       },
@@ -11453,7 +11414,7 @@ class ServerCore {
         const net = new Network(peer.key, peer);
         networks.add(peer.key, net);
       }
-      peer.startPing();
+      peer.startHeartbeat();
     }
   }
 }
