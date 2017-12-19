@@ -20,10 +20,10 @@ export default class ServerCore {
 
     // Subscribe to peer messages
     peer.subscribe(
-      msg => {
-        switch (msg.type) {
+      ({ type }) => {
+        switch (type) {
           case 'joined':
-            this.becomeMember(peer, msg)
+            this.becomeMember(peer)
             break
           case 'ping':
             peer.send({ pong: true })

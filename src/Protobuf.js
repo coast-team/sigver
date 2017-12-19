@@ -90,14 +90,14 @@ export const Content = $root.Content = (() => {
     }
 
     Content.prototype.id = 0;
-    Content.prototype.isEnd = false;
     Content.prototype.data = $util.newBuffer([]);
     Content.prototype.isError = false;
+    Content.prototype.isEnd = false;
 
     let $oneOfFields;
 
     Object.defineProperty(Content.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["data", "isError"]),
+        get: $util.oneOfGetter($oneOfFields = ["data", "isError", "isEnd"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -110,12 +110,12 @@ export const Content = $root.Content = (() => {
             writer = $Writer.create();
         if (message.id != null && message.hasOwnProperty("id"))
             writer.uint32(8).uint32(message.id);
-        if (message.isEnd != null && message.hasOwnProperty("isEnd"))
-            writer.uint32(16).bool(message.isEnd);
         if (message.data != null && message.hasOwnProperty("data"))
-            writer.uint32(26).bytes(message.data);
+            writer.uint32(18).bytes(message.data);
         if (message.isError != null && message.hasOwnProperty("isError"))
-            writer.uint32(32).bool(message.isError);
+            writer.uint32(24).bool(message.isError);
+        if (message.isEnd != null && message.hasOwnProperty("isEnd"))
+            writer.uint32(32).bool(message.isEnd);
         return writer;
     };
 
@@ -130,13 +130,13 @@ export const Content = $root.Content = (() => {
                 message.id = reader.uint32();
                 break;
             case 2:
-                message.isEnd = reader.bool();
-                break;
-            case 3:
                 message.data = reader.bytes();
                 break;
-            case 4:
+            case 3:
                 message.isError = reader.bool();
+                break;
+            case 4:
+                message.isEnd = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);

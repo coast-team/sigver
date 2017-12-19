@@ -1,3 +1,5 @@
+import { Subject } from 'rxjs/Subject'
+
 import { Message } from './Protobuf'
 import Peer from './Peer'
 import SigverError from './SigverError'
@@ -13,7 +15,6 @@ export default class WsServer {
     this.httpServer = httpServer
     this.host = host
     this.port = port
-    const Subject = require('rxjs/Rx').Subject
     this.peers = new Subject()
   }
 

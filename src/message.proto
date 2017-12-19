@@ -24,14 +24,12 @@ message Content {
   // Peer id to route data.
   uint32 id = 1;
 
-  // True if all WebRTC data has been transmitted.
-  bool isEnd = 2;
-
   // WebRTC data (in fact could be any array of bytes)
   // or error when the socket with one of the peer has
   // closed before `isEnd` message has been received.
   oneof type {
-    bytes data = 3;
-    bool isError = 4;
+    bytes data = 2;
+    bool isError = 3;
+    bool isEnd = 4; // True if all WebRTC data has been transmitted.
   }
 }
