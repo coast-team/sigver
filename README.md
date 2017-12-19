@@ -75,18 +75,13 @@ message Message {
 }
 
 message Content {
-  // Peer id to route data.
-  uint32 id = 1;
+  uint32 id = 1; // Peer id to route data.
 
-  // True if all WebRTC data has been transmitted.
-  bool isEnd = 2;
-
-  // WebRTC data (in fact could be any array of bytes)
-  // or error when the socket with one of the peer has
-  // closed before `isEnd` message has been received.
+  // Data to be transmitted to the sibling peer
   oneof type {
-    bytes data = 3;
-    bool isError = 4;
+    bytes data = 2; // WebRTC data (in fact could be any array of bytes)
+    bool isError = 3; // Indicating that error occured and thus signaling unsubscribes from the problematic peer
+    bool isEnd = 4; // Indicating that the peer finished to send all data to another peer
   }
 }
 
