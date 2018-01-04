@@ -28,31 +28,38 @@ npm install -g sigver
 
 ## Run
 ```shell
-Usage: sigver [options]
+Usage: server [options]
+
+Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)
 
 
-  Options:
+Options:
 
-    -h, --host <ip>         Select host address to bind to. (default: 0.0.0.0)
-    -p, --port <number>     Select port to use. (default: 8000)
+  -V, --version           output the version number
+  -h, --host <ip>         Select host address to bind to. (default: 0.0.0.0)
+  -p, --port <number>     Select port to use. (default: 8000)
+  -k, --key <file path>   Private key for the certificate
+  -c, --cert <file path>  The server certificate
+  -a, --ca <file path>    The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.
+  -h, --help              output usage information
 
-    -k, --key <file path>   Private key for the certificate
-    -c, --cert <file path>  The server certificate
-    -a, --ca <file path>    The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.
+Examples:
 
-    -h, --help              output usage information
-
-  Examples:
-
-     $ sigver                         # Server is listening on ws://0.0.0.0:8000
-     $ sigver -h 192.168.0.1 -p 9000  # Server is listening on ws://192.168.0.1:9000
-     $ sigver -p 9000                 # Server is listening on ws://0.0.0.0:9000
+   $ sigver                       # Server is listening on ws://0.0.0.0:8000
+   $ sigver -h 192.168.0.1 -p 80  # Server is listening on ws://192.168.0.1:80
+   $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Server is listening on wss://0.0.0.0:443
 ```
 
-## Server protocol
-Server accepts messages encoded with [Protocol Buffers](https://developers.google.com/protocol-buffers/).
+## How to use
+Assuming that the server is listening on `wss://mysigver.org`, then the server only accepts
+`wss://mysigver.org/:key` where **key** is any valid string less than 512 characters (key identifies peer-to-peer network). For example:
 
-Connect to the server as for example `ws://mydomain.com/:key`, where `key` could be any valid string less than 512 characters.
+`wss://mysigver.org/Lt71z0rspEqBKoConPJpr3NoODiO0kgAtM3fYc3VLH`
+
+
+
+## Server protocol
+Server uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) for encode/decode all messages.
 
 ```
 syntax = "proto3";
@@ -70,8 +77,8 @@ message Message {
     bool joined = 3; // Incoming for the server and outcoming from the client.
 
     // Server sends `heartbeat` message each 5 seconds and expects getting the
-    // same message back. If after 3 tentatives still no response then close the
-    // connection.
+    // same message back. If after 3 tentatives still no response then closes the
+    // socket.
     bool heartbeat = 4;
   }
 }
@@ -82,8 +89,14 @@ message Content {
   // Data to be transmitted to the sibling peer
   oneof type {
     bytes data = 2; // WebRTC data (in fact could be any array of bytes)
-    bool isError = 3; // Indicating that error occured and thus signaling unsubscribes from the problematic peer
+    bool isError = 3; // Indicating that error occurred and thus signaling unsubscribes from the problematic peer
     bool isEnd = 4; // Indicating that the peer finished to send all data to another peer
   }
 }
 ```
+
+Server may close the socket with the following codes:
+
+- **ERR_KEY: 4001**         // Inappropriate key format (e.g. key too long)
+- **ERR_HEARTBEAT = 4002**  // Heart-beats error
+- **ERR_MESSAGE = 4003**    // Any error due to message: type, format etc.

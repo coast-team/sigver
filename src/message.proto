@@ -25,7 +25,7 @@ message Content {
   // Data to be transmitted to the sibling peer
   oneof type {
     bytes data = 2; // WebRTC data (in fact could be any array of bytes)
-    bool isError = 3; // Indicating that error occured and thus signaling unsubscribes from the problematic peer
+    bool isError = 3; // Indicating that error occurred and thus signaling unsubscribes from the problematic peer
     bool isEnd = 4; // Indicating that the peer finished to send all data to another peer
   }
 }

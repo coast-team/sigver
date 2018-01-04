@@ -11,7 +11,7 @@ export class SigError extends Error {
   }
 }
 
-// Unapropriate key format (e.g. key too long).
+// Inappropriate key format (e.g. key too long)
 export const ERR_KEY = 4001
 
 // Heart-beats error

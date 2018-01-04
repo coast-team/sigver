@@ -11146,7 +11146,7 @@ class SigError extends Error {
   }
 }
 
-// Unapropriate key format (e.g. key too long).
+// Inappropriate key format (e.g. key too long)
 const ERR_KEY = 4001;
 
 // Heart-beats error
@@ -11491,6 +11491,14 @@ class Network {
 }
 
 // import SseServer from './SseServer'
+// Retreive version from package.json
+let version;
+try {
+  version = require('./package.json').version;
+} catch (err) {
+  version = '';
+}
+
 // Config LOGGER
 global.log = require('bunyan').createLogger({
   name: 'sigver',
@@ -11508,6 +11516,8 @@ const defaults = {
 };
 
 program
+  .version(version)
+  .description('Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)')
   .option('-h, --host <ip>', `Select host address to bind to.`, defaults.host)
   .option('-p, --port <number>', `Select port to use.`, defaults.port)
   .option('-k, --key <file path>',
@@ -11521,9 +11531,9 @@ program
       `
   Examples:
 
-     $ sigver                         # Server is listening on ws://0.0.0.0:8000
-     $ sigver -h 192.168.0.1 -p 9000  # Server is listening on ws://192.168.0.1:9000
-     $ sigver -p 9000                 # Server is listening on ws://0.0.0.0:9000`);
+     $ sigver                       # Server is listening on ws://0.0.0.0:8000
+     $ sigver -h 192.168.0.1 -p 80  # Server is listening on ws://192.168.0.1:80
+     $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Server is listening on wss://0.0.0.0:443`);
   })
   .parse(process.argv);
 
