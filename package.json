@@ -1,7 +1,7 @@
 {
   "name": "sigver",
   "description": "WebRTC signaling server based on WebSocket and Server-Sent-Event",
-  "version": "0.0.0-sementically-released",
+  "version": "0.0.0-development",
   "main": "server.js",
   "jsnext:main": "src/WSServer.js",
   "bin": {
@@ -25,7 +25,7 @@
     "precommit": "npm run lint && npm test -- --no-auto-watch --single-run",
     "commitmsg": "validate-commit-msg",
     "cz": "git-cz",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release"
   },
   "keywords": [
     "WebRTC",
@@ -75,7 +75,7 @@
     "rollup-plugin-filesize": "^1.5.0",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-re": "^1.0.6",
-    "semantic-release": "^11.2.0",
+    "semantic-release": "^11.0.2",
     "validate-commit-msg": "^2.14.0"
   },
   "config": {
