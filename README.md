@@ -21,35 +21,38 @@ Signaling server for WebRTC listening on <strong style="font-weight: bold">WebSo
   </a>
 <p>
 
-## How to use
+## Install
 ```sh
 npm install -g sigver
-sigver [options]
 ```
 
+## Run
 ```shell
-Options:
+Usage: sigver [options]
 
-    -h, --help          output usage information
-    -v, --version       output the version number
-    -h, --host <n>      Select host address to bind to. Default: 0.0.0.0
 
-    -p, --port <n>      Select port to use, Default: 8000
+  Options:
 
-    -s, --secure        If present, server is listening on WSS instead of WS
-    -k, --key <value>   Private key for the certificate
-    -c, --cert <value>  The server certificate
-    -a, --ca <value>    The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.
+    -h, --host <ip>         Select host address to bind to. (default: 0.0.0.0)
+    -p, --port <number>     Select port to use. (default: 8000)
 
-Examples:
+    -k, --key <file path>   Private key for the certificate
+    -c, --cert <file path>  The server certificate
+    -a, --ca <file path>    The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.
+
+    -h, --help              output usage information
+
+  Examples:
 
      $ sigver                         # Server is listening on ws://0.0.0.0:8000
      $ sigver -h 192.168.0.1 -p 9000  # Server is listening on ws://192.168.0.1:9000
-     $ sigver -p 9000                 # Server is listening on http://0.0.0.0:9000
+     $ sigver -p 9000                 # Server is listening on ws://0.0.0.0:9000
 ```
 
-## Protocol for WebSocket server
-Connect to the server as for example `ws://mydomain.com/:key`, where `key` could be any valid string less then 512 characters. The following protocol is described from server perspective ([more about Protocol Buffers](https://developers.google.com/protocol-buffers/)).
+## Server protocol
+Server accepts messages encoded with [Protocol Buffers](https://developers.google.com/protocol-buffers/).
+
+Connect to the server as for example `ws://mydomain.com/:key`, where `key` could be any valid string less than 512 characters.
 
 ```
 syntax = "proto3";
@@ -60,11 +63,11 @@ message Message {
 
     // Server response to the peer wanted to join a peer to peer network.
     // True if the first peer in the network.
-    bool isFirst = 2; // Only outcoming message
+    bool isFirst = 2; // Outcoming from the server and incoming for the client.
 
     // Peer response to the server when he joined the peer to peer network
     // successfully and is ready to help other peers to join this network.
-    bool joined = 3; // Only incoming
+    bool joined = 3; // Incoming for the server and outcoming from the client.
 
     // Server sends `heartbeat` message each 5 seconds and expects getting the
     // same message back. If after 3 tentatives still no response then close the
@@ -83,6 +86,4 @@ message Content {
     bool isEnd = 4; // Indicating that the peer finished to send all data to another peer
   }
 }
-
-
 ```

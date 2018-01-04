@@ -13,40 +13,37 @@ const program = require('commander')
 const defaults = {
   host: '0.0.0.0',
   port: 8000,
-  secure: false,
   key: '',
   cert: '',
   ca: ''
 }
 
 program
-  .option('-h, --host <n>', `Select host address to bind to. Default: ${defaults.host}\n`, defaults.host)
-  .option('-p, --port <n>', `Select port to use, Default: 8000\n'`, defaults.port)
-  .option('-s, --secure',
-    `If present, server is listening on WSS instead of WS`)
-  .option('-k, --key <value>',
+  .option('-h, --host <ip>', `Select host address to bind to.`, defaults.host)
+  .option('-p, --port <number>', `Select port to use.`, defaults.port)
+  .option('-k, --key <file path>',
     `Private key for the certificate`)
-  .option('-c, --cert <value>',
+  .option('-c, --cert <file path>',
     `The server certificate`)
-  .option('-a, --ca <value>',
+  .option('-a, --ca <file path>',
     `The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.`)
   .on('--help', () => {
     console.log(
-      `  Examples:
+      `
+  Examples:
 
      $ sigver                         # Server is listening on ws://0.0.0.0:8000
      $ sigver -h 192.168.0.1 -p 9000  # Server is listening on ws://192.168.0.1:9000
-     $ sigver -p 9000                 # Server is listening on http://0.0.0.0:9000
-`)
+     $ sigver -p 9000                 # Server is listening on ws://0.0.0.0:9000`)
   })
   .parse(process.argv)
 
-const {host, port, secure, key, cert, ca} = program
+const {host, port, key, cert, ca} = program
 
 const core = new ServerCore()
 
 let httpServer
-if (secure) {
+if (key && cert && ca) {
   const fs = require('fs')
   httpServer = require('https').createServer({
     key: fs.readFileSync(key),
