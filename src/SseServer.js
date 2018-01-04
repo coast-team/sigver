@@ -1,7 +1,7 @@
 import IOJsonString from './IOJsonString'
 import ServerCore from './ServerCore'
 import SseResponseWrapper from './SseResponseWrapper'
-import SigverError from './SigverError'
+import SigError from './SigError'
 
 let SseChannel = {}
 try {
@@ -47,7 +47,7 @@ export default class SseServer extends ServerCore {
           case 'GET': {
             sse.addClient(req, res, err => {
               if (err) {
-                console.log('SseServer: ' + new SigverError(SigverError.CROS_ERROR, err.message).message)
+                console.log('SseServer: ' + new SigError(SigError.CROS_ERROR, err.message).message)
               } else {
                 const sseChannel = new SseResponseWrapper(generateId(), sse, res)
                 resps.set(sseChannel.id, sseChannel)
@@ -71,14 +71,14 @@ export default class SseServer extends ServerCore {
                 const separator = body.indexOf('@')
                 resWrapper = resps.get(Number.parseInt(body.substring(0, separator), 10))
                 if (resWrapper === undefined) {
-                  throw new SigverError(SigverError.AUTH_ERROR, 'Send message before authentication')
+                  throw new SigError(SigError.AUTH_ERROR, 'Send message before authentication')
                 }
                 const data = body.substring(separator + 1)
 
                 super.handleMessage(resWrapper, new IOJsonString(data))
               } catch (err) {
-                if (err.name !== 'SigverError') {
-                  console.log(`SseServer: Error is not a SigverError instance: ${err.message}`)
+                if (err.name !== 'SigError') {
+                  console.log(`SseServer: Error is not a SigError instance: ${err.message}`)
                 } else {
                   console.log(`SseServer: ${err.message}`)
                 }

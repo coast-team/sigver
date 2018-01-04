@@ -1,4 +1,4 @@
-import SigverError from '../src/SigverError'
+import { ERR_KEY } from '../src/SigError'
 import * as h from './util.js'
 
 describe('', () => {
@@ -144,20 +144,20 @@ function test (Source) {
     })
 
     describe('Should fail to connect', () => {
-      it(`with code: ${SigverError.KEY_ERROR} because the key is too long`, done => {
+      it(`with code: ${ERR_KEY} because the key is too long`, done => {
         const key = 'Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.'
         const ws = new Source(`${url}/${key}`)
         ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(SigverError.KEY_ERROR)
+          expect(closeEvt.code).toEqual(ERR_KEY)
           done()
         }
         ws.onerror = err => done.fail(err.message)
       })
 
-      it(`with code: ${SigverError.KEY_ERROR} because the key is empty`, done => {
+      it(`with code: ${ERR_KEY} because the key is empty`, done => {
         const ws = new Source(`${url}`)
         ws.onclose = closeEvt => {
-          expect(closeEvt.code).toEqual(SigverError.KEY_ERROR)
+          expect(closeEvt.code).toEqual(ERR_KEY)
           done()
         }
         ws.onerror = err => done.fail(err.message)

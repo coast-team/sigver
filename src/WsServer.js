@@ -1,8 +1,8 @@
 import { Subject } from 'rxjs/Subject'
 
 import { Message } from './Protobuf'
-import Peer from './Peer'
-import SigverError from './SigverError'
+import { Peer } from './Peer'
+import { SigError, ERR_KEY, ERR_MESSAGE } from './SigError'
 
 const url = require('url')
 const KEY_LENGTH_LIMIT = 512
@@ -46,18 +46,21 @@ export default class WsServer {
       try {
         this.validateKey(key)
       } catch (err) {
+        log.debug('Validate key error ' + err.code, err.message)
         socket.close(err.code, err.message)
       }
 
       // Initialize peer
       const peer = new Peer(key)
+
+      // Socket config
       socket.binaryType = 'arraybuffer'
       socket.onmessage = evt => {
         try {
           peer.next(Message.decode(new Uint8Array(evt.data)))
         } catch (err) {
-          log.error(err)
-          socket.close(err.code, err.message)
+          log.error('Socket "onmessage" error', err)
+          socket.close(ERR_MESSAGE, err.message)
         }
       }
       socket.onerror = err => peer.error(err)
@@ -65,11 +68,18 @@ export default class WsServer {
         if (closeEvt.code === 1000) {
           peer.complete()
         } else {
-          peer.error(new SigverError(closeEvt.code, closeEvt.reason))
+          peer.error(new SigError(closeEvt.code, closeEvt.reason))
         }
       }
+
+      // Peer config
       peer.send = msg => {
-        socket.send(Message.encode(Message.create(msg)).finish(), {binary: true})
+        try {
+          socket.send(Message.encode(Message.create(msg)).finish(), {binary: true})
+        } catch (err) {
+          log.error('Socket "send" error', err)
+          socket.close(ERR_MESSAGE, err.message)
+        }
       }
       peer.close = (code, reason) => socket.close(code, reason)
       peer.heartbeat = () => socket.send(heartBeatMsg, {binary: true})
@@ -79,10 +89,10 @@ export default class WsServer {
 
   validateKey (key) {
     if (key === '') {
-      throw new SigverError(SigverError.KEY_ERROR, `The key ${key} is an empty string`)
+      throw new SigError(ERR_KEY, `The key ${key} is an empty string`)
     }
     if (key.length > KEY_LENGTH_LIMIT) {
-      throw new SigverError(SigverError.KEY_ERROR,
+      throw new SigError(ERR_KEY,
         `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
       )
     }

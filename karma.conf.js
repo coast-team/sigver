@@ -31,10 +31,18 @@ module.exports = function(config) {
     },
 
     rollupPreprocessor: {
-      format: 'iife',
-      name: 'sigver',
+      output: {
+        format: 'iife',
+        name: 'sigver'
+      },
       plugins: [
-        require('rollup-plugin-node-resolve')({}),
+        require('rollup-plugin-re')({
+          patterns: [{
+            test: /eval.*\(moduleName\);/g,
+            replace: 'undefined;'
+          }]
+        }),
+        require('rollup-plugin-node-resolve')(),
         require('rollup-plugin-commonjs')({
           include: 'node_modules/**',
           namedExports: { 'node_modules/protobufjs/minimal.js': [ 'Reader', 'Writer', 'util', 'roots' ] }

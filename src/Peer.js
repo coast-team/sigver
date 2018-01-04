@@ -1,13 +1,13 @@
 import { filter, pluck } from 'rxjs/operators'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 
-import SigverError from './SigverError'
+import { SigError, ERR_HEARTBEAT, ERR_MESSAGE } from './SigError'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
 const ID_MAX_VALUE = 4294967295
 
-export default class Peer extends ReplaySubject {
+export class Peer extends ReplaySubject {
   constructor (key) {
     super()
     this.key = key
@@ -30,16 +30,24 @@ export default class Peer extends ReplaySubject {
       this.missedHeartbeat++
       if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
         clearInterval(this.heartbeatInterval)
-        this.error(new SigverError(SigverError.HEARTBEAT_ERROR_CODE))
+        this.error(new SigError(ERR_HEARTBEAT))
       }
       this.heartbeat()
     }, HEARTBEAT_INTERVAL)
   }
 
-  connect (member) {
-    // Joining subscribes to network member
-    let memberEnded = false
-    const memberSub = member.pipe(
+  bindWith (member) {
+    this.joiningToMember(member)
+    this.memberToJoining(member)
+  }
+
+  /**
+   * Joining subscribes to the network member.
+   * @param  {Peer} member a member of the network
+   */
+  joiningToMember (member) {
+    let isEnd = false
+    const sub = member.pipe(
       filter((msg) => msg.type === 'content' && msg.content.id === this.id),
       pluck('content')
     ).subscribe(
@@ -51,67 +59,81 @@ export default class Peer extends ReplaySubject {
             break
           case 'isError':
             this.send({ content: { id: 0, isError: true } })
-            memberSub.unsubscribe()
+            sub.unsubscribe()
             // decline member rating
             break
           case 'isEnd':
-            memberEnded = true
-            this.send({ content: { id: 0, isEnd: true } })
-            memberSub.unsubscribe()
+            isEnd = true
+            this.send({ content: { id: 0, isEnd } })
+            sub.unsubscribe()
             break
-          default:
-            log.error(new Error('Unknown message from a network member'))
-            member.close()
-            memberSub.unsubscribe()
+          default: {
+            const err = new SigError(
+              ERR_MESSAGE,
+              `Unknown message type "${msg.type}" from a network member`
+            )
+            log.error(err)
+            member.close(err.code, err.message)
+            sub.unsubscribe()
+          }
         }
       },
       () => {
-        if (!memberEnded) {
+        if (!isEnd) {
           this.send({ content: { id: 0, isError: true } })
         }
       },
       () => {
-        if (!memberEnded) {
+        if (!isEnd) {
           this.send({ content: { id: 0, isError: true } })
         }
       }
     )
+  }
 
-    // Network member subscribes to Joining
-    let joiningEnded = false
-    const thisSub = this.pipe(
+  /**
+   * Network member subscribes to the joining peer.
+   * @param  {Peer} member a member of the network
+   */
+  memberToJoining (member) {
+    let isEnd = false
+    const sub = this.pipe(
       filter((msg) => msg.type === 'content'),
       pluck('content')
     ).subscribe(
       (msg) => {
-        log.debug('Message from Joining: ', msg.type)
         switch (msg.type) {
           case 'data':
             member.send({ content: { id: this.id, data: msg.data } })
             break
           case 'isError':
             member.send({ content: { id: this.id, isError: true } })
-            thisSub.unsubscribe()
+            sub.unsubscribe()
             // decline member rating
             break
           case 'isEnd':
-            joiningEnded = true
+            isEnd = true
             member.send({ content: { id: this.id, isEnd: true } })
-            thisSub.unsubscribe()
+            sub.unsubscribe()
             break
-          default:
-            log.error(new Error('Unknown message from a joining peer'))
-            this.close()
-            memberSub.unsubscribe()
+          default: {
+            const err = new SigError(
+              ERR_MESSAGE,
+              `Unknown message type "${msg.type}" from the ${this.id} joining peer`
+            )
+            log.error(err)
+            this.close(err.code, err.message)
+            sub.unsubscribe()
+          }
         }
       },
       () => {
-        if (!joiningEnded) {
+        if (!isEnd) {
           member.send({ content: { id: this.id, isError: true } })
         }
       },
       () => {
-        if (!joiningEnded) {
+        if (!isEnd) {
           member.send({ content: { id: this.id, isError: true } })
         }
       }

@@ -9,7 +9,7 @@ export default class ServerCore {
 
     // Check whether the first peer or not in the network identified by the key
     if (net !== undefined) {
-      peer.connect(net.selectMember())
+      peer.bindWith(net.selectMember())
       peer.send({ isFirst: false })
     } else {
       const net = new Network(key, peer)
@@ -67,7 +67,7 @@ class Network {
   addMember (peer) {
     peer.network = this
     this.members.add(peer)
-    log.info('ADD Member', {id: peer.id, key: this.key, size: this.members.size})
+    log.info('NEW Member', {id: peer.id, key: this.key, currentSize: this.members.size})
   }
 
   removeMember (peer) {
@@ -76,7 +76,7 @@ class Network {
       log.info('REMOVE Network', { id: peer.id, key: peer.key })
     } else {
       this.members.delete(peer)
-      log.info('DELETE Member', { id: peer.id, key: peer.key })
+      log.info('Member GONE', { id: peer.id, key: peer.key, currentSize: this.members.size })
     }
   }
 }

@@ -384,6 +384,7 @@ var Subscriber = (function (_super) {
                 }
                 if (typeof destinationOrNext === 'object') {
                     if (destinationOrNext instanceof Subscriber) {
+                        this.syncErrorThrowable = destinationOrNext.syncErrorThrowable;
                         this.destination = destinationOrNext;
                         this.destination.add(this);
                     }
@@ -850,7 +851,7 @@ var Observable = (function () {
             operator.call(sink, this.source);
         }
         else {
-            sink.add(this.source ? this._subscribe(sink) : this._trySubscribe(sink));
+            sink.add(this.source || !sink.syncErrorThrowable ? this._subscribe(sink) : this._trySubscribe(sink));
         }
         if (sink.syncErrorThrowable) {
             sink.syncErrorThrowable = false;
@@ -11132,28 +11133,34 @@ var pluck = pluck_1.pluck;
 
 var throttle = throttle_1.throttle;
 
-class SigverError extends Error {
+class SigError extends Error {
   constructor (code, message = '') {
     super();
-    this.code = code;
-    this.message = `${this.getCodeText()}: ${message}`;
     this.name = this.constructor.name;
-  }
-
-  // Unapropriate key format (e.g. key too long).
-  static get KEY_ERROR () { return 4001 }
-
-  // Pong message is not received during a certain delay.
-  static get HEARTBEAT_ERROR_CODE () { return 4002 }
-
-  getCodeText () {
-    switch (this.code) {
-      case SigverError.KEY_ERROR: return 'KEY_ERROR'
-      case SigverError.HEARTBEAT_ERROR_CODE: return 'HEARTBEAT_ERROR_CODE'
-      default: return this.code
+    this.code = code;
+    for (const key in errorCodes) {
+      if (errorCodes[key] === code) {
+        log.info('FOUND for ' + code);
+        this.message = `${key}: ${message}`;
+      }
     }
   }
 }
+
+// Unapropriate key format (e.g. key too long).
+const ERR_KEY = 4001;
+
+// Heart-beats error
+const ERR_HEARTBEAT = 4002;
+
+// Any error due to message: type, format etc.
+const ERR_MESSAGE = 4003;
+
+const errorCodes = {
+  ERR_KEY,
+  ERR_HEARTBEAT,
+  ERR_MESSAGE
+};
 
 const MAXIMUM_MISSED_HEARTBEAT = 3;
 const HEARTBEAT_INTERVAL = 5000;
@@ -11182,16 +11189,24 @@ class Peer extends ReplaySubject_2 {
       this.missedHeartbeat++;
       if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
         clearInterval(this.heartbeatInterval);
-        this.error(new SigverError(SigverError.HEARTBEAT_ERROR_CODE));
+        this.error(new SigError(ERR_HEARTBEAT));
       }
       this.heartbeat();
     }, HEARTBEAT_INTERVAL);
   }
 
-  connect (member) {
-    // Joining subscribes to network member
-    let memberEnded = false;
-    const memberSub = member.pipe(
+  bindWith (member) {
+    this.joiningToMember(member);
+    this.memberToJoining(member);
+  }
+
+  /**
+   * Joining subscribes to the network member.
+   * @param  {Peer} member a member of the network
+   */
+  joiningToMember (member) {
+    let isEnd = false;
+    const sub = member.pipe(
       filter((msg) => msg.type === 'content' && msg.content.id === this.id),
       pluck('content')
     ).subscribe(
@@ -11203,67 +11218,81 @@ class Peer extends ReplaySubject_2 {
             break
           case 'isError':
             this.send({ content: { id: 0, isError: true } });
-            memberSub.unsubscribe();
+            sub.unsubscribe();
             // decline member rating
             break
           case 'isEnd':
-            memberEnded = true;
-            this.send({ content: { id: 0, isEnd: true } });
-            memberSub.unsubscribe();
+            isEnd = true;
+            this.send({ content: { id: 0, isEnd } });
+            sub.unsubscribe();
             break
-          default:
-            log.error(new Error('Unknown message from a network member'));
-            member.close();
-            memberSub.unsubscribe();
+          default: {
+            const err = new SigError(
+              ERR_MESSAGE,
+              `Unknown message type "${msg.type}" from a network member`
+            );
+            log.error(err);
+            member.close(err.code, err.message);
+            sub.unsubscribe();
+          }
         }
       },
       () => {
-        if (!memberEnded) {
+        if (!isEnd) {
           this.send({ content: { id: 0, isError: true } });
         }
       },
       () => {
-        if (!memberEnded) {
+        if (!isEnd) {
           this.send({ content: { id: 0, isError: true } });
         }
       }
     );
+  }
 
-    // Network member subscribes to Joining
-    let joiningEnded = false;
-    const thisSub = this.pipe(
+  /**
+   * Network member subscribes to the joining peer.
+   * @param  {Peer} member a member of the network
+   */
+  memberToJoining (member) {
+    let isEnd = false;
+    const sub = this.pipe(
       filter((msg) => msg.type === 'content'),
       pluck('content')
     ).subscribe(
       (msg) => {
-        log.debug('Message from Joining: ', msg.type);
         switch (msg.type) {
           case 'data':
             member.send({ content: { id: this.id, data: msg.data } });
             break
           case 'isError':
             member.send({ content: { id: this.id, isError: true } });
-            thisSub.unsubscribe();
+            sub.unsubscribe();
             // decline member rating
             break
           case 'isEnd':
-            joiningEnded = true;
+            isEnd = true;
             member.send({ content: { id: this.id, isEnd: true } });
-            thisSub.unsubscribe();
+            sub.unsubscribe();
             break
-          default:
-            log.error(new Error('Unknown message from a joining peer'));
-            this.close();
-            memberSub.unsubscribe();
+          default: {
+            const err = new SigError(
+              ERR_MESSAGE,
+              `Unknown message type "${msg.type}" from the ${this.id} joining peer`
+            );
+            log.error(err);
+            this.close(err.code, err.message);
+            sub.unsubscribe();
+          }
         }
       },
       () => {
-        if (!joiningEnded) {
+        if (!isEnd) {
           member.send({ content: { id: this.id, isError: true } });
         }
       },
       () => {
-        if (!joiningEnded) {
+        if (!isEnd) {
           member.send({ content: { id: this.id, isError: true } });
         }
       }
@@ -11313,18 +11342,21 @@ class WsServer {
       try {
         this.validateKey(key);
       } catch (err) {
+        log.debug('Validate key error ' + err.code, err.message);
         socket.close(err.code, err.message);
       }
 
       // Initialize peer
       const peer = new Peer(key);
+
+      // Socket config
       socket.binaryType = 'arraybuffer';
       socket.onmessage = evt => {
         try {
           peer.next(Message.decode(new Uint8Array(evt.data)));
         } catch (err) {
-          log.error(err);
-          socket.close(err.code, err.message);
+          log.error('Socket "onmessage" error', err);
+          socket.close(ERR_MESSAGE, err.message);
         }
       };
       socket.onerror = err => peer.error(err);
@@ -11332,11 +11364,18 @@ class WsServer {
         if (closeEvt.code === 1000) {
           peer.complete();
         } else {
-          peer.error(new SigverError(closeEvt.code, closeEvt.reason));
+          peer.error(new SigError(closeEvt.code, closeEvt.reason));
         }
       };
+
+      // Peer config
       peer.send = msg => {
-        socket.send(Message.encode(Message.create(msg)).finish(), {binary: true});
+        try {
+          socket.send(Message.encode(Message.create(msg)).finish(), {binary: true});
+        } catch (err) {
+          log.error('Socket "send" error', err);
+          socket.close(ERR_MESSAGE, err.message);
+        }
       };
       peer.close = (code, reason) => socket.close(code, reason);
       peer.heartbeat = () => socket.send(heartBeatMsg, {binary: true});
@@ -11346,10 +11385,10 @@ class WsServer {
 
   validateKey (key) {
     if (key === '') {
-      throw new SigverError(SigverError.KEY_ERROR, `The key ${key} is an empty string`)
+      throw new SigError(ERR_KEY, `The key ${key} is an empty string`)
     }
     if (key.length > KEY_LENGTH_LIMIT) {
-      throw new SigverError(SigverError.KEY_ERROR,
+      throw new SigError(ERR_KEY,
         `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
       )
     }
@@ -11375,7 +11414,7 @@ class ServerCore {
 
     // Check whether the first peer or not in the network identified by the key
     if (net !== undefined) {
-      peer.connect(net.selectMember());
+      peer.bindWith(net.selectMember());
       peer.send({ isFirst: false });
     } else {
       const net = new Network(key, peer);
@@ -11433,7 +11472,7 @@ class Network {
   addMember (peer) {
     peer.network = this;
     this.members.add(peer);
-    log.info('ADD Member', {id: peer.id, key: this.key, size: this.members.size});
+    log.info('NEW Member', {id: peer.id, key: this.key, currentSize: this.members.size});
   }
 
   removeMember (peer) {
@@ -11442,7 +11481,7 @@ class Network {
       log.info('REMOVE Network', { id: peer.id, key: peer.key });
     } else {
       this.members.delete(peer);
-      log.info('DELETE Member', { id: peer.id, key: peer.key });
+      log.info('Member GONE', { id: peer.id, key: peer.key, currentSize: this.members.size });
     }
   }
 }
