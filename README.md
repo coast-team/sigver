@@ -22,9 +22,11 @@ Signaling server for WebRTC listening on <strong style="font-weight: bold">WebSo
 <p>
 
 ## Install
-```sh
+```shell
 npm install -g sigver
 ```
+
+Sigver is built on top of [µWebSockets](https://github.com/uNetworking/uWebSockets) server. µWebSockets will try te recompile itself during installation. If this fails it will silently fall back to using the precompiled binaries. If this fails too, then please check the project's repository.
 
 ## Run
 ```shell
