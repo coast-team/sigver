@@ -11140,7 +11140,6 @@ class SigError extends Error {
     this.code = code;
     for (const key in errorCodes) {
       if (errorCodes[key] === code) {
-        log.info('FOUND for ' + code);
         this.message = `${key}: ${message}`;
       }
     }
@@ -11466,7 +11465,12 @@ class Network {
   }
 
   selectMember () {
-    return this.members.values().next().value
+    const index = Math.floor(Math.random() * this.members.size);
+    const iterator = this.members.values();
+    for (let i = 0; i < index; i++) {
+      iterator.next();
+    }
+    return iterator.next().value
   }
 
   addMember (peer) {
