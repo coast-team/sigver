@@ -6,6 +6,8 @@ branches:
   only:
     - master
     - /^greenkeeper-.*$/
+  except:
+    - "/^v\\d+\\.\\d+\\.\\d+$/"
 addons:
   firefox: "latest"
   apt:
@@ -18,10 +20,7 @@ before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sleep 3
+script:
+  - npm test
 after_success:
   - ./node_modules/.bin/semantic-release
-after_script:
-  - kill -9 $(ps aux | grep 'pm2')
-branches:
-  except:
-    - "/^v\\d+\\.\\d+\\.\\d+$/"
