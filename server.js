@@ -92,7 +92,7 @@ var tryCatch_1 = {
 	tryCatch: tryCatch_2
 };
 
-var __extends$2 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -102,7 +102,7 @@ var __extends$2 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * `unsubscribe` of a {@link Subscription}.
  */
 var UnsubscriptionError = (function (_super) {
-    __extends$2(UnsubscriptionError, _super);
+    __extends(UnsubscriptionError, _super);
     function UnsubscriptionError(errors) {
         _super.call(this);
         this.errors = errors;
@@ -1002,7 +1002,7 @@ var Observable_1 = {
 	Observable: Observable_2
 };
 
-var __extends$3 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$2 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1017,7 +1017,7 @@ var __extends$3 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * @class ObjectUnsubscribedError
  */
 var ObjectUnsubscribedError = (function (_super) {
-    __extends$3(ObjectUnsubscribedError, _super);
+    __extends$2(ObjectUnsubscribedError, _super);
     function ObjectUnsubscribedError() {
         var err = _super.call(this, 'object unsubscribed');
         this.name = err.name = 'ObjectUnsubscribedError';
@@ -1033,7 +1033,7 @@ var ObjectUnsubscribedError_1 = {
 	ObjectUnsubscribedError: ObjectUnsubscribedError_2
 };
 
-var __extends$4 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$3 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1045,7 +1045,7 @@ var __extends$4 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * @extends {Ignored}
  */
 var SubjectSubscription = (function (_super) {
-    __extends$4(SubjectSubscription, _super);
+    __extends$3(SubjectSubscription, _super);
     function SubjectSubscription(subject, subscriber) {
         _super.call(this);
         this.subject = subject;
@@ -1077,7 +1077,7 @@ var SubjectSubscription_1 = {
 	SubjectSubscription: SubjectSubscription_2
 };
 
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$4 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1092,7 +1092,7 @@ var __extends = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) 
  * @class SubjectSubscriber<T>
  */
 var SubjectSubscriber = (function (_super) {
-    __extends(SubjectSubscriber, _super);
+    __extends$4(SubjectSubscriber, _super);
     function SubjectSubscriber(destination) {
         _super.call(this, destination);
         this.destination = destination;
@@ -1104,7 +1104,7 @@ var SubjectSubscriber_1 = SubjectSubscriber;
  * @class Subject<T>
  */
 var Subject = (function (_super) {
-    __extends(Subject, _super);
+    __extends$4(Subject, _super);
     function Subject() {
         _super.call(this);
         this.observers = [];
@@ -1207,7 +1207,7 @@ var Subject_2 = Subject;
  * @class AnonymousSubject<T>
  */
 var AnonymousSubject = (function (_super) {
-    __extends(AnonymousSubject, _super);
+    __extends$4(AnonymousSubject, _super);
     function AnonymousSubject(destination, source) {
         _super.call(this);
         this.destination = destination;
@@ -2014,7 +2014,7 @@ function pool(alloc, slice, size) {
     };
 }
 
-var longbits = LongBits$1;
+var longbits = LongBits;
 
 
 
@@ -2026,7 +2026,7 @@ var longbits = LongBits$1;
  * @param {number} lo Low 32 bits, unsigned
  * @param {number} hi High 32 bits, unsigned
  */
-function LongBits$1(lo, hi) {
+function LongBits(lo, hi) {
 
     // note that the casts below are theoretically unnecessary as of today, but older statically
     // generated converter code might still call the ctor with signed 32bits. kept for compat.
@@ -2049,7 +2049,7 @@ function LongBits$1(lo, hi) {
  * @memberof util.LongBits
  * @type {util.LongBits}
  */
-var zero = LongBits$1.zero = new LongBits$1(0, 0);
+var zero = LongBits.zero = new LongBits(0, 0);
 
 zero.toNumber = function() { return 0; };
 zero.zzEncode = zero.zzDecode = function() { return this; };
@@ -2060,14 +2060,14 @@ zero.length = function() { return 1; };
  * @memberof util.LongBits
  * @type {string}
  */
-var zeroHash = LongBits$1.zeroHash = "\0\0\0\0\0\0\0\0";
+var zeroHash = LongBits.zeroHash = "\0\0\0\0\0\0\0\0";
 
 /**
  * Constructs new long bits from the specified number.
  * @param {number} value Value
  * @returns {util.LongBits} Instance
  */
-LongBits$1.fromNumber = function fromNumber(value) {
+LongBits.fromNumber = function fromNumber(value) {
     if (value === 0)
         return zero;
     var sign = value < 0;
@@ -2084,7 +2084,7 @@ LongBits$1.fromNumber = function fromNumber(value) {
                 hi = 0;
         }
     }
-    return new LongBits$1(lo, hi);
+    return new LongBits(lo, hi);
 };
 
 /**
@@ -2092,17 +2092,17 @@ LongBits$1.fromNumber = function fromNumber(value) {
  * @param {Long|number|string} value Value
  * @returns {util.LongBits} Instance
  */
-LongBits$1.from = function from(value) {
+LongBits.from = function from(value) {
     if (typeof value === "number")
-        return LongBits$1.fromNumber(value);
-    if (minimal$2.isString(value)) {
+        return LongBits.fromNumber(value);
+    if (minimal.isString(value)) {
         /* istanbul ignore else */
-        if (minimal$2.Long)
-            value = minimal$2.Long.fromString(value);
+        if (minimal.Long)
+            value = minimal.Long.fromString(value);
         else
-            return LongBits$1.fromNumber(parseInt(value, 10));
+            return LongBits.fromNumber(parseInt(value, 10));
     }
-    return value.low || value.high ? new LongBits$1(value.low >>> 0, value.high >>> 0) : zero;
+    return value.low || value.high ? new LongBits(value.low >>> 0, value.high >>> 0) : zero;
 };
 
 /**
@@ -2110,7 +2110,7 @@ LongBits$1.from = function from(value) {
  * @param {boolean} [unsigned=false] Whether unsigned or not
  * @returns {number} Possibly unsafe number
  */
-LongBits$1.prototype.toNumber = function toNumber(unsigned) {
+LongBits.prototype.toNumber = function toNumber(unsigned) {
     if (!unsigned && this.hi >>> 31) {
         var lo = ~this.lo + 1 >>> 0,
             hi = ~this.hi     >>> 0;
@@ -2126,9 +2126,9 @@ LongBits$1.prototype.toNumber = function toNumber(unsigned) {
  * @param {boolean} [unsigned=false] Whether unsigned or not
  * @returns {Long} Long
  */
-LongBits$1.prototype.toLong = function toLong(unsigned) {
-    return minimal$2.Long
-        ? new minimal$2.Long(this.lo | 0, this.hi | 0, Boolean(unsigned))
+LongBits.prototype.toLong = function toLong(unsigned) {
+    return minimal.Long
+        ? new minimal.Long(this.lo | 0, this.hi | 0, Boolean(unsigned))
         /* istanbul ignore next */
         : { low: this.lo | 0, high: this.hi | 0, unsigned: Boolean(unsigned) };
 };
@@ -2140,10 +2140,10 @@ var charCodeAt = String.prototype.charCodeAt;
  * @param {string} hash Hash
  * @returns {util.LongBits} Bits
  */
-LongBits$1.fromHash = function fromHash(hash) {
+LongBits.fromHash = function fromHash(hash) {
     if (hash === zeroHash)
         return zero;
-    return new LongBits$1(
+    return new LongBits(
         ( charCodeAt.call(hash, 0)
         | charCodeAt.call(hash, 1) << 8
         | charCodeAt.call(hash, 2) << 16
@@ -2160,7 +2160,7 @@ LongBits$1.fromHash = function fromHash(hash) {
  * Converts this long bits to a 8 characters long hash.
  * @returns {string} Hash
  */
-LongBits$1.prototype.toHash = function toHash() {
+LongBits.prototype.toHash = function toHash() {
     return String.fromCharCode(
         this.lo        & 255,
         this.lo >>> 8  & 255,
@@ -2177,7 +2177,7 @@ LongBits$1.prototype.toHash = function toHash() {
  * Zig-zag encodes this long bits.
  * @returns {util.LongBits} `this`
  */
-LongBits$1.prototype.zzEncode = function zzEncode() {
+LongBits.prototype.zzEncode = function zzEncode() {
     var mask =   this.hi >> 31;
     this.hi  = ((this.hi << 1 | this.lo >>> 31) ^ mask) >>> 0;
     this.lo  = ( this.lo << 1                   ^ mask) >>> 0;
@@ -2188,7 +2188,7 @@ LongBits$1.prototype.zzEncode = function zzEncode() {
  * Zig-zag decodes this long bits.
  * @returns {util.LongBits} `this`
  */
-LongBits$1.prototype.zzDecode = function zzDecode() {
+LongBits.prototype.zzDecode = function zzDecode() {
     var mask = -(this.lo & 1);
     this.lo  = ((this.lo >>> 1 | this.hi << 31) ^ mask) >>> 0;
     this.hi  = ( this.hi >>> 1                  ^ mask) >>> 0;
@@ -2199,7 +2199,7 @@ LongBits$1.prototype.zzDecode = function zzDecode() {
  * Calculates the length of this longbits when encoded as a varint.
  * @returns {number} Length
  */
-LongBits$1.prototype.length = function length() {
+LongBits.prototype.length = function length() {
     var part0 =  this.lo,
         part1 = (this.lo >>> 28 | this.hi << 4) >>> 0,
         part2 =  this.hi >>> 24;
@@ -2214,7 +2214,7 @@ LongBits$1.prototype.length = function length() {
          : part2 < 128 ? 9 : 10;
 };
 
-var minimal$2 = createCommonjsModule(function (module, exports) {
+var minimal = createCommonjsModule(function (module, exports) {
 var util = exports;
 
 // used to return a Promise where callback is omitted
@@ -2627,9 +2627,9 @@ var writer = Writer;
 
 var BufferWriter; // cyclic
 
-var LongBits  = minimal$2.LongBits;
-var base64    = minimal$2.base64;
-var utf8      = minimal$2.utf8;
+var LongBits$1  = minimal.LongBits;
+var base64    = minimal.base64;
+var utf8      = minimal.utf8;
 
 /**
  * Constructs a new writer operation instance.
@@ -2748,7 +2748,7 @@ function Writer() {
  * @function
  * @returns {BufferWriter|Writer} A {@link BufferWriter} when Buffers are supported, otherwise a {@link Writer}
  */
-Writer.create = minimal$2.Buffer
+Writer.create = minimal.Buffer
     ? function create_buffer_setup() {
         return (Writer.create = function create_buffer() {
             return new BufferWriter();
@@ -2765,13 +2765,13 @@ Writer.create = minimal$2.Buffer
  * @returns {Uint8Array} Buffer
  */
 Writer.alloc = function alloc(size) {
-    return new minimal$2.Array(size);
+    return new minimal.Array(size);
 };
 
 // Use Uint8Array buffer pool in the browser, just like node does with buffers
 /* istanbul ignore else */
-if (minimal$2.Array !== Array)
-    Writer.alloc = minimal$2.pool(Writer.alloc, minimal$2.Array.prototype.subarray);
+if (minimal.Array !== Array)
+    Writer.alloc = minimal.pool(Writer.alloc, minimal.Array.prototype.subarray);
 
 /**
  * Pushes a new operation to the queue.
@@ -2844,7 +2844,7 @@ Writer.prototype.uint32 = function write_uint32(value) {
  */
 Writer.prototype.int32 = function write_int32(value) {
     return value < 0
-        ? this._push(writeVarint64, 10, LongBits.fromNumber(value)) // 10 bytes per spec
+        ? this._push(writeVarint64, 10, LongBits$1.fromNumber(value)) // 10 bytes per spec
         : this.uint32(value);
 };
 
@@ -2877,7 +2877,7 @@ function writeVarint64(val, buf, pos) {
  * @throws {TypeError} If `value` is a string and no long library is present.
  */
 Writer.prototype.uint64 = function write_uint64(value) {
-    var bits = LongBits.from(value);
+    var bits = LongBits$1.from(value);
     return this._push(writeVarint64, bits.length(), bits);
 };
 
@@ -2897,7 +2897,7 @@ Writer.prototype.int64 = Writer.prototype.uint64;
  * @throws {TypeError} If `value` is a string and no long library is present.
  */
 Writer.prototype.sint64 = function write_sint64(value) {
-    var bits = LongBits.from(value).zzEncode();
+    var bits = LongBits$1.from(value).zzEncode();
     return this._push(writeVarint64, bits.length(), bits);
 };
 
@@ -2941,7 +2941,7 @@ Writer.prototype.sfixed32 = Writer.prototype.fixed32;
  * @throws {TypeError} If `value` is a string and no long library is present.
  */
 Writer.prototype.fixed64 = function write_fixed64(value) {
-    var bits = LongBits.from(value);
+    var bits = LongBits$1.from(value);
     return this._push(writeFixed32, 4, bits.lo)._push(writeFixed32, 4, bits.hi);
 };
 
@@ -2961,7 +2961,7 @@ Writer.prototype.sfixed64 = Writer.prototype.fixed64;
  * @returns {Writer} `this`
  */
 Writer.prototype.float = function write_float(value) {
-    return this._push(minimal$2.float.writeFloatLE, 4, value);
+    return this._push(minimal.float.writeFloatLE, 4, value);
 };
 
 /**
@@ -2971,10 +2971,10 @@ Writer.prototype.float = function write_float(value) {
  * @returns {Writer} `this`
  */
 Writer.prototype.double = function write_double(value) {
-    return this._push(minimal$2.float.writeDoubleLE, 8, value);
+    return this._push(minimal.float.writeDoubleLE, 8, value);
 };
 
-var writeBytes = minimal$2.Array.prototype.set
+var writeBytes = minimal.Array.prototype.set
     ? function writeBytes_set(val, buf, pos) {
         buf.set(val, pos); // also works for plain array values
     }
@@ -2993,7 +2993,7 @@ Writer.prototype.bytes = function write_bytes(value) {
     var len = value.length >>> 0;
     if (!len)
         return this._push(writeByte, 1, 0);
-    if (minimal$2.isString(value)) {
+    if (minimal.isString(value)) {
         var buf = Writer.alloc(len = base64.length(value));
         base64.decode(value, buf, 0);
         value = buf;
@@ -3088,7 +3088,7 @@ var writer_buffer = BufferWriter$1;
 
 
 
-var Buffer = minimal$2.Buffer;
+var Buffer = minimal.Buffer;
 
 /**
  * Constructs a new buffer writer instance.
@@ -3106,7 +3106,7 @@ function BufferWriter$1() {
  * @returns {Buffer} Buffer
  */
 BufferWriter$1.alloc = function alloc_buffer(size) {
-    return (BufferWriter$1.alloc = minimal$2._Buffer_allocUnsafe)(size);
+    return (BufferWriter$1.alloc = minimal._Buffer_allocUnsafe)(size);
 };
 
 var writeBytesBuffer = Buffer && Buffer.prototype instanceof Uint8Array && Buffer.prototype.set.name === "set"
@@ -3126,8 +3126,8 @@ var writeBytesBuffer = Buffer && Buffer.prototype instanceof Uint8Array && Buffe
  * @override
  */
 BufferWriter$1.prototype.bytes = function write_bytes_buffer(value) {
-    if (minimal$2.isString(value))
-        value = minimal$2._Buffer_from(value, "base64");
+    if (minimal.isString(value))
+        value = minimal._Buffer_from(value, "base64");
     var len = value.length >>> 0;
     this.uint32(len);
     if (len)
@@ -3137,7 +3137,7 @@ BufferWriter$1.prototype.bytes = function write_bytes_buffer(value) {
 
 function writeStringBuffer(val, buf, pos) {
     if (val.length < 40) // plain js is faster for short strings (probably due to redundant assertions)
-        minimal$2.utf8.write(val, buf, pos);
+        minimal.utf8.write(val, buf, pos);
     else
         buf.utf8Write(val, pos);
 }
@@ -3159,8 +3159,8 @@ var reader = Reader;
 
 var BufferReader; // cyclic
 
-var LongBits$2  = minimal$2.LongBits;
-var utf8$1      = minimal$2.utf8;
+var LongBits$2  = minimal.LongBits;
+var utf8$1      = minimal.utf8;
 
 /* istanbul ignore next */
 function indexOutOfRange(reader, writeLength) {
@@ -3214,10 +3214,10 @@ var create_array = typeof Uint8Array !== "undefined"
  * @returns {Reader|BufferReader} A {@link BufferReader} if `buffer` is a Buffer, otherwise a {@link Reader}
  * @throws {Error} If `buffer` is not a valid buffer
  */
-Reader.create = minimal$2.Buffer
+Reader.create = minimal.Buffer
     ? function create_buffer_setup(buffer) {
         return (Reader.create = function create_buffer(buffer) {
-            return minimal$2.Buffer.isBuffer(buffer)
+            return minimal.Buffer.isBuffer(buffer)
                 ? new BufferReader(buffer)
                 /* istanbul ignore next */
                 : create_array(buffer);
@@ -3226,7 +3226,7 @@ Reader.create = minimal$2.Buffer
     /* istanbul ignore next */
     : create_array;
 
-Reader.prototype._slice = minimal$2.Array.prototype.subarray || /* istanbul ignore next */ minimal$2.Array.prototype.slice;
+Reader.prototype._slice = minimal.Array.prototype.subarray || /* istanbul ignore next */ minimal.Array.prototype.slice;
 
 /**
  * Reads a varint as an unsigned 32 bit value.
@@ -3425,7 +3425,7 @@ Reader.prototype.float = function read_float() {
     if (this.pos + 4 > this.len)
         throw indexOutOfRange(this, 4);
 
-    var value = minimal$2.float.readFloatLE(this.buf, this.pos);
+    var value = minimal.float.readFloatLE(this.buf, this.pos);
     this.pos += 4;
     return value;
 };
@@ -3441,7 +3441,7 @@ Reader.prototype.double = function read_double() {
     if (this.pos + 8 > this.len)
         throw indexOutOfRange(this, 4);
 
-    var value = minimal$2.float.readDoubleLE(this.buf, this.pos);
+    var value = minimal.float.readDoubleLE(this.buf, this.pos);
     this.pos += 8;
     return value;
 };
@@ -3534,8 +3534,8 @@ Reader.prototype.skipType = function(wireType) {
 Reader._configure = function(BufferReader_) {
     BufferReader = BufferReader_;
 
-    var fn = minimal$2.Long ? "toLong" : /* istanbul ignore next */ "toNumber";
-    minimal$2.merge(Reader.prototype, {
+    var fn = minimal.Long ? "toLong" : /* istanbul ignore next */ "toNumber";
+    minimal.merge(Reader.prototype, {
 
         int64: function read_int64() {
             return readLongVarint.call(this)[fn](false);
@@ -3586,8 +3586,8 @@ function BufferReader$1(buffer) {
 }
 
 /* istanbul ignore else */
-if (minimal$2.Buffer)
-    BufferReader$1.prototype._slice = minimal$2.Buffer.prototype.slice;
+if (minimal.Buffer)
+    BufferReader$1.prototype._slice = minimal.Buffer.prototype.slice;
 
 /**
  * @override
@@ -3602,7 +3602,7 @@ var service = Service;
 
 
 // Extends EventEmitter
-(Service.prototype = Object.create(minimal$2.EventEmitter.prototype)).constructor = Service;
+(Service.prototype = Object.create(minimal.EventEmitter.prototype)).constructor = Service;
 
 /**
  * A service method callback as used by {@link rpc.ServiceMethod|ServiceMethod}.
@@ -3642,7 +3642,7 @@ function Service(rpcImpl, requestDelimited, responseDelimited) {
     if (typeof rpcImpl !== "function")
         throw TypeError("rpcImpl must be a function");
 
-    minimal$2.EventEmitter.call(this);
+    minimal.EventEmitter.call(this);
 
     /**
      * RPC implementation. Becomes `null` once the service is ended.
@@ -3681,7 +3681,7 @@ Service.prototype.rpcCall = function rpcCall(method, requestCtor, responseCtor, 
 
     var self = this;
     if (!callback)
-        return minimal$2.asPromise(rpcCall, self, method, requestCtor, responseCtor, request);
+        return minimal.asPromise(rpcCall, self, method, requestCtor, responseCtor, request);
 
     if (!self.rpcImpl) {
         setTimeout(function() { callback(Error("already ended")); }, 0);
@@ -3792,7 +3792,7 @@ protobuf.Reader       = reader;
 protobuf.BufferReader = reader_buffer;
 
 // Utility
-protobuf.util         = minimal$2;
+protobuf.util         = minimal;
 protobuf.rpc          = rpc_1;
 protobuf.roots        = roots;
 protobuf.configure    = configure;
@@ -3812,12 +3812,12 @@ protobuf.Writer._configure(protobuf.BufferWriter);
 configure();
 });
 
-var minimal = indexMinimal;
+var minimal$2 = indexMinimal;
 
-var minimal_1 = minimal.Reader;
-var minimal_2 = minimal.Writer;
-var minimal_3 = minimal.util;
-var minimal_4 = minimal.roots;
+var minimal_1 = minimal$2.Reader;
+var minimal_2 = minimal$2.Writer;
+var minimal_3 = minimal$2.util;
+var minimal_4 = minimal$2.roots;
 
 /*eslint-disable block-scoped-var, no-redeclare, no-control-regex, no-prototype-builtins*/
 const $Reader = minimal_1;
@@ -3964,7 +3964,7 @@ const Content = $root.Content = (() => {
     return Content;
 })();
 
-var __extends$6 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$5 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -3976,7 +3976,7 @@ var __extends$6 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * @extends {Ignored}
  */
 var OuterSubscriber = (function (_super) {
-    __extends$6(OuterSubscriber, _super);
+    __extends$5(OuterSubscriber, _super);
     function OuterSubscriber() {
         _super.apply(this, arguments);
     }
@@ -4058,7 +4058,7 @@ var iterator_1 = iterator.symbolIteratorPonyfill;
 var iterator_2 = iterator.iterator;
 var iterator_3 = iterator.$$iterator;
 
-var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$6 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -4070,7 +4070,7 @@ var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * @extends {Ignored}
  */
 var InnerSubscriber = (function (_super) {
-    __extends$7(InnerSubscriber, _super);
+    __extends$6(InnerSubscriber, _super);
     function InnerSubscriber(parent, outerValue, outerIndex) {
         _super.call(this);
         this.parent = parent;
@@ -4173,7 +4173,7 @@ var subscribeToResult_1 = {
 	subscribeToResult: subscribeToResult_2
 };
 
-var __extends$5 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -4188,7 +4188,7 @@ var __extends$5 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * @extends {Ignored}
  */
 var AuditSubscriber = (function (_super) {
-    __extends$5(AuditSubscriber, _super);
+    __extends$7(AuditSubscriber, _super);
     function AuditSubscriber(destination, durationSelector) {
         _super.call(this, destination);
         this.durationSelector = durationSelector;
@@ -4235,7 +4235,7 @@ var AuditSubscriber = (function (_super) {
     return AuditSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -4256,7 +4256,7 @@ var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * @class Action<T>
  */
 var Action = (function (_super) {
-    __extends$9(Action, _super);
+    __extends$8(Action, _super);
     function Action(scheduler, work) {
         _super.call(this);
     }
@@ -4283,7 +4283,7 @@ var Action_1 = {
 	Action: Action_2
 };
 
-var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -4296,7 +4296,7 @@ var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
  * @extends {Ignored}
  */
 var AsyncAction = (function (_super) {
-    __extends$8(AsyncAction, _super);
+    __extends$9(AsyncAction, _super);
     function AsyncAction(scheduler, work) {
         _super.call(this, scheduler, work);
         this.scheduler = scheduler;
@@ -5172,7 +5172,7 @@ var CatchSubscriber = (function (_super) {
     return CatchSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-var __extends$20 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$18 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5184,7 +5184,7 @@ var __extends$20 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @hide true
  */
 var ScalarObservable = (function (_super) {
-    __extends$20(ScalarObservable, _super);
+    __extends$18(ScalarObservable, _super);
     function ScalarObservable(value, scheduler) {
         _super.call(this);
         this.value = value;
@@ -5234,7 +5234,7 @@ var ScalarObservable_1 = {
 	ScalarObservable: ScalarObservable_2
 };
 
-var __extends$21 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$19 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5246,7 +5246,7 @@ var __extends$21 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @hide true
  */
 var EmptyObservable = (function (_super) {
-    __extends$21(EmptyObservable, _super);
+    __extends$19(EmptyObservable, _super);
     function EmptyObservable(scheduler) {
         _super.call(this);
         this.scheduler = scheduler;
@@ -5319,7 +5319,7 @@ var EmptyObservable_1 = {
 	EmptyObservable: EmptyObservable_2
 };
 
-var __extends$19 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$20 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5334,7 +5334,7 @@ var __extends$19 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @hide true
  */
 var ArrayObservable = (function (_super) {
-    __extends$19(ArrayObservable, _super);
+    __extends$20(ArrayObservable, _super);
     function ArrayObservable(array, scheduler) {
         _super.call(this);
         this.array = array;
@@ -5445,7 +5445,7 @@ var ArrayObservable_1 = {
 	ArrayObservable: ArrayObservable_2
 };
 
-var __extends$18 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$21 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5461,7 +5461,7 @@ var none = {};
  * @extends {Ignored}
  */
 var CombineLatestSubscriber = (function (_super) {
-    __extends$18(CombineLatestSubscriber, _super);
+    __extends$21(CombineLatestSubscriber, _super);
     function CombineLatestSubscriber(destination, project) {
         _super.call(this, destination);
         this.project = project;
@@ -5523,7 +5523,7 @@ var CombineLatestSubscriber = (function (_super) {
     return CombineLatestSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-var __extends$23 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$22 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5536,7 +5536,7 @@ var __extends$23 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @hide true
  */
 var PromiseObservable = (function (_super) {
-    __extends$23(PromiseObservable, _super);
+    __extends$22(PromiseObservable, _super);
     function PromiseObservable(promise, scheduler) {
         _super.call(this);
         this.promise = promise;
@@ -5648,7 +5648,7 @@ var PromiseObservable_1 = {
 	PromiseObservable: PromiseObservable_2
 };
 
-var __extends$24 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$23 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5662,7 +5662,7 @@ var __extends$24 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @hide true
  */
 var IteratorObservable = (function (_super) {
-    __extends$24(IteratorObservable, _super);
+    __extends$23(IteratorObservable, _super);
     function IteratorObservable(iterator$$2, scheduler) {
         _super.call(this);
         this.scheduler = scheduler;
@@ -5815,7 +5815,7 @@ var IteratorObservable_1 = {
 	IteratorObservable: IteratorObservable_2
 };
 
-var __extends$25 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$24 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5829,7 +5829,7 @@ var __extends$25 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @hide true
  */
 var ArrayLikeObservable = (function (_super) {
-    __extends$25(ArrayLikeObservable, _super);
+    __extends$24(ArrayLikeObservable, _super);
     function ArrayLikeObservable(arrayLike, scheduler) {
         _super.call(this);
         this.arrayLike = arrayLike;
@@ -6019,7 +6019,7 @@ var Notification_1 = {
 	Notification: Notification_2
 };
 
-var __extends$26 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$25 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -6072,13 +6072,13 @@ var __extends$26 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @method observeOn
  * @owner Observable
  */
-function observeOn$1(scheduler, delay) {
+function observeOn(scheduler, delay) {
     if (delay === void 0) { delay = 0; }
     return function observeOnOperatorFunction(source) {
         return source.lift(new ObserveOnOperator(scheduler, delay));
     };
 }
-var observeOn_2 = observeOn$1;
+var observeOn_2 = observeOn;
 var ObserveOnOperator = (function () {
     function ObserveOnOperator(scheduler, delay) {
         if (delay === void 0) { delay = 0; }
@@ -6097,7 +6097,7 @@ var ObserveOnOperator_1 = ObserveOnOperator;
  * @extends {Ignored}
  */
 var ObserveOnSubscriber = (function (_super) {
-    __extends$26(ObserveOnSubscriber, _super);
+    __extends$25(ObserveOnSubscriber, _super);
     function ObserveOnSubscriber(destination, scheduler, delay) {
         if (delay === void 0) { delay = 0; }
         _super.call(this, destination);
@@ -6141,7 +6141,7 @@ var observeOn_1 = {
 	ObserveOnMessage: ObserveOnMessage_1
 };
 
-var __extends$22 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$26 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -6163,7 +6163,7 @@ var __extends$22 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @hide true
  */
 var FromObservable = (function (_super) {
-    __extends$22(FromObservable, _super);
+    __extends$26(FromObservable, _super);
     function FromObservable(ish, scheduler) {
         _super.call(this, null);
         this.ish = ish;
@@ -6931,7 +6931,7 @@ var DistinctUntilChangedSubscriber = (function (_super) {
     return DistinctUntilChangedSubscriber;
 }(Subscriber_1.Subscriber));
 
-var __extends$38 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$37 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -6947,7 +6947,7 @@ var __extends$38 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @class ArgumentOutOfRangeError
  */
 var ArgumentOutOfRangeError = (function (_super) {
-    __extends$38(ArgumentOutOfRangeError, _super);
+    __extends$37(ArgumentOutOfRangeError, _super);
     function ArgumentOutOfRangeError() {
         var err = _super.call(this, 'argument out of range');
         this.name = err.name = 'ArgumentOutOfRangeError';
@@ -6963,7 +6963,7 @@ var ArgumentOutOfRangeError_1 = {
 	ArgumentOutOfRangeError: ArgumentOutOfRangeError_2
 };
 
-var __extends$37 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$38 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -6976,7 +6976,7 @@ var __extends$37 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @extends {Ignored}
  */
 var ElementAtSubscriber = (function (_super) {
-    __extends$37(ElementAtSubscriber, _super);
+    __extends$38(ElementAtSubscriber, _super);
     function ElementAtSubscriber(destination, index, defaultValue) {
         _super.call(this, destination);
         this.index = index;
@@ -7295,12 +7295,12 @@ var __extends$43 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @method filter
  * @owner Observable
  */
-function filter$1(predicate, thisArg) {
+function filter(predicate, thisArg) {
     return function filterOperatorFunction(source) {
         return source.lift(new FilterOperator(predicate, thisArg));
     };
 }
-var filter_2 = filter$1;
+var filter_2 = filter;
 var FilterOperator = (function () {
     function FilterOperator(predicate, thisArg) {
         this.predicate = predicate;
@@ -7413,7 +7413,7 @@ var FindValueSubscriber = (function (_super) {
     return FindValueSubscriber;
 }(Subscriber_1.Subscriber));
 
-var __extends$47 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$46 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -7429,7 +7429,7 @@ var __extends$47 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @class EmptyError
  */
 var EmptyError = (function (_super) {
-    __extends$47(EmptyError, _super);
+    __extends$46(EmptyError, _super);
     function EmptyError() {
         var err = _super.call(this, 'no elements in sequence');
         this.name = err.name = 'EmptyError';
@@ -7445,7 +7445,7 @@ var EmptyError_1 = {
 	EmptyError: EmptyError_2
 };
 
-var __extends$46 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$47 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -7458,7 +7458,7 @@ var __extends$46 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @extends {Ignored}
  */
 var FirstSubscriber = (function (_super) {
-    __extends$46(FirstSubscriber, _super);
+    __extends$47(FirstSubscriber, _super);
     function FirstSubscriber(destination, predicate, resultSelector, defaultValue, source) {
         _super.call(this, destination);
         this.predicate = predicate;
@@ -7988,7 +7988,7 @@ var __extends$52 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @method map
  * @owner Observable
  */
-function map$1(project, thisArg) {
+function map(project, thisArg) {
     return function mapOperation(source) {
         if (typeof project !== 'function') {
             throw new TypeError('argument is not a function. Are you looking for `mapTo()`?');
@@ -7996,7 +7996,7 @@ function map$1(project, thisArg) {
         return source.lift(new MapOperator(project, thisArg));
     };
 }
-var map_2 = map$1;
+var map_2 = map;
 var MapOperator = (function () {
     function MapOperator(project, thisArg) {
         this.project = project;
@@ -8367,26 +8367,26 @@ var MergeScanSubscriber = (function (_super) {
     return MergeScanSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-var __extends$60 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$59 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 
-function refCount$1() {
+function refCount() {
     return function refCountOperatorFunction(source) {
-        return source.lift(new RefCountOperator$1(source));
+        return source.lift(new RefCountOperator(source));
     };
 }
-var refCount_2 = refCount$1;
-var RefCountOperator$1 = (function () {
+var refCount_2 = refCount;
+var RefCountOperator = (function () {
     function RefCountOperator(connectable) {
         this.connectable = connectable;
     }
     RefCountOperator.prototype.call = function (subscriber, source) {
         var connectable = this.connectable;
         connectable._refCount++;
-        var refCounter = new RefCountSubscriber$1(subscriber, connectable);
+        var refCounter = new RefCountSubscriber(subscriber, connectable);
         var subscription = source.subscribe(refCounter);
         if (!refCounter.closed) {
             refCounter.connection = connectable.connect();
@@ -8395,8 +8395,8 @@ var RefCountOperator$1 = (function () {
     };
     return RefCountOperator;
 }());
-var RefCountSubscriber$1 = (function (_super) {
-    __extends$60(RefCountSubscriber, _super);
+var RefCountSubscriber = (function (_super) {
+    __extends$59(RefCountSubscriber, _super);
     function RefCountSubscriber(destination, connectable) {
         _super.call(this, destination);
         this.connectable = connectable;
@@ -8456,7 +8456,7 @@ var refCount_1 = {
 	refCount: refCount_2
 };
 
-var __extends$59 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$60 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -8470,7 +8470,7 @@ var __extends$59 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @class ConnectableObservable<T>
  */
 var ConnectableObservable = (function (_super) {
-    __extends$59(ConnectableObservable, _super);
+    __extends$60(ConnectableObservable, _super);
     function ConnectableObservable(source, subjectFactory) {
         _super.call(this);
         this.source = source;
@@ -8511,7 +8511,7 @@ var ConnectableObservable = (function (_super) {
     return ConnectableObservable;
 }(Observable_1.Observable));
 var ConnectableSubscriber = (function (_super) {
-    __extends$59(ConnectableSubscriber, _super);
+    __extends$60(ConnectableSubscriber, _super);
     function ConnectableSubscriber(destination, connectable) {
         _super.call(this, destination);
         this.connectable = connectable;
@@ -8540,8 +8540,8 @@ var ConnectableSubscriber = (function (_super) {
     };
     return ConnectableSubscriber;
 }(Subject_1.SubjectSubscriber));
-var RefCountSubscriber = (function (_super) {
-    __extends$59(RefCountSubscriber, _super);
+var RefCountSubscriber$1 = (function (_super) {
+    __extends$60(RefCountSubscriber, _super);
     function RefCountSubscriber(destination, connectable) {
         _super.call(this, destination);
         this.connectable = connectable;
@@ -8691,7 +8691,7 @@ var PairwiseSubscriber = (function (_super) {
  * @method pluck
  * @owner Observable
  */
-function pluck$1() {
+function pluck() {
     var properties = [];
     for (var _i = 0; _i < arguments.length; _i++) {
         properties[_i - 0] = arguments[_i];
@@ -8702,7 +8702,7 @@ function pluck$1() {
     }
     return function (source) { return map_1.map(plucker(properties, length))(source); };
 }
-var pluck_2 = pluck$1;
+var pluck_2 = pluck;
 function plucker(props, length) {
     var mapper = function (x) {
         var currentProp = x;
@@ -8823,7 +8823,7 @@ var AsyncSubject = (function (_super) {
     return AsyncSubject;
 }(Subject_1.Subject));
 
-var __extends$66 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$65 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -8835,7 +8835,7 @@ var __extends$66 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @extends {Ignored}
  */
 var QueueAction = (function (_super) {
-    __extends$66(QueueAction, _super);
+    __extends$65(QueueAction, _super);
     function QueueAction(scheduler, work) {
         _super.call(this, scheduler, work);
         this.scheduler = scheduler;
@@ -8876,14 +8876,14 @@ var QueueAction_1 = {
 	QueueAction: QueueAction_2
 };
 
-var __extends$67 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$66 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 
 var QueueScheduler = (function (_super) {
-    __extends$67(QueueScheduler, _super);
+    __extends$66(QueueScheduler, _super);
     function QueueScheduler() {
         _super.apply(this, arguments);
     }
@@ -8964,7 +8964,7 @@ var queue = {
 	queue: queue_1
 };
 
-var __extends$65 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$67 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -8979,7 +8979,7 @@ var __extends$65 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @class ReplaySubject<T>
  */
 var ReplaySubject = (function (_super) {
-    __extends$65(ReplaySubject, _super);
+    __extends$67(ReplaySubject, _super);
     function ReplaySubject(bufferSize, windowTime, scheduler) {
         if (bufferSize === void 0) { bufferSize = Number.POSITIVE_INFINITY; }
         if (windowTime === void 0) { windowTime = Number.POSITIVE_INFINITY; }
@@ -10268,7 +10268,7 @@ var TimeIntervalSubscriber = (function (_super) {
     return TimeIntervalSubscriber;
 }(Subscriber_1.Subscriber));
 
-var __extends$90 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$89 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -10281,7 +10281,7 @@ var __extends$90 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @class TimeoutError
  */
 var TimeoutError = (function (_super) {
-    __extends$90(TimeoutError, _super);
+    __extends$89(TimeoutError, _super);
     function TimeoutError() {
         var err = _super.call(this, 'Timeout has occurred');
         this.name = err.name = 'TimeoutError';
@@ -10291,7 +10291,7 @@ var TimeoutError = (function (_super) {
     return TimeoutError;
 }(Error));
 
-var __extends$89 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$90 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -10306,7 +10306,7 @@ var __extends$89 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @extends {Ignored}
  */
 var TimeoutSubscriber = (function (_super) {
-    __extends$89(TimeoutSubscriber, _super);
+    __extends$90(TimeoutSubscriber, _super);
     function TimeoutSubscriber(destination, absoluteTimeout, waitFor, scheduler, errorInstance) {
         _super.call(this, destination);
         this.absoluteTimeout = absoluteTimeout;
@@ -11127,9 +11127,9 @@ var ZipBufferIterator = (function (_super) {
     return ZipBufferIterator;
 }(OuterSubscriber_1.OuterSubscriber));
 
-var filter = filter_1.filter;
+var filter$1 = filter_1.filter;
 
-var pluck = pluck_1.pluck;
+var pluck$1 = pluck_1.pluck;
 
 var throttle = throttle_1.throttle;
 
@@ -11206,8 +11206,8 @@ class Peer extends ReplaySubject_2 {
   joiningToMember (member) {
     let isEnd = false;
     const sub = member.pipe(
-      filter((msg) => msg.type === 'content' && msg.content.id === this.id),
-      pluck('content')
+      filter$1((msg) => msg.type === 'content' && msg.content.id === this.id),
+      pluck$1('content')
     ).subscribe(
       (msg) => {
         log.debug('Message from Member: ', msg.type);
@@ -11256,8 +11256,8 @@ class Peer extends ReplaySubject_2 {
   memberToJoining (member) {
     let isEnd = false;
     const sub = this.pipe(
-      filter((msg) => msg.type === 'content'),
-      pluck('content')
+      filter$1((msg) => msg.type === 'content'),
+      pluck$1('content')
     ).subscribe(
       (msg) => {
         switch (msg.type) {

@@ -51,7 +51,7 @@
   "devDependencies": {
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^2.1.0",
-    "eslint": "^4.15.0",
+    "eslint": "^4.16.0",
     "eslint-config-conaclos": "^2.2.0",
     "eslint-config-standard": "^10.0.0",
     "eslint-plugin-extra-rules": "0.8.1",
@@ -60,7 +60,7 @@
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
     "husky": "^0.14.3",
-    "jasmine": "^2.8.0",
+    "jasmine": "^2.9.0",
     "jasmine-spec-reporter": "^4.2.1",
     "karma": "^2.0.0",
     "karma-chrome-launcher": "^2.1.1",
@@ -69,13 +69,13 @@
     "karma-rollup-preprocessor": "^5.1.1",
     "karma-spec-reporter": "0.0.32",
     "pm2": "^2.9.1",
-    "rollup": "^0.53.4",
+    "rollup": "^0.54.1",
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-filesize": "^1.5.0",
     "rollup-plugin-node-resolve": "^3.0.2",
     "rollup-plugin-re": "^1.0.6",
-    "semantic-release": "^11.0.2",
+    "semantic-release": "^12.2.4",
     "validate-commit-msg": "^2.14.0"
   },
   "config": {
