@@ -18,7 +18,7 @@ export class Peer extends ReplaySubject {
   }
 
   clean () {
-    clearTimeout(this.heartbeatInterval)
+    clearInterval(this.heartbeatInterval)
     if (this.network !== undefined) {
       this.network.removeMember(this)
     }

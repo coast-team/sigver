@@ -11176,7 +11176,7 @@ class Peer extends ReplaySubject_2 {
   }
 
   clean () {
-    clearTimeout(this.heartbeatInterval);
+    clearInterval(this.heartbeatInterval);
     if (this.network !== undefined) {
       this.network.removeMember(this);
     }
