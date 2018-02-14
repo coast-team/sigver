@@ -15,6 +15,7 @@ export class Peer extends ReplaySubject {
     this.network = undefined
     this.heartbeatInterval = undefined
     this.missedHeartbeat = 0
+    this.triedMembers = []
   }
 
   clean () {
@@ -37,6 +38,7 @@ export class Peer extends ReplaySubject {
   }
 
   bindWith (member) {
+    this.triedMembers.push(member.id)
     this.joiningToMember(member)
     this.memberToJoining(member)
   }

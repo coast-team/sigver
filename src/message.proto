@@ -10,12 +10,14 @@ message Message {
 
     // Peer response to the server when he joined the peer to peer network
     // successfully and is ready to help other peers to join this network.
-    bool joined = 3; // Only incoming
+    bool stable = 3; // Only incoming
 
     // Server sends `heartbeat` message each 5 seconds and expects getting the
     // same message back. If after 3 tentatives still no response then close the
     // connection.
     bool heartbeat = 4;
+
+    bool tryAnother = 5; // Only incoming
   }
 }
 

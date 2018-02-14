@@ -16,13 +16,14 @@ export const Message = $root.Message = (() => {
 
     Message.prototype.content = null;
     Message.prototype.isFirst = false;
-    Message.prototype.joined = false;
+    Message.prototype.stable = false;
     Message.prototype.heartbeat = false;
+    Message.prototype.tryAnother = false;
 
     let $oneOfFields;
 
     Object.defineProperty(Message.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "joined", "heartbeat"]),
+        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "stable", "heartbeat", "tryAnother"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -37,10 +38,12 @@ export const Message = $root.Message = (() => {
             $root.Content.encode(message.content, writer.uint32(10).fork()).ldelim();
         if (message.isFirst != null && message.hasOwnProperty("isFirst"))
             writer.uint32(16).bool(message.isFirst);
-        if (message.joined != null && message.hasOwnProperty("joined"))
-            writer.uint32(24).bool(message.joined);
+        if (message.stable != null && message.hasOwnProperty("stable"))
+            writer.uint32(24).bool(message.stable);
         if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
             writer.uint32(32).bool(message.heartbeat);
+        if (message.tryAnother != null && message.hasOwnProperty("tryAnother"))
+            writer.uint32(40).bool(message.tryAnother);
         return writer;
     };
 
@@ -58,10 +61,13 @@ export const Message = $root.Message = (() => {
                 message.isFirst = reader.bool();
                 break;
             case 3:
-                message.joined = reader.bool();
+                message.stable = reader.bool();
                 break;
             case 4:
                 message.heartbeat = reader.bool();
+                break;
+            case 5:
+                message.tryAnother = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);

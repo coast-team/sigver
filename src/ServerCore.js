@@ -1,3 +1,5 @@
+import { ERR_ALL_MEMBERS_TESTED } from './SigError'
+
 const networks = new Map()
 
 /**
@@ -9,7 +11,12 @@ export default class ServerCore {
 
     // Check whether the first peer or not in the network identified by the key
     if (net !== undefined) {
-      peer.bindWith(net.selectMember())
+      const member = net.selectMember()
+      if (member) {
+        peer.bindWith(member)
+      } else {
+        peer.close(ERR_ALL_MEMBERS_TESTED, 'All members have been tested')
+      }
       peer.send({ isFirst: false })
     } else {
       const net = new Network(key, peer)
@@ -22,12 +29,21 @@ export default class ServerCore {
     peer.subscribe(
       ({ type }) => {
         switch (type) {
-          case 'joined':
+          case 'stable':
             this.becomeMember(peer)
             break
           case 'heartbeat':
             peer.missedHeartbeat = 0
             break
+          case 'tryAnother': {
+            const member = net.selectMember(peer.triedMembers)
+            if (member) {
+              peer.bindWith(member)
+            } else {
+              peer.close(ERR_ALL_MEMBERS_TESTED, 'All members have been tested')
+            }
+            break
+          }
         }
       },
       err => {
@@ -60,13 +76,18 @@ class Network {
     this.addMember(peer)
   }
 
-  selectMember () {
-    const index = Math.floor(Math.random() * this.members.size)
-    const iterator = this.members.values()
-    for (let i = 0; i < index; i++) {
-      iterator.next()
+  selectMember (excludeMembers = []) {
+    const ids = []
+    this.members.forEach((id) => {
+      if (!excludeMembers.includes(id)) {
+        ids[ids.length] = id
+      }
+    })
+    if (ids.length !== 0) {
+      return ids[Math.floor(Math.random() * ids.length)]
+    } else {
+      return undefined
     }
-    return iterator.next().value
   }
 
   addMember (peer) {

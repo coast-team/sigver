@@ -3837,13 +3837,14 @@ const Message = $root.Message = (() => {
 
     Message.prototype.content = null;
     Message.prototype.isFirst = false;
-    Message.prototype.joined = false;
+    Message.prototype.stable = false;
     Message.prototype.heartbeat = false;
+    Message.prototype.tryAnother = false;
 
     let $oneOfFields;
 
     Object.defineProperty(Message.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "joined", "heartbeat"]),
+        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "stable", "heartbeat", "tryAnother"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -3858,10 +3859,12 @@ const Message = $root.Message = (() => {
             $root.Content.encode(message.content, writer.uint32(10).fork()).ldelim();
         if (message.isFirst != null && message.hasOwnProperty("isFirst"))
             writer.uint32(16).bool(message.isFirst);
-        if (message.joined != null && message.hasOwnProperty("joined"))
-            writer.uint32(24).bool(message.joined);
+        if (message.stable != null && message.hasOwnProperty("stable"))
+            writer.uint32(24).bool(message.stable);
         if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
             writer.uint32(32).bool(message.heartbeat);
+        if (message.tryAnother != null && message.hasOwnProperty("tryAnother"))
+            writer.uint32(40).bool(message.tryAnother);
         return writer;
     };
 
@@ -3879,10 +3882,13 @@ const Message = $root.Message = (() => {
                 message.isFirst = reader.bool();
                 break;
             case 3:
-                message.joined = reader.bool();
+                message.stable = reader.bool();
                 break;
             case 4:
                 message.heartbeat = reader.bool();
+                break;
+            case 5:
+                message.tryAnother = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -11155,10 +11161,14 @@ const ERR_HEARTBEAT = 4002;
 // Any error due to message: type, format etc.
 const ERR_MESSAGE = 4003;
 
+// When all members of the network have been tested, but no connection has been established.
+const ERR_ALL_MEMBERS_TESTED = 4004;
+
 const errorCodes = {
   ERR_KEY,
   ERR_HEARTBEAT,
-  ERR_MESSAGE
+  ERR_MESSAGE,
+  ERR_ALL_MEMBERS_TESTED
 };
 
 const MAXIMUM_MISSED_HEARTBEAT = 3;
@@ -11173,6 +11183,7 @@ class Peer extends ReplaySubject_2 {
     this.network = undefined;
     this.heartbeatInterval = undefined;
     this.missedHeartbeat = 0;
+    this.triedMembers = [];
   }
 
   clean () {
@@ -11195,6 +11206,7 @@ class Peer extends ReplaySubject_2 {
   }
 
   bindWith (member) {
+    this.triedMembers.push(member.id);
     this.joiningToMember(member);
     this.memberToJoining(member);
   }
@@ -11413,7 +11425,12 @@ class ServerCore {
 
     // Check whether the first peer or not in the network identified by the key
     if (net !== undefined) {
-      peer.bindWith(net.selectMember());
+      const member = net.selectMember();
+      if (member) {
+        peer.bindWith(member);
+      } else {
+        peer.close(ERR_ALL_MEMBERS_TESTED, 'All members have been tested');
+      }
       peer.send({ isFirst: false });
     } else {
       const net = new Network(key, peer);
@@ -11426,12 +11443,21 @@ class ServerCore {
     peer.subscribe(
       ({ type }) => {
         switch (type) {
-          case 'joined':
+          case 'stable':
             this.becomeMember(peer);
             break
           case 'heartbeat':
             peer.missedHeartbeat = 0;
             break
+          case 'tryAnother': {
+            const member = net.selectMember(peer.triedMembers);
+            if (member) {
+              peer.bindWith(member);
+            } else {
+              peer.close(ERR_ALL_MEMBERS_TESTED, 'All members have been tested');
+            }
+            break
+          }
         }
       },
       err => {
@@ -11464,13 +11490,18 @@ class Network {
     this.addMember(peer);
   }
 
-  selectMember () {
-    const index = Math.floor(Math.random() * this.members.size);
-    const iterator = this.members.values();
-    for (let i = 0; i < index; i++) {
-      iterator.next();
+  selectMember (excludeMembers = []) {
+    const ids = [];
+    this.members.forEach((id) => {
+      if (!excludeMembers.includes(id)) {
+        ids[ids.length] = id;
+      }
+    });
+    if (ids.length !== 0) {
+      return ids[Math.floor(Math.random() * ids.length)]
+    } else {
+      return undefined
     }
-    return iterator.next().value
   }
 
   addMember (peer) {
