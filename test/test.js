@@ -27,7 +27,7 @@ function test (Source) {
         set onmessage (cb) {
           ws.onmessage = msgEvt => {
             const msg = h.decode(msgEvt.data)
-            if (msg.type === 'ping') {
+            if (msg.type === 'heartbeat') {
               ws.send(h.encode({ pong: true }))
             } else {
               cb(msg)
