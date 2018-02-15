@@ -1,5 +1,5 @@
 import { filter, pluck } from 'rxjs/operators'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
+import { Subject } from 'rxjs/Subject'
 
 import { SigError, ERR_HEARTBEAT, ERR_MESSAGE } from './SigError'
 
@@ -7,12 +7,12 @@ const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
 const ID_MAX_VALUE = 4294967295
 
-export class Peer extends ReplaySubject {
+export class Peer extends Subject {
   constructor (key) {
     super()
     this.key = key
     this.id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE)
-    this.network = undefined
+    this.group = undefined
     this.heartbeatInterval = undefined
     this.missedHeartbeat = 0
     this.triedMembers = []
@@ -20,8 +20,8 @@ export class Peer extends ReplaySubject {
 
   clean () {
     clearInterval(this.heartbeatInterval)
-    if (this.network !== undefined) {
-      this.network.removeMember(this)
+    if (this.group !== undefined) {
+      this.group.removeMember(this)
     }
   }
 
@@ -44,8 +44,8 @@ export class Peer extends ReplaySubject {
   }
 
   /**
-   * Joining subscribes to the network member.
-   * @param  {Peer} member a member of the network
+   * Joining subscribes to the group member.
+   * @param  {Peer} member a member of the group
    */
   joiningToMember (member) {
     let isEnd = false
@@ -54,7 +54,6 @@ export class Peer extends ReplaySubject {
       pluck('content')
     ).subscribe(
       (msg) => {
-        log.debug('Message from Member: ', msg.type)
         switch (msg.type) {
           case 'data':
             this.send({ content: { id: 0, data: msg.data } })
@@ -72,7 +71,7 @@ export class Peer extends ReplaySubject {
           default: {
             const err = new SigError(
               ERR_MESSAGE,
-              `Unknown message type "${msg.type}" from a network member`
+              `Unknown message type "${msg.type}" from a group member`
             )
             log.error(err)
             member.close(err.code, err.message)
@@ -95,7 +94,7 @@ export class Peer extends ReplaySubject {
 
   /**
    * Network member subscribes to the joining peer.
-   * @param  {Peer} member a member of the network
+   * @param  {Peer} member a member of the group
    */
   memberToJoining (member) {
     let isEnd = false

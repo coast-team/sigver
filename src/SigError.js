@@ -20,12 +20,8 @@ export const ERR_HEARTBEAT = 4002
 // Any error due to message: type, format etc.
 export const ERR_MESSAGE = 4003
 
-// When all members of the network have been tested, but no connection has been established.
-export const ERR_ALL_MEMBERS_TESTED = 4004
-
 const errorCodes = {
   ERR_KEY,
   ERR_HEARTBEAT,
-  ERR_MESSAGE,
-  ERR_ALL_MEMBERS_TESTED
+  ERR_MESSAGE
 }
