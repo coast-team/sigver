@@ -65,10 +65,9 @@ export default class WsServer {
       }
       socket.onerror = err => peer.error(err)
       socket.onclose = closeEvt => {
-        if (closeEvt.code === 1000) {
-          peer.complete()
-        } else {
-          peer.error(new SigError(closeEvt.code, closeEvt.reason))
+        peer.complete()
+        if (closeEvt.code !== 1000) {
+          log.info('Socket closed', {id: peer.id, key, code: closeEvt.code, reason: closeEvt.reason})
         }
       }
 
