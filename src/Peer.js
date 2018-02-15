@@ -18,8 +18,8 @@ function generateId () {
 }
 
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
-const firstTrueMsg = Message.encode(Message.create({ first: true })).finish()
-const firstFalseMsg = Message.encode(Message.create({ first: true })).finish()
+const firstTrueMsg = Message.encode(Message.create({ isFirst: true })).finish()
+const firstFalseMsg = Message.encode(Message.create({ isFirst: false })).finish()
 
 export class Peer extends Subject {
   constructor (key, sendFunc, closeFunc, heartbeatFunc) {
@@ -34,8 +34,8 @@ export class Peer extends Subject {
     // Set methods
     this.send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish())
     this.close = (code, reason) => closeFunc(code, reason)
-    this.sendFirstTrue = (msg) => sendFunc(firstTrueMsg)
-    this.sendFirstFalse = (msg) => sendFunc(firstFalseMsg)
+    this.sendFirstTrue = () => sendFunc(firstTrueMsg)
+    this.sendFirstFalse = () => sendFunc(firstFalseMsg)
 
     // Start heartbeat interval
     this.missedHeartbeat = 0
@@ -63,7 +63,7 @@ export class Peer extends Subject {
       this.group.removeMember(this)
     }
     this.complete()
-    this.generatedIds.delete(this.id)
+    generatedIds.delete(this.id)
     if (code !== 1000) {
       log.info('Socket closed', { id: this.id, key: this.key, code, reason })
     }

@@ -4,10 +4,6 @@
 
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-
-
-
-
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
@@ -85,7 +81,6 @@ function tryCatch(fn) {
     return tryCatcher;
 }
 var tryCatch_2 = tryCatch;
-
 
 
 var tryCatch_1 = {
@@ -325,6 +320,7 @@ var Observer = {
 };
 
 var rxSubscriber = createCommonjsModule(function (module, exports) {
+
 var Symbol = root.root.Symbol;
 exports.rxSubscriber = (typeof Symbol === 'function' && typeof Symbol.for === 'function') ?
     Symbol.for('rxSubscriber') : '@@rxSubscriber';
@@ -334,7 +330,6 @@ exports.rxSubscriber = (typeof Symbol === 'function' && typeof Symbol.for === 'f
 exports.$$rxSubscriber = exports.rxSubscriber;
 
 });
-
 var rxSubscriber_1 = rxSubscriber.rxSubscriber;
 var rxSubscriber_2 = rxSubscriber.$$rxSubscriber;
 
@@ -629,6 +624,7 @@ var toSubscriber_1 = {
 };
 
 var observable = createCommonjsModule(function (module, exports) {
+
 function getSymbolObservable(context) {
     var $$observable;
     var Symbol = context.Symbol;
@@ -654,7 +650,6 @@ exports.observable = getSymbolObservable(root.root);
 exports.$$observable = exports.observable;
 
 });
-
 var observable_1 = observable.getSymbolObservable;
 var observable_2 = observable.observable;
 var observable_3 = observable.$$observable;
@@ -1303,8 +1298,9 @@ var isPromise_1 = {
 };
 
 var iterator = createCommonjsModule(function (module, exports) {
-function symbolIteratorPonyfill(root$$2) {
-    var Symbol = root$$2.Symbol;
+
+function symbolIteratorPonyfill(root$$1) {
+    var Symbol = root$$1.Symbol;
     if (typeof Symbol === 'function') {
         if (!Symbol.iterator) {
             Symbol.iterator = Symbol('iterator polyfill');
@@ -1313,11 +1309,11 @@ function symbolIteratorPonyfill(root$$2) {
     }
     else {
         // [for Mozilla Gecko 27-35:](https://mzl.la/2ewE1zC)
-        var Set_1 = root$$2.Set;
+        var Set_1 = root$$1.Set;
         if (Set_1 && typeof new Set_1()['@@iterator'] === 'function') {
             return '@@iterator';
         }
-        var Map_1 = root$$2.Map;
+        var Map_1 = root$$1.Map;
         // required for compatability with es6-shim
         if (Map_1) {
             var keys = Object.getOwnPropertyNames(Map_1.prototype);
@@ -1340,7 +1336,6 @@ exports.iterator = symbolIteratorPonyfill(root.root);
 exports.$$iterator = exports.iterator;
 
 });
-
 var iterator_1 = iterator.symbolIteratorPonyfill;
 var iterator_2 = iterator.iterator;
 var iterator_3 = iterator.$$iterator;
@@ -1465,10 +1460,6 @@ var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -1883,7 +1874,6 @@ function isNumeric(val) {
 var isNumeric_2 = isNumeric;
 
 
-
 var isNumeric_1 = {
 	isNumeric: isNumeric_2
 };
@@ -2018,8 +2008,6 @@ var __extends$12 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -2048,7 +2036,6 @@ var __extends$13 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -2125,9 +2112,6 @@ var __extends$14 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 var Context = (function () {
     function Context() {
         this.buffer = [];
@@ -2249,9 +2233,6 @@ var __extends$15 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -2348,11 +2329,6 @@ var __extends$16 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -2423,8 +2399,6 @@ var __extends$17 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -2950,24 +2924,24 @@ var __extends$23 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  */
 var IteratorObservable = (function (_super) {
     __extends$23(IteratorObservable, _super);
-    function IteratorObservable(iterator$$2, scheduler) {
+    function IteratorObservable(iterator$$1, scheduler) {
         _super.call(this);
         this.scheduler = scheduler;
-        if (iterator$$2 == null) {
+        if (iterator$$1 == null) {
             throw new Error('iterator cannot be null.');
         }
-        this.iterator = getIterator(iterator$$2);
+        this.iterator = getIterator(iterator$$1);
     }
-    IteratorObservable.create = function (iterator$$2, scheduler) {
-        return new IteratorObservable(iterator$$2, scheduler);
+    IteratorObservable.create = function (iterator$$1, scheduler) {
+        return new IteratorObservable(iterator$$1, scheduler);
     };
     IteratorObservable.dispatch = function (state) {
-        var index = state.index, hasError = state.hasError, iterator$$2 = state.iterator, subscriber = state.subscriber;
+        var index = state.index, hasError = state.hasError, iterator$$1 = state.iterator, subscriber = state.subscriber;
         if (hasError) {
             subscriber.error(state.error);
             return;
         }
-        var result = iterator$$2.next();
+        var result = iterator$$1.next();
         if (result.done) {
             subscriber.complete();
             return;
@@ -2975,8 +2949,8 @@ var IteratorObservable = (function (_super) {
         subscriber.next(result.value);
         state.index = index + 1;
         if (subscriber.closed) {
-            if (typeof iterator$$2.return === 'function') {
-                iterator$$2.return();
+            if (typeof iterator$$1.return === 'function') {
+                iterator$$1.return();
             }
             return;
         }
@@ -2984,15 +2958,15 @@ var IteratorObservable = (function (_super) {
     };
     IteratorObservable.prototype._subscribe = function (subscriber) {
         var index = 0;
-        var _a = this, iterator$$2 = _a.iterator, scheduler = _a.scheduler;
+        var _a = this, iterator$$1 = _a.iterator, scheduler = _a.scheduler;
         if (scheduler) {
             return scheduler.schedule(IteratorObservable.dispatch, 0, {
-                index: index, iterator: iterator$$2, subscriber: subscriber
+                index: index, iterator: iterator$$1, subscriber: subscriber
             });
         }
         else {
             do {
-                var result = iterator$$2.next();
+                var result = iterator$$1.next();
                 if (result.done) {
                     subscriber.complete();
                     break;
@@ -3001,8 +2975,8 @@ var IteratorObservable = (function (_super) {
                     subscriber.next(result.value);
                 }
                 if (subscriber.closed) {
-                    if (typeof iterator$$2.return === 'function') {
-                        iterator$$2.return();
+                    if (typeof iterator$$1.return === 'function') {
+                        iterator$$1.return();
                     }
                     break;
                 }
@@ -3553,8 +3527,6 @@ var __extends$27 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -3641,7 +3613,6 @@ var __extends$28 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -3689,8 +3660,6 @@ var __extends$29 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -3760,8 +3729,6 @@ var __extends$30 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -3814,7 +3781,6 @@ var __extends$31 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -3845,10 +3811,6 @@ var __extends$32 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -3923,10 +3885,6 @@ var __extends$33 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4052,7 +4010,6 @@ var __extends$34 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4111,9 +4068,6 @@ var __extends$35 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4170,9 +4124,6 @@ var __extends$36 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4255,8 +4206,6 @@ var __extends$38 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4295,7 +4244,6 @@ var __extends$39 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4339,8 +4287,6 @@ var __extends$40 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4380,8 +4326,6 @@ var __extends$41 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4457,10 +4401,6 @@ var __extends$42 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4639,8 +4579,6 @@ var __extends$44 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4660,7 +4598,6 @@ var __extends$45 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4737,8 +4674,6 @@ var __extends$47 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -4916,12 +4851,6 @@ var __extends$48 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5104,8 +5033,6 @@ var __extends$49 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5127,7 +5054,6 @@ var __extends$50 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5157,8 +5083,6 @@ var __extends$51 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5335,7 +5259,6 @@ var __extends$53 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5358,8 +5281,6 @@ var __extends$54 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5391,7 +5312,6 @@ var __extends$55 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5446,9 +5366,6 @@ var __extends$56 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5495,8 +5412,6 @@ var __extends$57 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5580,10 +5495,6 @@ var __extends$58 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5888,10 +5799,6 @@ var __extends$61 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 var OnErrorResumeNextSubscriber = (function (_super) {
     __extends$61(OnErrorResumeNextSubscriber, _super);
     function OnErrorResumeNextSubscriber(destination, nextSources) {
@@ -5928,7 +5835,6 @@ var __extends$62 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6356,10 +6262,6 @@ var __extends$68 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6416,8 +6318,6 @@ var __extends$69 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6450,11 +6350,6 @@ var __extends$70 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6530,7 +6425,6 @@ var __extends$71 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6563,11 +6457,6 @@ var __extends$72 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6635,8 +6524,6 @@ var __extends$73 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6672,8 +6559,6 @@ var __extends$74 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6711,9 +6596,6 @@ var __extends$75 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6806,8 +6688,6 @@ var __extends$76 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6868,7 +6748,6 @@ var __extends$77 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6894,8 +6773,6 @@ var __extends$78 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6931,8 +6808,6 @@ var __extends$79 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -6976,7 +6851,6 @@ var __extends$80 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7016,8 +6890,6 @@ var __extends$81 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7093,8 +6965,6 @@ var __extends$82 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7160,9 +7030,6 @@ var __extends$83 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7194,8 +7061,6 @@ var __extends$84 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7222,7 +7087,6 @@ var __extends$85 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7264,7 +7128,6 @@ var __extends$86 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7455,7 +7318,6 @@ var ThrottleSubscriber = (function (_super) {
 }(OuterSubscriber_1.OuterSubscriber));
 
 });
-
 var throttle_2 = throttle_1.defaultThrottleConfig;
 var throttle_3 = throttle_1.throttle;
 
@@ -7464,9 +7326,6 @@ var __extends$87 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7522,8 +7381,6 @@ var __extends$88 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 var TimeInterval = (function () {
     function TimeInterval(value, interval) {
         this.value = value;
@@ -7531,7 +7388,6 @@ var TimeInterval = (function () {
     }
     return TimeInterval;
 }());
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7582,10 +7438,6 @@ var __extends$90 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7638,10 +7490,6 @@ var __extends$91 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7696,9 +7544,6 @@ var __extends$92 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7751,8 +7596,6 @@ var __extends$93 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -7818,11 +7661,6 @@ var __extends$94 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
 var CountedSubject = (function (_super) {
     __extends$94(CountedSubject, _super);
     function CountedSubject() {
@@ -7944,12 +7782,6 @@ var __extends$95 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -8068,11 +7900,6 @@ var __extends$96 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -8143,8 +7970,6 @@ var __extends$97 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -8210,12 +8035,6 @@ var __extends$98 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
-
-
-
-
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -8252,9 +8071,9 @@ var ZipSubscriber = (function (_super) {
         }
         this.active = len;
         for (var i = 0; i < len; i++) {
-            var iterator$$2 = iterators[i];
-            if (iterator$$2.stillUnsubscribed) {
-                this.add(iterator$$2.subscribe(iterator$$2, i));
+            var iterator$$1 = iterators[i];
+            if (iterator$$1.stillUnsubscribed) {
+                this.add(iterator$$1.subscribe(iterator$$1, i));
             }
             else {
                 this.active--; // not an observable
@@ -8273,19 +8092,19 @@ var ZipSubscriber = (function (_super) {
         var destination = this.destination;
         // abort if not all of them have values
         for (var i = 0; i < len; i++) {
-            var iterator$$2 = iterators[i];
-            if (typeof iterator$$2.hasValue === 'function' && !iterator$$2.hasValue()) {
+            var iterator$$1 = iterators[i];
+            if (typeof iterator$$1.hasValue === 'function' && !iterator$$1.hasValue()) {
                 return;
             }
         }
         var shouldComplete = false;
         var args = [];
         for (var i = 0; i < len; i++) {
-            var iterator$$2 = iterators[i];
-            var result = iterator$$2.next();
+            var iterator$$1 = iterators[i];
+            var result = iterator$$1.next();
             // check to see if it's completed now that you've gotten
             // the next value.
-            if (iterator$$2.hasCompleted()) {
+            if (iterator$$1.hasCompleted()) {
                 shouldComplete = true;
             }
             if (result.done) {
@@ -8318,9 +8137,9 @@ var ZipSubscriber = (function (_super) {
     return ZipSubscriber;
 }(Subscriber_1.Subscriber));
 var StaticIterator = (function () {
-    function StaticIterator(iterator$$2) {
-        this.iterator = iterator$$2;
-        this.nextResult = iterator$$2.next();
+    function StaticIterator(iterator$$1) {
+        this.iterator = iterator$$1;
+        this.nextResult = iterator$$1.next();
     }
     StaticIterator.prototype.hasValue = function () {
         return true;
@@ -8500,6 +8319,12 @@ function asPromise(fn, ctx/*, varargs */) {
 }
 
 var base64_1 = createCommonjsModule(function (module, exports) {
+
+/**
+ * A minimal base64 implementation for number arrays.
+ * @memberof util
+ * @namespace
+ */
 var base64 = exports;
 
 /**
@@ -9062,6 +8887,12 @@ function inquire(moduleName) {
 }
 
 var utf8_1 = createCommonjsModule(function (module, exports) {
+
+/**
+ * A minimal UTF8 implementation for number arrays.
+ * @memberof util
+ * @namespace
+ */
 var utf8 = exports;
 
 /**
@@ -9823,9 +9654,9 @@ var writer = Writer;
 
 var BufferWriter; // cyclic
 
-var LongBits$1  = minimal.LongBits;
-var base64    = minimal.base64;
-var utf8      = minimal.utf8;
+var LongBits$1  = minimal.LongBits,
+    base64    = minimal.base64,
+    utf8      = minimal.utf8;
 
 /**
  * Constructs a new writer operation instance.
@@ -10355,8 +10186,8 @@ var reader = Reader;
 
 var BufferReader; // cyclic
 
-var LongBits$2  = minimal.LongBits;
-var utf8$1      = minimal.utf8;
+var LongBits$2  = minimal.LongBits,
+    utf8$1      = minimal.utf8;
 
 /* istanbul ignore next */
 function indexOutOfRange(reader, writeLength) {
@@ -10936,6 +10767,11 @@ Service.prototype.end = function end(endedByRPC) {
 };
 
 var rpc_1 = createCommonjsModule(function (module, exports) {
+
+/**
+ * Streaming RPC helpers.
+ * @namespace
+ */
 var rpc = exports;
 
 /**
@@ -11009,16 +10845,14 @@ configure();
 });
 
 var minimal$2 = indexMinimal;
-
 var minimal_1 = minimal$2.Reader;
 var minimal_2 = minimal$2.Writer;
 var minimal_3 = minimal$2.util;
 var minimal_4 = minimal$2.roots;
 
 /*eslint-disable block-scoped-var, no-redeclare, no-control-regex, no-prototype-builtins*/
-const $Reader = minimal_1;
-const $Writer = minimal_2;
-const $util = minimal_3;
+
+const $Reader = minimal_1, $Writer = minimal_2, $util = minimal_3;
 
 const $root = minimal_4["default"] || (minimal_4["default"] = {});
 
@@ -11180,8 +11014,8 @@ function generateId () {
 }
 
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish();
-const firstTrueMsg = Message.encode(Message.create({ first: true })).finish();
-const firstFalseMsg = Message.encode(Message.create({ first: true })).finish();
+const firstTrueMsg = Message.encode(Message.create({ isFirst: true })).finish();
+const firstFalseMsg = Message.encode(Message.create({ isFirst: false })).finish();
 
 class Peer extends Subject_2 {
   constructor (key, sendFunc, closeFunc, heartbeatFunc) {
@@ -11196,8 +11030,8 @@ class Peer extends Subject_2 {
     // Set methods
     this.send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish());
     this.close = (code, reason) => closeFunc(code, reason);
-    this.sendFirstTrue = (msg) => sendFunc(firstTrueMsg);
-    this.sendFirstFalse = (msg) => sendFunc(firstFalseMsg);
+    this.sendFirstTrue = () => sendFunc(firstTrueMsg);
+    this.sendFirstFalse = () => sendFunc(firstFalseMsg);
 
     // Start heartbeat interval
     this.missedHeartbeat = 0;
@@ -11225,7 +11059,7 @@ class Peer extends Subject_2 {
       this.group.removeMember(this);
     }
     this.complete();
-    this.generatedIds.delete(this.id);
+    generatedIds.delete(this.id);
     if (code !== 1000) {
       log.info('Socket closed', { id: this.id, key: this.key, code, reason });
     }
@@ -11515,7 +11349,6 @@ class Group {
   }
 }
 
-// import SseServer from './SseServer'
 // Retreive version from package.json
 let version;
 try {
