@@ -11171,6 +11171,8 @@ const HEARTBEAT_INTERVAL = 5000;
 const ID_MAX_VALUE = 4294967295;
 
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish();
+const firstTrueMsg = Message.encode(Message.create({ first: true })).finish();
+const firstFalseMsg = Message.encode(Message.create({ first: true })).finish();
 
 class Peer extends Subject_2 {
   constructor (key, sendFunc, closeFunc, heartbeatFunc) {
@@ -11185,6 +11187,8 @@ class Peer extends Subject_2 {
     // Set methods
     this.send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish());
     this.close = (code, reason) => closeFunc(code, reason);
+    this.sendFirstTrue = (msg) => sendFunc(firstTrueMsg);
+    this.sendFirstFalse = (msg) => sendFunc(firstFalseMsg);
 
     // Start heartbeat interval
     this.missedHeartbeat = 0;
@@ -11444,10 +11448,10 @@ class ServerCore {
     // Check whether the first peer or not in the group identified by the key
     if (group) {
       peer.bindWith(group.selectMemberFor(peer));
-      peer.send({ isFirst: false });
+      peer.sendFirstFalse();
     } else {
       groups.set(peer.key, new Group(peer));
-      peer.send({ isFirst: true });
+      peer.sendFirstTrue();
     }
   }
 

@@ -30,10 +30,10 @@ export default class ServerCore {
     // Check whether the first peer or not in the group identified by the key
     if (group) {
       peer.bindWith(group.selectMemberFor(peer))
-      peer.send({ isFirst: false })
+      peer.sendFirstFalse()
     } else {
       groups.set(peer.key, new Group(peer))
-      peer.send({ isFirst: true })
+      peer.sendFirstTrue()
     }
   }
 

@@ -9,6 +9,8 @@ const HEARTBEAT_INTERVAL = 5000
 const ID_MAX_VALUE = 4294967295
 
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
+const firstTrueMsg = Message.encode(Message.create({ first: true })).finish()
+const firstFalseMsg = Message.encode(Message.create({ first: true })).finish()
 
 export class Peer extends Subject {
   constructor (key, sendFunc, closeFunc, heartbeatFunc) {
@@ -23,6 +25,8 @@ export class Peer extends Subject {
     // Set methods
     this.send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish())
     this.close = (code, reason) => closeFunc(code, reason)
+    this.sendFirstTrue = (msg) => sendFunc(firstTrueMsg)
+    this.sendFirstFalse = (msg) => sendFunc(firstFalseMsg)
 
     // Start heartbeat interval
     this.missedHeartbeat = 0
