@@ -11169,6 +11169,15 @@ const Content = $root.Content = (() => {
 const MAXIMUM_MISSED_HEARTBEAT = 3;
 const HEARTBEAT_INTERVAL = 5000;
 const ID_MAX_VALUE = 4294967295;
+const generatedIds = new Set();
+
+function generateId () {
+  const id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE);
+  if (generatedIds.has(id)) {
+    return generateId()
+  }
+  return id
+}
 
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish();
 const firstTrueMsg = Message.encode(Message.create({ first: true })).finish();
@@ -11178,7 +11187,7 @@ class Peer extends Subject_2 {
   constructor (key, sendFunc, closeFunc, heartbeatFunc) {
     super();
     this.key = key;
-    this.id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE);
+    this.id = generateId();
     this.group = undefined;
     this.heartbeatInterval = undefined;
     this.missedHeartbeat = 0;
@@ -11216,6 +11225,7 @@ class Peer extends Subject_2 {
       this.group.removeMember(this);
     }
     this.complete();
+    this.generatedIds.delete(this.id);
     if (code !== 1000) {
       log.info('Socket closed', { id: this.id, key: this.key, code, reason });
     }
