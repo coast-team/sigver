@@ -2,13 +2,16 @@ import { filter, pluck } from 'rxjs/operators'
 import { Subject } from 'rxjs/Subject'
 
 import { SigError, ERR_HEARTBEAT, ERR_MESSAGE } from './SigError'
+import { Message } from './Protobuf'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
 const ID_MAX_VALUE = 4294967295
 
+const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
+
 export class Peer extends Subject {
-  constructor (key) {
+  constructor (key, sendFunc, closeFunc, heartbeatFunc) {
     super()
     this.key = key
     this.id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE)
@@ -16,16 +19,12 @@ export class Peer extends Subject {
     this.heartbeatInterval = undefined
     this.missedHeartbeat = 0
     this.triedMembers = []
-  }
 
-  clean () {
-    clearInterval(this.heartbeatInterval)
-    if (this.group !== undefined) {
-      this.group.removeMember(this)
-    }
-  }
+    // Set methods
+    this.send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish())
+    this.close = (code, reason) => closeFunc(code, reason)
 
-  startHeartbeat () {
+    // Start heartbeat interval
     this.missedHeartbeat = 0
     this.heartbeatInterval = setInterval(() => {
       this.missedHeartbeat++
@@ -33,8 +32,27 @@ export class Peer extends Subject {
         clearInterval(this.heartbeatInterval)
         this.error(new SigError(ERR_HEARTBEAT))
       }
-      this.heartbeat()
+      heartbeatFunc(heartBeatMsg)
     }, HEARTBEAT_INTERVAL)
+  }
+
+  onMessage (bytes) {
+    try {
+      this.next(Message.decode(new Uint8Array(bytes)))
+    } catch (err) {
+      this.close(ERR_MESSAGE, err.message)
+    }
+  }
+
+  onClose (code, reason) {
+    clearInterval(this.heartbeatInterval)
+    if (this.group !== undefined) {
+      this.group.removeMember(this)
+    }
+    this.complete()
+    if (code !== 1000) {
+      log.info('Socket closed', { id: this.id, key: this.key, code, reason })
+    }
   }
 
   bindWith (member) {

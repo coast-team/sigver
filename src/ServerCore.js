@@ -4,57 +4,46 @@ const groups = new Map()
  * The core of the signaling server (WebSocket and SSE) containing the main logic
  */
 export default class ServerCore {
-  init ({ peer, key }) {
-    peer.startHeartbeat()
+  init (peer) {
     this.bindToMember(peer)
 
     // Subscribe to peer messages
-    peer.subscribe(
-      ({ type }) => {
-        switch (type) {
-          case 'stable':
-            this.becomeMember(peer)
-            break
-          case 'heartbeat':
-            peer.missedHeartbeat = 0
-            break
-          case 'tryAnother': {
-            this.bindToMember(peer)
-            break
-          }
+    peer.subscribe(({ type }) => {
+      switch (type) {
+        case 'stable':
+          this.becomeMember(peer)
+          break
+        case 'heartbeat':
+          peer.missedHeartbeat = 0
+          break
+        case 'tryAnother': {
+          this.bindToMember(peer)
+          break
         }
-      },
-      err => {
-        log.error('ServerCore', { id: peer.id, isOpener: peer.groups !== undefined, err })
-        peer.clean()
-      },
-      () => peer.clean()
-    )
+      }
+    })
   }
 
   bindToMember (peer) {
     const group = groups.get(peer.key)
 
     // Check whether the first peer or not in the group identified by the key
-    if (group !== undefined) {
+    if (group) {
       peer.bindWith(group.selectMemberFor(peer))
       peer.send({ isFirst: false })
     } else {
-      const group = new Group(peer)
-      groups.set(peer.key, group)
+      groups.set(peer.key, new Group(peer))
       peer.send({ isFirst: true })
     }
   }
 
   becomeMember (peer) {
-    if (peer.groups === undefined) {
+    if (peer.group === undefined) {
       const group = groups.get(peer.key)
-      if (group !== undefined) {
+      if (group) {
         group.addMember(peer)
       } else {
-        log.warn('Uncommon Open; create new Group', { id: peer.id, key: peer.key })
-        const group = new Group(peer.key, peer)
-        groups.add(peer.key, group)
+        groups.set(peer.key, new Group(peer, peer))
       }
     }
   }
@@ -62,7 +51,6 @@ export default class ServerCore {
 
 class Group {
   constructor (peer) {
-    this.key = peer.key
     this.members = new Set()
     this.addMember(peer)
   }
@@ -83,14 +71,14 @@ class Group {
   }
 
   addMember (peer) {
-    peer.groups = this
+    peer.group = this
     this.members.add(peer)
-    log.info('NEW Member', {id: peer.id, key: this.key, currentSize: this.members.size})
+    log.info('NEW Member', {id: peer.id, key: peer.key, currentSize: this.members.size})
   }
 
   removeMember (peer) {
     if (this.members.size === 1) {
-      groups.delete(this.key)
+      groups.delete(peer.key)
       log.info('REMOVE Group', { id: peer.id, key: peer.key })
     } else {
       this.members.delete(peer)

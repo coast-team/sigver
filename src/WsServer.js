@@ -1,12 +1,10 @@
 import { Subject } from 'rxjs/Subject'
 
-import { Message } from './Protobuf'
 import { Peer } from './Peer'
 import { SigError, ERR_KEY, ERR_MESSAGE } from './SigError'
 
 const url = require('url')
 const KEY_LENGTH_LIMIT = 512
-const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
 
 /**
  * WebSocket server able to use ws or uws modules.
@@ -51,38 +49,27 @@ export default class WsServer {
       }
 
       // Initialize peer
-      const peer = new Peer(key)
+      const peer = new Peer(
+        key,
+        bytes => {
+          try {
+            socket.send(bytes, {binary: true})
+          } catch (err) {
+            log.error('Socket "send" error', err)
+            socket.close(ERR_MESSAGE, err.message)
+          }
+        },
+        (code, reason) => socket.close(code, reason),
+        (bytes) => socket.send(bytes, {binary: true})
+      )
 
       // Socket config
       socket.binaryType = 'arraybuffer'
-      socket.onmessage = evt => {
-        try {
-          peer.next(Message.decode(new Uint8Array(evt.data)))
-        } catch (err) {
-          log.error('Socket "onmessage" error', err)
-          socket.close(ERR_MESSAGE, err.message)
-        }
-      }
+      socket.onmessage = evt => peer.onMessage(evt.data)
       socket.onerror = err => peer.error(err)
-      socket.onclose = closeEvt => {
-        peer.complete()
-        if (closeEvt.code !== 1000) {
-          log.info('Socket closed', {id: peer.id, key, code: closeEvt.code, reason: closeEvt.reason})
-        }
-      }
+      socket.onclose = closeEvt => peer.onClose(closeEvt.code, closeEvt.reason)
 
-      // Peer config
-      peer.send = msg => {
-        try {
-          socket.send(Message.encode(Message.create(msg)).finish(), {binary: true})
-        } catch (err) {
-          log.error('Socket "send" error', err)
-          socket.close(ERR_MESSAGE, err.message)
-        }
-      }
-      peer.close = (code, reason) => socket.close(code, reason)
-      peer.heartbeat = () => socket.send(heartBeatMsg, {binary: true})
-      this.peers.next({ peer, key })
+      this.peers.next(peer)
     })
   }
 

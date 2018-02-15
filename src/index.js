@@ -66,7 +66,7 @@ if (key && cert && ca) {
 
 const wsServer = new WsServer(httpServer, host, port)
 wsServer.peers.subscribe(
-  channel => core.init(channel),
+  peer => core.init(peer),
   err => log.fatal('WebSocket server peers error', err)
 )
 wsServer.start(() => {
