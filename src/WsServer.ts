@@ -1,7 +1,10 @@
+import { Server as HttpServer } from 'http'
+import { Server as HttpsServer } from 'https'
 import { Subject } from 'rxjs/Subject'
+import { Server } from 'uws'
 
 import { Peer } from './Peer'
-import { SigError, ERR_KEY, ERR_MESSAGE } from './SigError'
+import { ERR_KEY, ERR_MESSAGE, SigError } from './SigError'
 
 const url = require('url')
 const KEY_LENGTH_LIMIT = 512
@@ -9,12 +12,24 @@ const KEY_LENGTH_LIMIT = 512
 /**
  * WebSocket server able to use ws or uws modules.
  */
-export default class WsServer {
-  constructor (httpServer, host, port) {
+export class WsServer {
+  readonly host: string
+  readonly port: number
+
+  private httpServer: HttpServer | HttpsServer
+  private webSocketServer: Server
+  private peers: Subject<Peer>
+
+  constructor (
+    httpServer: HttpServer | HttpsServer,
+    host: string,
+    port: number,
+    peers: Subject<Peer>,
+  ) {
     this.httpServer = httpServer
     this.host = host
     this.port = port
-    this.peers = new Subject()
+    this.peers = peers
   }
 
   /**
@@ -23,20 +38,18 @@ export default class WsServer {
    */
   start (cb = () => {}) {
     this.httpServer.listen(this.port, this.host, cb)
+
     const WebSocketServer = require('uws').Server
 
     // Starting server
-    this.server = new WebSocketServer({
+    this.webSocketServer = new WebSocketServer({
       perMessageDeflate: false,
-      server: this.httpServer
+      server: this.httpServer,
     })
 
-    this.server.on('error', err => {
-      log.error('Server error', err)
-      this.peers.error(err)
-    })
+    this.webSocketServer.on('error', (err) => log.error('Server error', err))
 
-    this.server.on('connection', socket => {
+    this.webSocketServer.on('connection', (socket) => {
       const { pathname } = url.parse(socket.upgradeReq.url, true)
 
       // Check key
@@ -44,14 +57,14 @@ export default class WsServer {
       try {
         this.validateKey(key)
       } catch (err) {
-        log.debug('Validate key error ' + err.code, err.message)
+        log.error('Validate key error ', err)
         socket.close(err.code, err.message)
       }
 
       // Initialize peer
       const peer = new Peer(
         key,
-        bytes => {
+        (bytes) => {
           try {
             socket.send(bytes, {binary: true})
           } catch (err) {
@@ -60,35 +73,33 @@ export default class WsServer {
           }
         },
         (code, reason) => socket.close(code, reason),
-        (bytes) => socket.send(bytes, {binary: true})
+        (bytes) => socket.send(bytes, {binary: true}),
       )
 
       // Socket config
-      socket.binaryType = 'arraybuffer'
-      socket.onmessage = evt => peer.onMessage(evt.data)
-      socket.onerror = err => peer.error(err)
-      socket.onclose = closeEvt => peer.onClose(closeEvt.code, closeEvt.reason)
+      socket.onmessage = (evt) => peer.onMessage(evt.data)
+      socket.onerror = (err) => peer.error(err)
+      socket.onclose = (closeEvt) => peer.onClose(closeEvt.code, closeEvt.reason)
 
       this.peers.next(peer)
     })
   }
 
-  validateKey (key) {
+  close (cb: any) {
+    if (this.webSocketServer !== null) {
+      log.info('Server has stopped successfully')
+      this.webSocketServer.close(cb)
+    }
+  }
+
+  private validateKey (key: string) {
     if (key === '') {
       throw new SigError(ERR_KEY, `The key ${key} is an empty string`)
     }
     if (key.length > KEY_LENGTH_LIMIT) {
       throw new SigError(ERR_KEY,
-        `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
+        `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`,
       )
-    }
-  }
-
-  close (cb) {
-    if (this.server !== null) {
-      log.info('Server has stopped successfully')
-      this.server.close(cb)
-      this.peers.complete()
     }
   }
 }

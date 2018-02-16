@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-(function () {
 'use strict';
 
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -1245,6 +1244,41 @@ var Subject_1 = {
 	Subject: Subject_2,
 	AnonymousSubject: AnonymousSubject_1
 };
+
+class Group {
+    constructor(peer, onNoMembers) {
+        this.members = new Set();
+        this.onNoMembers = onNoMembers;
+        this.addMember(peer);
+    }
+    selectMemberFor(joining) {
+        const peersToTry = [];
+        this.members.forEach((member) => {
+            if (!joining.triedMembers.includes(member.id)) {
+                peersToTry.push(member);
+            }
+        });
+        if (peersToTry.length !== 0) {
+            return peersToTry[Math.floor(Math.random() * peersToTry.length)];
+        }
+        else {
+            joining.triedMembers = [];
+            return this.selectMemberFor(joining);
+        }
+    }
+    addMember(peer) {
+        peer.group = this;
+        this.members.add(peer);
+        log.info('Member JOINED', { key: peer.key, id: peer.id, size: this.members.size });
+    }
+    removeMember(peer) {
+        this.members.delete(peer);
+        log.info('Member LEFT', { key: peer.key, id: peer.id, size: this.members.size });
+        if (this.members.size === 0) {
+            this.onNoMembers();
+        }
+    }
+}
 
 var __extends$5 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -8238,34 +8272,6 @@ var pluck$1 = pluck_1.pluck;
 
 var throttle = throttle_1.throttle;
 
-class SigError extends Error {
-  constructor (code, message = '') {
-    super();
-    this.name = this.constructor.name;
-    this.code = code;
-    for (const key in errorCodes) {
-      if (errorCodes[key] === code) {
-        this.message = `${key}: ${message}`;
-      }
-    }
-  }
-}
-
-// Inappropriate key format (e.g. key too long)
-const ERR_KEY = 4001;
-
-// Heart-beats error
-const ERR_HEARTBEAT = 4002;
-
-// Any error due to message: type, format etc.
-const ERR_MESSAGE = 4003;
-
-const errorCodes = {
-  ERR_KEY,
-  ERR_HEARTBEAT,
-  ERR_MESSAGE
-};
-
 var aspromise = asPromise;
 
 /**
@@ -10852,12 +10858,33 @@ var minimal_4 = minimal$2.roots;
 
 /*eslint-disable block-scoped-var, no-redeclare, no-control-regex, no-prototype-builtins*/
 
+// Common aliases
 const $Reader = minimal_1, $Writer = minimal_2, $util = minimal_3;
 
+// Exported root namespace
 const $root = minimal_4["default"] || (minimal_4["default"] = {});
 
 const Message = $root.Message = (() => {
 
+    /**
+     * Properties of a Message.
+     * @exports IMessage
+     * @interface IMessage
+     * @property {IContent|null} [content] Message content
+     * @property {boolean|null} [isFirst] Message isFirst
+     * @property {boolean|null} [stable] Message stable
+     * @property {boolean|null} [heartbeat] Message heartbeat
+     * @property {boolean|null} [tryAnother] Message tryAnother
+     */
+
+    /**
+     * Constructs a new Message.
+     * @exports Message
+     * @classdesc Represents a Message.
+     * @implements IMessage
+     * @constructor
+     * @param {IMessage=} [properties] Properties to set
+     */
     function Message(properties) {
         if (properties)
             for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
@@ -10865,39 +10892,108 @@ const Message = $root.Message = (() => {
                     this[keys[i]] = properties[keys[i]];
     }
 
+    /**
+     * Message content.
+     * @member {IContent|null|undefined} content
+     * @memberof Message
+     * @instance
+     */
     Message.prototype.content = null;
+
+    /**
+     * Message isFirst.
+     * @member {boolean} isFirst
+     * @memberof Message
+     * @instance
+     */
     Message.prototype.isFirst = false;
+
+    /**
+     * Message stable.
+     * @member {boolean} stable
+     * @memberof Message
+     * @instance
+     */
     Message.prototype.stable = false;
+
+    /**
+     * Message heartbeat.
+     * @member {boolean} heartbeat
+     * @memberof Message
+     * @instance
+     */
     Message.prototype.heartbeat = false;
+
+    /**
+     * Message tryAnother.
+     * @member {boolean} tryAnother
+     * @memberof Message
+     * @instance
+     */
     Message.prototype.tryAnother = false;
 
+    // OneOf field names bound to virtual getters and setters
     let $oneOfFields;
 
+    /**
+     * Message type.
+     * @member {"content"|"isFirst"|"stable"|"heartbeat"|"tryAnother"|undefined} type
+     * @memberof Message
+     * @instance
+     */
     Object.defineProperty(Message.prototype, "type", {
         get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "stable", "heartbeat", "tryAnother"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
+    /**
+     * Creates a new Message instance using the specified properties.
+     * @function create
+     * @memberof Message
+     * @static
+     * @param {IMessage=} [properties] Properties to set
+     * @returns {Message} Message instance
+     */
     Message.create = function create(properties) {
         return new Message(properties);
     };
 
+    /**
+     * Encodes the specified Message message. Does not implicitly {@link Message.verify|verify} messages.
+     * @function encode
+     * @memberof Message
+     * @static
+     * @param {IMessage} message Message message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
     Message.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
         if (message.content != null && message.hasOwnProperty("content"))
-            $root.Content.encode(message.content, writer.uint32(10).fork()).ldelim();
+            $root.Content.encode(message.content, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
         if (message.isFirst != null && message.hasOwnProperty("isFirst"))
-            writer.uint32(16).bool(message.isFirst);
+            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.isFirst);
         if (message.stable != null && message.hasOwnProperty("stable"))
-            writer.uint32(24).bool(message.stable);
+            writer.uint32(/* id 3, wireType 0 =*/24).bool(message.stable);
         if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
-            writer.uint32(32).bool(message.heartbeat);
+            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.heartbeat);
         if (message.tryAnother != null && message.hasOwnProperty("tryAnother"))
-            writer.uint32(40).bool(message.tryAnother);
+            writer.uint32(/* id 5, wireType 0 =*/40).bool(message.tryAnother);
         return writer;
     };
 
+    /**
+     * Decodes a Message message from the specified reader or buffer.
+     * @function decode
+     * @memberof Message
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @param {number} [length] Message length if known beforehand
+     * @returns {Message} Message
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
     Message.decode = function decode(reader, length) {
         if (!(reader instanceof $Reader))
             reader = $Reader.create(reader);
@@ -10933,6 +11029,24 @@ const Message = $root.Message = (() => {
 
 const Content = $root.Content = (() => {
 
+    /**
+     * Properties of a Content.
+     * @exports IContent
+     * @interface IContent
+     * @property {number|null} [id] Content id
+     * @property {Uint8Array|null} [data] Content data
+     * @property {boolean|null} [isError] Content isError
+     * @property {boolean|null} [isEnd] Content isEnd
+     */
+
+    /**
+     * Constructs a new Content.
+     * @exports Content
+     * @classdesc Represents a Content.
+     * @implements IContent
+     * @constructor
+     * @param {IContent=} [properties] Properties to set
+     */
     function Content(properties) {
         if (properties)
             for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
@@ -10940,36 +11054,98 @@ const Content = $root.Content = (() => {
                     this[keys[i]] = properties[keys[i]];
     }
 
+    /**
+     * Content id.
+     * @member {number} id
+     * @memberof Content
+     * @instance
+     */
     Content.prototype.id = 0;
+
+    /**
+     * Content data.
+     * @member {Uint8Array} data
+     * @memberof Content
+     * @instance
+     */
     Content.prototype.data = $util.newBuffer([]);
+
+    /**
+     * Content isError.
+     * @member {boolean} isError
+     * @memberof Content
+     * @instance
+     */
     Content.prototype.isError = false;
+
+    /**
+     * Content isEnd.
+     * @member {boolean} isEnd
+     * @memberof Content
+     * @instance
+     */
     Content.prototype.isEnd = false;
 
+    // OneOf field names bound to virtual getters and setters
     let $oneOfFields;
 
+    /**
+     * Content type.
+     * @member {"data"|"isError"|"isEnd"|undefined} type
+     * @memberof Content
+     * @instance
+     */
     Object.defineProperty(Content.prototype, "type", {
         get: $util.oneOfGetter($oneOfFields = ["data", "isError", "isEnd"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
+    /**
+     * Creates a new Content instance using the specified properties.
+     * @function create
+     * @memberof Content
+     * @static
+     * @param {IContent=} [properties] Properties to set
+     * @returns {Content} Content instance
+     */
     Content.create = function create(properties) {
         return new Content(properties);
     };
 
+    /**
+     * Encodes the specified Content message. Does not implicitly {@link Content.verify|verify} messages.
+     * @function encode
+     * @memberof Content
+     * @static
+     * @param {IContent} message Content message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
     Content.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
         if (message.id != null && message.hasOwnProperty("id"))
-            writer.uint32(8).uint32(message.id);
+            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
         if (message.data != null && message.hasOwnProperty("data"))
-            writer.uint32(18).bytes(message.data);
+            writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.data);
         if (message.isError != null && message.hasOwnProperty("isError"))
-            writer.uint32(24).bool(message.isError);
+            writer.uint32(/* id 3, wireType 0 =*/24).bool(message.isError);
         if (message.isEnd != null && message.hasOwnProperty("isEnd"))
-            writer.uint32(32).bool(message.isEnd);
+            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.isEnd);
         return writer;
     };
 
+    /**
+     * Decodes a Content message from the specified reader or buffer.
+     * @function decode
+     * @memberof Content
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @param {number} [length] Message length if known beforehand
+     * @returns {Content} Content
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
     Content.decode = function decode(reader, length) {
         if (!(reader instanceof $Reader))
             reader = $Reader.create(reader);
@@ -11000,437 +11176,346 @@ const Content = $root.Content = (() => {
     return Content;
 })();
 
+class SigError extends Error {
+    constructor(code, message = '') {
+        super();
+        this.name = this.constructor.name;
+        this.code = code;
+        this.message = `${code}: ${message}`;
+    }
+}
+// Inappropriate key format (e.g. key too long)
+const ERR_KEY = 4001;
+// Heartbeat error
+const ERR_HEARTBEAT = 4002;
+// Any error due to message: type, format etc.
+const ERR_MESSAGE = 4003;
+
 const MAXIMUM_MISSED_HEARTBEAT = 3;
 const HEARTBEAT_INTERVAL = 5000;
 const ID_MAX_VALUE = 4294967295;
 const generatedIds = new Set();
-
-function generateId () {
-  const id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE);
-  if (generatedIds.has(id)) {
-    return generateId()
-  }
-  return id
+function generateId() {
+    const id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE);
+    if (generatedIds.has(id)) {
+        return generateId();
+    }
+    return id;
 }
-
 // Preconstructed messages for optimisation
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish();
 const firstTrueMsg = Message.encode(Message.create({ isFirst: true })).finish();
 const firstFalseMsg = Message.encode(Message.create({ isFirst: false })).finish();
-
 class Peer extends Subject_2 {
-  constructor (key, sendFunc, closeFunc, heartbeatFunc) {
-    super();
-    this.key = key;
-    this.id = undefined;
-    this.group = undefined;
-    this.heartbeatInterval = undefined;
-    this.missedHeartbeat = 0;
-    this.triedMembers = [];
-    this.subToMember = undefined;
-    this.subToJoining = undefined;
-
-    // Set methods
-    this.send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish());
-    this.close = (code, reason) => closeFunc(code, reason);
-    this.sendFirstTrue = () => sendFunc(firstTrueMsg);
-    this.sendFirstFalse = () => sendFunc(firstFalseMsg);
-
-    // Start heartbeat interval
-    this.missedHeartbeat = 0;
-    this.heartbeatInterval = setInterval(() => {
-      this.missedHeartbeat++;
-      if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
+    constructor(key, sendFunc, closeFunc, heartbeatFunc) {
+        super();
+        this.key = key;
+        this.missedHeartbeat = 0;
+        this.triedMembers = [];
+        // Set methods
+        this._send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish());
+        this._close = (code, reason) => closeFunc(code, reason);
+        this._sendFirstTrue = () => sendFunc(firstTrueMsg);
+        this._sendFirstFalse = () => sendFunc(firstFalseMsg);
+        // Start heartbeat interval
+        this.missedHeartbeat = 0;
+        this.heartbeatInterval = setInterval(() => {
+            this.missedHeartbeat++;
+            if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
+                clearInterval(this.heartbeatInterval);
+                this.error(new SigError(ERR_HEARTBEAT));
+            }
+            heartbeatFunc(heartBeatMsg);
+        }, HEARTBEAT_INTERVAL);
+    }
+    send(msg) { this._send(msg); }
+    close(code, reason) { this._close(code, reason); }
+    sendFirstTrue() { this._sendFirstTrue(); }
+    sendFirstFalse() { this._sendFirstFalse(); }
+    onMessage(bytes) {
+        try {
+            this.next(Message.decode(new Uint8Array(bytes)));
+        }
+        catch (err) {
+            this.close(ERR_MESSAGE, err.message);
+        }
+    }
+    onClose(code, reason) {
         clearInterval(this.heartbeatInterval);
-        this.error(new SigError(ERR_HEARTBEAT));
-      }
-      heartbeatFunc(heartBeatMsg);
-    }, HEARTBEAT_INTERVAL);
-  }
-
-  onMessage (bytes) {
-    try {
-      this.next(Message.decode(new Uint8Array(bytes)));
-    } catch (err) {
-      this.close(ERR_MESSAGE, err.message);
+        if (this.group !== undefined) {
+            this.group.removeMember(this);
+        }
+        this.complete();
+        generatedIds.delete(this.id);
+        if (code !== 1000) {
+            log.info('Connection with peer has closed', { key: this.key, id: this.id, code, reason });
+        }
     }
-  }
-
-  onClose (code, reason) {
-    clearInterval(this.heartbeatInterval);
-    if (this.group !== undefined) {
-      this.group.removeMember(this);
-    }
-    this.complete();
-    generatedIds.delete(this.id);
-    if (code !== 1000) {
-      log.info('Connection with peer has closed', { key: this.key, id: this.id, code, reason });
-    }
-  }
-
-  bindWith (member) {
-    if (this.subToMember) {
-      this.subToMember.unsubscribe();
-    }
-    if (this.subToJoining) {
-      this.subToJoining.unsubscribe();
-    }
-    this.id = generateId();
-    this.triedMembers.push(member.id);
-    this.joiningToMember(member);
-    this.memberToJoining(member);
-  }
-
-  /**
-   * Joining subscribes to the group member.
-   * @param  {Peer} member a member of the group
-   */
-  joiningToMember (member) {
-    let isEnd = false;
-    this.subToMember = member.pipe(
-      filter$1((msg) => msg.type === 'content' && msg.content.id === this.id),
-      pluck$1('content')
-    ).subscribe(
-      (msg) => {
-        switch (msg.type) {
-          case 'data':
-            this.send({ content: { id: 0, data: msg.data } });
-            break
-          case 'isError':
-            this.send({ content: { id: 0, isError: true } });
+    bindWith(member) {
+        if (this.subToMember) {
             this.subToMember.unsubscribe();
+        }
+        if (this.subToJoining) {
             this.subToJoining.unsubscribe();
-            // decline member rating
-            break
-          case 'isEnd':
-            isEnd = true;
-            this.send({ content: { id: 0, isEnd } });
-            this.subToMember.unsubscribe();
-            break
-          default: {
-            const err = new SigError(
-              ERR_MESSAGE,
-              `Unknown message type "${msg.type}" from a group member`
-            );
-            log.error(err);
-            member.close(err.code, err.message);
-            this.subToMember.unsubscribe();
-          }
         }
-      },
-      () => {
-        if (!isEnd) {
-          this.send({ content: { id: 0, isError: true } });
-        }
-      },
-      () => {
-        if (!isEnd) {
-          this.send({ content: { id: 0, isError: true } });
-        }
-      }
-    );
-  }
-
-  /**
-   * Network member subscribes to the joining peer.
-   * @param  {Peer} member a member of the group
-   */
-  memberToJoining (member) {
-    let isEnd = false;
-    this.subToJoining = this.pipe(
-      filter$1((msg) => msg.type === 'content'),
-      pluck$1('content')
-    ).subscribe(
-      (msg) => {
-        switch (msg.type) {
-          case 'data':
-            member.send({ content: { id: this.id, data: msg.data } });
-            break
-          case 'isError':
-            member.send({ content: { id: this.id, isError: true } });
-            this.subToJoining.unsubscribe();
-            this.subToMember.unsubscribe();
-            // decline member rating
-            break
-          case 'isEnd':
-            isEnd = true;
-            member.send({ content: { id: this.id, isEnd: true } });
-            this.subToJoining.unsubscribe();
-            break
-          default: {
-            const err = new SigError(
-              ERR_MESSAGE,
-              `Unknown message type "${msg.type}" from the ${this.id} joining peer`
-            );
-            log.error(err);
-            this.close(err.code, err.message);
-            this.subToJoining.unsubscribe();
-          }
-        }
-      },
-      () => {
-        if (!isEnd) {
-          member.send({ content: { id: this.id, isError: true } });
-        }
-      },
-      () => {
-        if (!isEnd) {
-          member.send({ content: { id: this.id, isError: true } });
-        }
-      }
-    );
-  }
+        this.id = generateId();
+        this.triedMembers.push(member.id);
+        this.joiningToMember(member);
+        this.memberToJoining(member);
+    }
+    /**
+     * Joining subscribes to the group member.
+     * @param  {Peer} member a member of the group
+     */
+    joiningToMember(member) {
+        let isEnd = false;
+        this.subToMember = member.pipe(filter$1((msg) => {
+            return msg.type === 'content' && msg.content !== null
+                && msg.content !== undefined && msg.content.id === this.id;
+        }), pluck$1('content')).subscribe((obj) => {
+            const msg = obj;
+            switch (msg.type) {
+                case 'data':
+                    this.send({ content: { id: 0, data: msg.data } });
+                    break;
+                case 'isError':
+                    this.send({ content: { id: 0, isError: true } });
+                    this.subToMember.unsubscribe();
+                    this.subToJoining.unsubscribe();
+                    // decline member rating
+                    break;
+                case 'isEnd':
+                    isEnd = true;
+                    this.send({ content: { id: 0, isEnd } });
+                    this.subToMember.unsubscribe();
+                    break;
+                default: {
+                    const err = new SigError(ERR_MESSAGE, `Unknown message type "${msg.type}" from a group member`);
+                    log.error(err);
+                    member.close(err.code, err.message);
+                    this.subToMember.unsubscribe();
+                }
+            }
+        }, () => {
+            if (!isEnd) {
+                this.send({ content: { id: 0, isError: true } });
+            }
+        }, () => {
+            if (!isEnd) {
+                this.send({ content: { id: 0, isError: true } });
+            }
+        });
+    }
+    /**
+     * Network member subscribes to the joining peer.
+     * @param  {Peer} member a member of the group
+     */
+    memberToJoining(member) {
+        let isEnd = false;
+        this.subToJoining = this.pipe(filter$1((msg) => msg.type === 'content'), pluck$1('content')).subscribe((obj) => {
+            const msg = obj;
+            switch (msg.type) {
+                case 'data':
+                    member.send({ content: { id: this.id, data: msg.data } });
+                    break;
+                case 'isError':
+                    member.send({ content: { id: this.id, isError: true } });
+                    this.subToJoining.unsubscribe();
+                    this.subToMember.unsubscribe();
+                    // decline member rating
+                    break;
+                case 'isEnd':
+                    isEnd = true;
+                    member.send({ content: { id: this.id, isEnd } });
+                    this.subToJoining.unsubscribe();
+                    break;
+                default: {
+                    const err = new SigError(ERR_MESSAGE, `Unknown message type "${msg.type}" from the ${this.id} joining peer`);
+                    log.error(err);
+                    this.close(err.code, err.message);
+                    this.subToJoining.unsubscribe();
+                }
+            }
+        }, () => {
+            if (!isEnd) {
+                member.send({ content: { id: this.id, isError: true } });
+            }
+        }, () => {
+            if (!isEnd) {
+                member.send({ content: { id: this.id, isError: true } });
+            }
+        });
+    }
 }
 
 const url = require('url');
 const KEY_LENGTH_LIMIT = 512;
-
 /**
  * WebSocket server able to use ws or uws modules.
  */
 class WsServer {
-  constructor (httpServer, host, port) {
-    this.httpServer = httpServer;
-    this.host = host;
-    this.port = port;
-    this.peers = new Subject_2();
-  }
-
-  /**
-   * Start the server.
-   * @param {Function} cb Callback to execute after the server has been started
-   */
-  start (cb = () => {}) {
-    this.httpServer.listen(this.port, this.host, cb);
-    const WebSocketServer = require('uws').Server;
-
-    // Starting server
-    this.server = new WebSocketServer({
-      perMessageDeflate: false,
-      server: this.httpServer
-    });
-
-    this.server.on('error', err => {
-      log.error('Server error', err);
-      this.peers.error(err);
-    });
-
-    this.server.on('connection', socket => {
-      const { pathname } = url.parse(socket.upgradeReq.url, true);
-
-      // Check key
-      const key = pathname.substr(1);
-      try {
-        this.validateKey(key);
-      } catch (err) {
-        log.debug('Validate key error ' + err.code, err.message);
-        socket.close(err.code, err.message);
-      }
-
-      // Initialize peer
-      const peer = new Peer(
-        key,
-        bytes => {
-          try {
-            socket.send(bytes, {binary: true});
-          } catch (err) {
-            log.error('Socket "send" error', err);
-            socket.close(ERR_MESSAGE, err.message);
-          }
-        },
-        (code, reason) => socket.close(code, reason),
-        (bytes) => socket.send(bytes, {binary: true})
-      );
-
-      // Socket config
-      socket.binaryType = 'arraybuffer';
-      socket.onmessage = evt => peer.onMessage(evt.data);
-      socket.onerror = err => peer.error(err);
-      socket.onclose = closeEvt => peer.onClose(closeEvt.code, closeEvt.reason);
-
-      this.peers.next(peer);
-    });
-  }
-
-  validateKey (key) {
-    if (key === '') {
-      throw new SigError(ERR_KEY, `The key ${key} is an empty string`)
+    constructor(httpServer, host, port, peers) {
+        this.httpServer = httpServer;
+        this.host = host;
+        this.port = port;
+        this.peers = peers;
     }
-    if (key.length > KEY_LENGTH_LIMIT) {
-      throw new SigError(ERR_KEY,
-        `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
-      )
+    /**
+     * Start the server.
+     * @param {Function} cb Callback to execute after the server has been started
+     */
+    start(cb = () => { }) {
+        this.httpServer.listen(this.port, this.host, cb);
+        const WebSocketServer = require('uws').Server;
+        // Starting server
+        this.webSocketServer = new WebSocketServer({
+            perMessageDeflate: false,
+            server: this.httpServer,
+        });
+        this.webSocketServer.on('error', (err) => log.error('Server error', err));
+        this.webSocketServer.on('connection', (socket) => {
+            const { pathname } = url.parse(socket.upgradeReq.url, true);
+            // Check key
+            const key = pathname.substr(1);
+            try {
+                this.validateKey(key);
+            }
+            catch (err) {
+                log.error('Validate key error ', err);
+                socket.close(err.code, err.message);
+            }
+            // Initialize peer
+            const peer = new Peer(key, (bytes) => {
+                try {
+                    socket.send(bytes, { binary: true });
+                }
+                catch (err) {
+                    log.error('Socket "send" error', err);
+                    socket.close(ERR_MESSAGE, err.message);
+                }
+            }, (code, reason) => socket.close(code, reason), (bytes) => socket.send(bytes, { binary: true }));
+            // Socket config
+            socket.onmessage = (evt) => peer.onMessage(evt.data);
+            socket.onerror = (err) => peer.error(err);
+            socket.onclose = (closeEvt) => peer.onClose(closeEvt.code, closeEvt.reason);
+            this.peers.next(peer);
+        });
     }
-  }
-
-  close (cb) {
-    if (this.server !== null) {
-      log.info('Server has stopped successfully');
-      this.server.close(cb);
-      this.peers.complete();
-    }
-  }
-}
-
-const groups = new Map();
-
-/**
- * The core of the signaling server (WebSocket and SSE) containing the main logic
- */
-class ServerCore {
-  init (peer) {
-    this.bindToMember(peer);
-
-    // Subscribe to peer messages
-    peer.subscribe(({ type }) => {
-      switch (type) {
-        case 'stable':
-          this.becomeMember(peer);
-          break
-        case 'heartbeat':
-          peer.missedHeartbeat = 0;
-          break
-        case 'tryAnother': {
-          this.bindToMember(peer);
-          break
+    close(cb) {
+        if (this.webSocketServer !== null) {
+            log.info('Server has stopped successfully');
+            this.webSocketServer.close(cb);
         }
-      }
-    });
-  }
-
-  bindToMember (peer) {
-    const group = groups.get(peer.key);
-
-    // Check whether the first peer or not in the group identified by the key
-    if (group) {
-      peer.bindWith(group.selectMemberFor(peer));
-      peer.sendFirstFalse();
-    } else {
-      groups.set(peer.key, new Group(peer));
-      peer.sendFirstTrue();
     }
-  }
-
-  becomeMember (peer) {
-    if (peer.group === undefined) {
-      const group = groups.get(peer.key);
-      if (group) {
-        group.addMember(peer);
-      } else {
-        groups.set(peer.key, new Group(peer, peer));
-      }
+    validateKey(key) {
+        if (key === '') {
+            throw new SigError(ERR_KEY, `The key ${key} is an empty string`);
+        }
+        if (key.length > KEY_LENGTH_LIMIT) {
+            throw new SigError(ERR_KEY, `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`);
+        }
     }
-  }
-}
-
-class Group {
-  constructor (peer) {
-    this.members = new Set();
-    this.addMember(peer);
-  }
-
-  selectMemberFor (peer) {
-    const peersToTry = [];
-    this.members.forEach((member) => {
-      if (!peer.triedMembers.includes(member.id)) {
-        peersToTry.push(member);
-      }
-    });
-    if (peersToTry.length !== 0) {
-      return peersToTry[Math.floor(Math.random() * peersToTry.length)]
-    } else {
-      peer.triedMembers = [];
-      return this.selectMemberFor(peer)
-    }
-  }
-
-  addMember (peer) {
-    peer.group = this;
-    this.members.add(peer);
-    log.info('Member JOINED', {key: peer.key, id: peer.id, size: this.members.size});
-  }
-
-  removeMember (peer) {
-    if (this.members.size === 1) {
-      groups.delete(peer.key);
-      log.info('REMOVE Group', { key: peer.key, id: peer.id });
-    } else {
-      this.members.delete(peer);
-      log.info('Member LEFT', { key: peer.key, id: peer.id, size: this.members.size });
-    }
-  }
 }
 
 // Retreive version from package.json
 let version;
 try {
-  version = require('./package.json').version;
-} catch (err) {
-  version = '';
+    version = require('./package.json').version;
 }
-
+catch (err) {
+    version = '';
+}
 // Config LOGGER
 global.log = require('bunyan').createLogger({
-  name: 'sigver',
-  level: 'trace'
+    name: 'sigver',
+    level: 'trace',
 });
-
-const program = require('commander');
-
+// Default options for commander
 const defaults = {
-  host: '0.0.0.0',
-  port: 8000,
-  key: '',
-  cert: '',
-  ca: ''
+    host: '0.0.0.0',
+    port: 8000,
+    key: '',
+    cert: '',
+    ca: '',
 };
-
-program
-  .version(version)
-  .description('Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)')
-  .option('-h, --host <ip>', `Select host address to bind to.`, defaults.host)
-  .option('-p, --port <number>', `Select port to use.`, defaults.port)
-  .option('-k, --key <file path>',
-    `Private key for the certificate`)
-  .option('-c, --cert <file path>',
-    `The server certificate`)
-  .option('-a, --ca <file path>',
-    `The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.`)
-  .on('--help', () => {
-    console.log(
-      `
+const commander = require('commander')
+    .version(version)
+    .description('Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)')
+    .option('-h, --host <ip>', `Select host address to bind to.`, defaults.host)
+    .option('-p, --port <number>', `Select port to use.`, defaults.port)
+    .option('-k, --key <file path>', `Private key for the certificate`)
+    .option('-c, --cert <file path>', `The server certificate`)
+    .option('-a, --ca <file path>', `The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.`)
+    .on('--help', () => {
+    console.log(`
   Examples:
 
      $ sigver                       # Server is listening on ws://0.0.0.0:8000
      $ sigver -h 192.168.0.1 -p 80  # Server is listening on ws://192.168.0.1:80
      $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Server is listening on wss://0.0.0.0:443`);
-  })
-  .parse(process.argv);
-
-const {host, port, key, cert, ca} = program;
-
-const core = new ServerCore();
-
+})
+    .parse(process.argv);
+const { host, port, key, cert, ca } = commander;
+// Choose between HTTP & HTTPS
 let httpServer;
 if (key && cert && ca) {
-  const fs = require('fs');
-  httpServer = require('https').createServer({
-    key: fs.readFileSync(key),
-    cert: fs.readFileSync(cert),
-    ca: fs.readFileSync(ca)
-  });
-} else {
-  httpServer = require('http').createServer();
+    const fs = require('fs');
+    httpServer = require('https').createServer({
+        key: fs.readFileSync(key),
+        cert: fs.readFileSync(cert),
+        ca: fs.readFileSync(ca),
+    });
 }
-
-const wsServer = new WsServer(httpServer, host, port);
-wsServer.peers.subscribe(
-  peer => core.init(peer),
-  err => log.fatal('WebSocket server peers error', err)
-);
+else {
+    httpServer = require('http').createServer();
+}
+// Setup main signaling logic
+const peers = new Subject_2();
+const groups = new Map();
+peers.subscribe((peer) => {
+    bindToMember(peer);
+    // Subscribe to peer messages
+    peer.subscribe(({ type }) => {
+        switch (type) {
+            case 'stable':
+                becomeMember(peer);
+                break;
+            case 'heartbeat':
+                peer.missedHeartbeat = 0;
+                break;
+            case 'tryAnother': {
+                bindToMember(peer);
+                break;
+            }
+        }
+    });
+}, (err) => log.fatal('WebSocket server peers error', err));
+function bindToMember(peer) {
+    const group = groups.get(peer.key);
+    // Check whether the first peer or not in the group identified by the key
+    if (group) {
+        peer.bindWith(group.selectMemberFor(peer));
+        peer.sendFirstFalse();
+    }
+    else {
+        groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)));
+        peer.sendFirstTrue();
+    }
+}
+function becomeMember(peer) {
+    if (peer.group === undefined) {
+        const group = groups.get(peer.key);
+        if (group) {
+            group.addMember(peer);
+        }
+        else {
+            groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)));
+        }
+    }
+}
+// Start listen
+const wsServer = new WsServer(httpServer, host, port, peers);
 wsServer.start(() => {
-  const address = httpServer.address();
-  log.info(`WebSocket server is listening on ${address.address}:${address.port}`);
+    const address = httpServer.address();
+    log.info(`WebSocket server is listening on ${address.address}:${address.port}`);
 });
-
-}());
