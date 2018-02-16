@@ -56,14 +56,14 @@ class Group {
   }
 
   selectMemberFor (peer) {
-    const ids = []
-    this.members.forEach((id) => {
-      if (!peer.triedMembers.includes(id)) {
-        ids[ids.length] = id
+    const peersToTry = []
+    this.members.forEach((member) => {
+      if (!peer.triedMembers.includes(member.id)) {
+        peersToTry.push(member)
       }
     })
-    if (ids.length !== 0) {
-      return ids[Math.floor(Math.random() * ids.length)]
+    if (peersToTry.length !== 0) {
+      return peersToTry[Math.floor(Math.random() * peersToTry.length)]
     } else {
       peer.triedMembers = []
       return this.selectMemberFor(peer)
@@ -73,16 +73,16 @@ class Group {
   addMember (peer) {
     peer.group = this
     this.members.add(peer)
-    log.info('NEW Member', {id: peer.id, key: peer.key, currentSize: this.members.size})
+    log.info('Member JOINED', {key: peer.key, id: peer.id, size: this.members.size})
   }
 
   removeMember (peer) {
     if (this.members.size === 1) {
       groups.delete(peer.key)
-      log.info('REMOVE Group', { id: peer.id, key: peer.key })
+      log.info('REMOVE Group', { key: peer.key, id: peer.id })
     } else {
       this.members.delete(peer)
-      log.info('Member GONE', { id: peer.id, key: peer.key, currentSize: this.members.size })
+      log.info('Member LEFT', { key: peer.key, id: peer.id, size: this.members.size })
     }
   }
 }

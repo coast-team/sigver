@@ -17,6 +17,7 @@ function generateId () {
   return id
 }
 
+// Preconstructed messages for optimisation
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
 const firstTrueMsg = Message.encode(Message.create({ isFirst: true })).finish()
 const firstFalseMsg = Message.encode(Message.create({ isFirst: false })).finish()
@@ -25,11 +26,13 @@ export class Peer extends Subject {
   constructor (key, sendFunc, closeFunc, heartbeatFunc) {
     super()
     this.key = key
-    this.id = generateId()
+    this.id = undefined
     this.group = undefined
     this.heartbeatInterval = undefined
     this.missedHeartbeat = 0
     this.triedMembers = []
+    this.subToMember = undefined
+    this.subToJoining = undefined
 
     // Set methods
     this.send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish())
@@ -65,11 +68,18 @@ export class Peer extends Subject {
     this.complete()
     generatedIds.delete(this.id)
     if (code !== 1000) {
-      log.info('Socket closed', { id: this.id, key: this.key, code, reason })
+      log.info('Connection with peer has closed', { key: this.key, id: this.id, code, reason })
     }
   }
 
   bindWith (member) {
+    if (this.subToMember) {
+      this.subToMember.unsubscribe()
+    }
+    if (this.subToJoining) {
+      this.subToJoining.unsubscribe()
+    }
+    this.id = generateId()
     this.triedMembers.push(member.id)
     this.joiningToMember(member)
     this.memberToJoining(member)
@@ -81,7 +91,7 @@ export class Peer extends Subject {
    */
   joiningToMember (member) {
     let isEnd = false
-    const sub = member.pipe(
+    this.subToMember = member.pipe(
       filter((msg) => msg.type === 'content' && msg.content.id === this.id),
       pluck('content')
     ).subscribe(
@@ -92,13 +102,14 @@ export class Peer extends Subject {
             break
           case 'isError':
             this.send({ content: { id: 0, isError: true } })
-            sub.unsubscribe()
+            this.subToMember.unsubscribe()
+            this.subToJoining.unsubscribe()
             // decline member rating
             break
           case 'isEnd':
             isEnd = true
             this.send({ content: { id: 0, isEnd } })
-            sub.unsubscribe()
+            this.subToMember.unsubscribe()
             break
           default: {
             const err = new SigError(
@@ -107,7 +118,7 @@ export class Peer extends Subject {
             )
             log.error(err)
             member.close(err.code, err.message)
-            sub.unsubscribe()
+            this.subToMember.unsubscribe()
           }
         }
       },
@@ -130,7 +141,7 @@ export class Peer extends Subject {
    */
   memberToJoining (member) {
     let isEnd = false
-    const sub = this.pipe(
+    this.subToJoining = this.pipe(
       filter((msg) => msg.type === 'content'),
       pluck('content')
     ).subscribe(
@@ -141,13 +152,14 @@ export class Peer extends Subject {
             break
           case 'isError':
             member.send({ content: { id: this.id, isError: true } })
-            sub.unsubscribe()
+            this.subToJoining.unsubscribe()
+            this.subToMember.unsubscribe()
             // decline member rating
             break
           case 'isEnd':
             isEnd = true
             member.send({ content: { id: this.id, isEnd: true } })
-            sub.unsubscribe()
+            this.subToJoining.unsubscribe()
             break
           default: {
             const err = new SigError(
@@ -156,7 +168,7 @@ export class Peer extends Subject {
             )
             log.error(err)
             this.close(err.code, err.message)
-            sub.unsubscribe()
+            this.subToJoining.unsubscribe()
           }
         }
       },
