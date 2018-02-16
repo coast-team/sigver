@@ -1,5 +1,6 @@
-import { ERR_KEY } from '../src/SigError'
 import * as h from './util.js'
+
+const ERR_KEY = 4001
 
 describe('', () => {
   test(WebSocket)
