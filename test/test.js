@@ -17,7 +17,7 @@ function test (Source) {
   describe(Source.name, () => {
     const channels = new Set()
 
-    function getConnection (key, fail) {
+    function getConnection (key) {
       const ws = new Source(`${url}/${key}`)
       ws.binaryType = 'arraybuffer'
       ws.onclose = closeEvt => fail(closeEvt.reason)
@@ -40,14 +40,14 @@ function test (Source) {
 
     afterEach(() => {
       for (let ws of channels) {
-        ws.onclose = () => {}
+        ws.onclose = undefined
         ws.close(1000)
       }
       channels.clear()
     })
 
     it('Should be the first in the network', done => {
-      const con = getConnection(h.randomKey(), done.fail)
+      const con = getConnection(h.randomKey())
       con.onmessage = msg => {
         expect(msg.isFirst).toBeTruthy()
         done()
@@ -56,10 +56,10 @@ function test (Source) {
 
     it('Should NOT be the first in the network', done => {
       const key = h.randomKey()
-      const con1 = getConnection(key, done.fail)
+      const con1 = getConnection(key)
       con1.onmessage = msg => {
         expect(msg.isFirst).toBeTruthy()
-        const con2 = getConnection(key, done.fail)
+        const con2 = getConnection(key)
         con2.onmessage = msg => {
           expect(msg.isFirst).toBeFalsy()
           done()
@@ -71,11 +71,11 @@ function test (Source) {
       const key = h.randomKey()
       const msg1 = h.randomBytes()
       const msg2 = h.randomBytes()
-      const con1 = getConnection(key, done.fail)
+      const con1 = getConnection(key)
       const msgSeq = (function * () {
         let msg = yield
         expect(msg.isFirst).toBeTruthy()
-        const con2 = getConnection(key, done.fail)
+        const con2 = getConnection(key)
         con2.onmessage = msg => msgSeq.next(msg)
 
         msg = yield
@@ -103,16 +103,16 @@ function test (Source) {
       const msg2 = h.randomBytes()
       const msg3 = h.randomBytes()
 
-      const con1 = getConnection(key, done.fail)
+      const con1 = getConnection(key)
       const msgSeq = (function * () {
         let msg = yield
         expect(msg.isFirst).toBeTruthy()
-        const con2 = getConnection(key, done.fail)
+        const con2 = getConnection(key)
         con2.onmessage = msg => msgSeq.next(msg)
 
         msg = yield
         expect(msg.isFirst).toBeFalsy()
-        const con3 = getConnection(key, done.fail)
+        const con3 = getConnection(key)
         con3.onmessage = msg => msgSeq.next(msg)
 
         msg = yield
@@ -151,7 +151,7 @@ function test (Source) {
           expect(closeEvt.code).toEqual(ERR_KEY)
           done()
         }
-        ws.onerror = err => done.fail(err.message)
+        ws.onerror = err => fail(err.message)
       })
 
       it(`with code: ${ERR_KEY} because the key is empty`, done => {
@@ -160,7 +160,7 @@ function test (Source) {
           expect(closeEvt.code).toEqual(ERR_KEY)
           done()
         }
-        ws.onerror = err => done.fail(err.message)
+        ws.onerror = err => fail(err.message)
       })
     })
   })

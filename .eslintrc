@@ -18,6 +18,7 @@
   "globals": {
     "log": true,
     "jasmine": true,
+    "fail": true,
     "describe": true,
     "xdescribe": true,
     "fdescribe": true,
