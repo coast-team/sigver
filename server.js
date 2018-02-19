@@ -11212,6 +11212,7 @@ class Peer extends Subject_2 {
         this.key = key;
         this.missedHeartbeat = 0;
         this.triedMembers = [];
+        this.id = generateId();
         // Set methods
         this._send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish());
         this._close = (code, reason) => closeFunc(code, reason);

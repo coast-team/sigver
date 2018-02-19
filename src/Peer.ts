@@ -51,6 +51,7 @@ export class Peer extends Subject<Message> {
     this.key = key
     this.missedHeartbeat = 0
     this.triedMembers = []
+    this.id = generateId()
 
     // Set methods
     this._send = (msg: IMessage) => sendFunc(Message.encode(Message.create(msg)).finish())

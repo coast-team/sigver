@@ -42,7 +42,7 @@
   "dependencies": {
     "bunyan": "^1.8.12",
     "commander": "^2.13.0",
-    "protobufjs": "^6.8.4",
+    "protobufjs": "^6.8.5",
     "rxjs": "^5.5.6",
     "uws": "^9.14.0"
   },
