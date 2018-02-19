@@ -64,7 +64,7 @@ export class Peer extends Subject<Message> {
       this.missedHeartbeat++
       if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
         clearInterval(this.heartbeatInterval)
-        this.error(new SigError(ERR_HEARTBEAT))
+        this.close(ERR_HEARTBEAT, 'Too many missed hearbeats')
       }
       heartbeatFunc(heartBeatMsg)
     }, HEARTBEAT_INTERVAL)
