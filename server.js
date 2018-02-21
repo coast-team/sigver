@@ -1259,7 +1259,7 @@ class Group {
             }
         });
         if (peersToTry.length !== 0) {
-            return peersToTry[Math.floor(Math.random() * peersToTry.length)];
+            return peersToTry[0];
         }
         else {
             joining.triedMembers = [];
