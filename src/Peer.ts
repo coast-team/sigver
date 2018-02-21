@@ -28,13 +28,13 @@ export class Peer extends Subject<Message> {
 
   readonly key: string
   public id: number
-  public group: Group
+  public group: Group | undefined
   public triedMembers: number[]
   public missedHeartbeat: number
 
   private heartbeatInterval: NodeJS.Timer
-  private subToMember: Subscription
-  private subToJoining: Subscription
+  private subToMember: Subscription | undefined
+  private subToJoining: Subscription | undefined
 
   private _send: (msg: IMessage) => void
   private _close: (code: number, reason: string) => void
@@ -133,14 +133,20 @@ export class Peer extends Subject<Message> {
           break
         case 'isError':
           this.send({ content: { id: 0, isError: true } })
-          this.subToMember.unsubscribe()
-          this.subToJoining.unsubscribe()
+          if (this.subToMember) {
+            this.subToMember.unsubscribe()
+          }
+          if (this.subToJoining) {
+            this.subToJoining.unsubscribe()
+          }
           // decline member rating
           break
         case 'isEnd':
           isEnd = true
           this.send({ content: { id: 0, isEnd } })
-          this.subToMember.unsubscribe()
+          if (this.subToMember) {
+            this.subToMember.unsubscribe()
+          }
           break
         default: {
           const err = new SigError(
@@ -149,7 +155,9 @@ export class Peer extends Subject<Message> {
           )
           log.error(err)
           member.close(err.code, err.message)
-          this.subToMember.unsubscribe()
+          if (this.subToMember) {
+            this.subToMember.unsubscribe()
+          }
         }
         }
       },
@@ -184,14 +192,20 @@ export class Peer extends Subject<Message> {
           break
         case 'isError':
           member.send({ content: { id: this.id, isError: true } })
-          this.subToJoining.unsubscribe()
-          this.subToMember.unsubscribe()
+          if (this.subToMember) {
+            this.subToMember.unsubscribe()
+          }
+          if (this.subToJoining) {
+            this.subToJoining.unsubscribe()
+          }
           // decline member rating
           break
         case 'isEnd':
           isEnd = true
           member.send({ content: { id: this.id, isEnd } })
-          this.subToJoining.unsubscribe()
+          if (this.subToJoining) {
+            this.subToJoining.unsubscribe()
+          }
           break
         default: {
           const err = new SigError(
@@ -200,7 +214,9 @@ export class Peer extends Subject<Message> {
           )
           log.error(err)
           this.close(err.code, err.message)
-          this.subToJoining.unsubscribe()
+          if (this.subToJoining) {
+            this.subToJoining.unsubscribe()
+          }
         }
         }
       },

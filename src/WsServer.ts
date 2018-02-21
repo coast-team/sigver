@@ -17,7 +17,7 @@ export class WsServer {
   readonly port: number
 
   private httpServer: HttpServer | HttpsServer
-  private webSocketServer: Server
+  private webSocketServer: Server | undefined
   private peers: Subject<Peer>
 
   constructor (
@@ -42,14 +42,15 @@ export class WsServer {
     const WebSocketServer = require('uws').Server
 
     // Starting server
-    this.webSocketServer = new WebSocketServer({
+    const wss: Server = new WebSocketServer({
       perMessageDeflate: false,
       server: this.httpServer,
     })
+    this.webSocketServer = wss
 
-    this.webSocketServer.on('error', (err) => log.error('Server error', err))
+    wss.on('error', (err) => log.error('Server error', err))
 
-    this.webSocketServer.on('connection', (socket) => {
+    wss.on('connection', (socket) => {
       const { pathname } = url.parse(socket.upgradeReq.url, true)
 
       // Check key
@@ -86,7 +87,7 @@ export class WsServer {
   }
 
   close (cb: any) {
-    if (this.webSocketServer !== null) {
+    if (this.webSocketServer) {
       log.info('Server has stopped successfully')
       this.webSocketServer.close(cb)
     }

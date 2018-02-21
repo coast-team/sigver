@@ -11281,20 +11281,28 @@ class Peer extends Subject_2 {
                     break;
                 case 'isError':
                     this.send({ content: { id: 0, isError: true } });
-                    this.subToMember.unsubscribe();
-                    this.subToJoining.unsubscribe();
+                    if (this.subToMember) {
+                        this.subToMember.unsubscribe();
+                    }
+                    if (this.subToJoining) {
+                        this.subToJoining.unsubscribe();
+                    }
                     // decline member rating
                     break;
                 case 'isEnd':
                     isEnd = true;
                     this.send({ content: { id: 0, isEnd } });
-                    this.subToMember.unsubscribe();
+                    if (this.subToMember) {
+                        this.subToMember.unsubscribe();
+                    }
                     break;
                 default: {
                     const err = new SigError(ERR_MESSAGE, `Unknown message type "${msg.type}" from a group member`);
                     log.error(err);
                     member.close(err.code, err.message);
-                    this.subToMember.unsubscribe();
+                    if (this.subToMember) {
+                        this.subToMember.unsubscribe();
+                    }
                 }
             }
         }, () => {
@@ -11321,20 +11329,28 @@ class Peer extends Subject_2 {
                     break;
                 case 'isError':
                     member.send({ content: { id: this.id, isError: true } });
-                    this.subToJoining.unsubscribe();
-                    this.subToMember.unsubscribe();
+                    if (this.subToMember) {
+                        this.subToMember.unsubscribe();
+                    }
+                    if (this.subToJoining) {
+                        this.subToJoining.unsubscribe();
+                    }
                     // decline member rating
                     break;
                 case 'isEnd':
                     isEnd = true;
                     member.send({ content: { id: this.id, isEnd } });
-                    this.subToJoining.unsubscribe();
+                    if (this.subToJoining) {
+                        this.subToJoining.unsubscribe();
+                    }
                     break;
                 default: {
                     const err = new SigError(ERR_MESSAGE, `Unknown message type "${msg.type}" from the ${this.id} joining peer`);
                     log.error(err);
                     this.close(err.code, err.message);
-                    this.subToJoining.unsubscribe();
+                    if (this.subToJoining) {
+                        this.subToJoining.unsubscribe();
+                    }
                 }
             }
         }, () => {
@@ -11369,12 +11385,13 @@ class WsServer {
         this.httpServer.listen(this.port, this.host, cb);
         const WebSocketServer = require('uws').Server;
         // Starting server
-        this.webSocketServer = new WebSocketServer({
+        const wss = new WebSocketServer({
             perMessageDeflate: false,
             server: this.httpServer,
         });
-        this.webSocketServer.on('error', (err) => log.error('Server error', err));
-        this.webSocketServer.on('connection', (socket) => {
+        this.webSocketServer = wss;
+        wss.on('error', (err) => log.error('Server error', err));
+        wss.on('connection', (socket) => {
             const { pathname } = url.parse(socket.upgradeReq.url, true);
             // Check key
             const key = pathname.substr(1);
@@ -11403,7 +11420,7 @@ class WsServer {
         });
     }
     close(cb) {
-        if (this.webSocketServer !== null) {
+        if (this.webSocketServer) {
             log.info('Server has stopped successfully');
             this.webSocketServer.close(cb);
         }
