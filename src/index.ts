@@ -98,8 +98,14 @@ function bindToMember (peer: Peer) {
 
   // Check whether the first peer or not in the group identified by the key
   if (group) {
-    peer.bindWith(group.selectMemberFor(peer))
-    peer.sendFirstFalse()
+    if (group.oneLeftAndAlreadyTried(peer)) {
+      log.info('ONE LEFT AND ALREADY TRIED: switch peers', { key: peer.key})
+      group.switchPeers(peer)
+      peer.sendFirstTrue()
+    } else {
+      peer.bindWith(group.selectMemberFor(peer))
+      peer.sendFirstFalse()
+    }
   } else {
     groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)))
     peer.sendFirstTrue()

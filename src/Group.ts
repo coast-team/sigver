@@ -1,14 +1,35 @@
 import { Peer } from './Peer'
+import { ERR_BLOCKING_MEMBER } from './SigError'
 
 export class Group {
 
-  private members: Set<Peer>
   private onNoMembers: () => void
+  private members: Set<Peer>
 
   constructor (peer: Peer, onNoMembers: () => void) {
     this.members = new Set()
     this.onNoMembers = onNoMembers
     this.addMember(peer)
+  }
+
+  get size () {
+    return this.members.size
+  }
+
+  switchPeers (peer: Peer) {
+    if (this.size === 1) {
+      const blockingMember = this.members.values().next().value
+      this.addMember(peer)
+      blockingMember.close(ERR_BLOCKING_MEMBER, 'prevent other peers from joining the group')
+    }
+  }
+
+  oneLeftAndAlreadyTried (peer: Peer): boolean {
+    if (this.size === 1) {
+      const id = this.members.values().next().value.id
+      return peer.triedMembers.includes(id)
+    }
+    return false
   }
 
   selectMemberFor (joining: Peer): Peer {
@@ -39,4 +60,5 @@ export class Group {
       this.onNoMembers()
     }
   }
+
 }

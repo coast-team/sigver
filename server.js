@@ -1245,11 +1245,45 @@ var Subject_1 = {
 	AnonymousSubject: AnonymousSubject_1
 };
 
+class SigError extends Error {
+    constructor(code, message = '') {
+        super();
+        this.name = this.constructor.name;
+        this.code = code;
+        this.message = `${code}: ${message}`;
+    }
+}
+// Inappropriate key format (e.g. key too long)
+const ERR_KEY = 4001;
+// Heartbeat error
+const ERR_HEARTBEAT = 4002;
+// Any error due to message: type, format etc.
+const ERR_MESSAGE = 4003;
+// When one member left and new peers could not join via him.
+const ERR_BLOCKING_MEMBER = 4004;
+
 class Group {
     constructor(peer, onNoMembers) {
         this.members = new Set();
         this.onNoMembers = onNoMembers;
         this.addMember(peer);
+    }
+    get size() {
+        return this.members.size;
+    }
+    switchPeers(peer) {
+        if (this.size === 1) {
+            const blockingMember = this.members.values().next().value;
+            this.addMember(peer);
+            blockingMember.close(ERR_BLOCKING_MEMBER, 'prevent other peers from joining the group');
+        }
+    }
+    oneLeftAndAlreadyTried(peer) {
+        if (this.size === 1) {
+            const id = this.members.values().next().value.id;
+            return peer.triedMembers.includes(id);
+        }
+        return false;
     }
     selectMemberFor(joining) {
         const peersToTry = [];
@@ -11176,21 +11210,6 @@ const Content = $root.Content = (() => {
     return Content;
 })();
 
-class SigError extends Error {
-    constructor(code, message = '') {
-        super();
-        this.name = this.constructor.name;
-        this.code = code;
-        this.message = `${code}: ${message}`;
-    }
-}
-// Inappropriate key format (e.g. key too long)
-const ERR_KEY = 4001;
-// Heartbeat error
-const ERR_HEARTBEAT = 4002;
-// Any error due to message: type, format etc.
-const ERR_MESSAGE = 4003;
-
 const MAXIMUM_MISSED_HEARTBEAT = 3;
 const HEARTBEAT_INTERVAL = 5000;
 const ID_MAX_VALUE = 4294967295;
@@ -11512,8 +11531,15 @@ function bindToMember(peer) {
     const group = groups.get(peer.key);
     // Check whether the first peer or not in the group identified by the key
     if (group) {
-        peer.bindWith(group.selectMemberFor(peer));
-        peer.sendFirstFalse();
+        if (group.oneLeftAndAlreadyTried(peer)) {
+            log.info('ONE LEFT AND ALREADY TRIED: switch peers', { key: peer.key });
+            group.switchPeers(peer);
+            peer.sendFirstTrue();
+        }
+        else {
+            peer.bindWith(group.selectMemberFor(peer));
+            peer.sendFirstFalse();
+        }
     }
     else {
         groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)));
