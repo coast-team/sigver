@@ -79,6 +79,13 @@ module.exports = function(config) {
 
     browsers: ['ChromeHeadless', 'Firefox'],
 
+    customLaunchers: {
+      FirefoxHeadless: {
+        base: 'Firefox',
+        flags: [ '-headless' ],
+      },
+    },
+
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: false,
@@ -92,7 +99,7 @@ module.exports = function(config) {
    * Travis options
    */
   if (process.env.TRAVIS) {
-    config.browsers = ['ChromeHeadless', 'Firefox']
+    config.browsers = ['ChromeHeadless', 'FirefoxHeadless']
     config.autoWatch = false
     config.singleRun = true
   }
