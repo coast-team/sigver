@@ -70,18 +70,21 @@ message Message {
   oneof type {
     Content content = 1;
 
-    // Server response to the peer wanted to join a peer to peer network.
+    // Server's response to the peer wanted to join a peer to peer network.
     // True if the first peer in the network.
-    bool isFirst = 2; // Outcoming from the server and incoming for the client.
+    bool isFirst = 2; // Only outcoming message
 
-    // Peer response to the server when he joined the peer to peer network
-    // successfully and is ready to help other peers to join this network.
-    bool joined = 3; // Incoming for the server and outcoming from the client.
+    // Peer's response to the server when he joined the group
+    // successfully and is ready to help other peers to join.
+    bool stable = 3; // Only incoming
 
     // Server sends `heartbeat` message each 5 seconds and expects getting the
-    // same message back. If after 3 tentatives still no response then closes the
-    // socket.
+    // same message back. If after 3 tentatives still no response then close the
+    // connection.
     bool heartbeat = 4;
+
+    // Peer's request to try another group member for joining.
+    bool tryAnother = 5; // Only incoming
   }
 }
 
@@ -99,6 +102,7 @@ message Content {
 
 Server may close the socket with the following codes:
 
-- **ERR_KEY: 4001**         // Inappropriate key format (e.g. key too long)
-- **ERR_HEARTBEAT = 4002**  // Heart-beats error
-- **ERR_MESSAGE = 4003**    // Any error due to message: type, format etc.
+- **ERR_KEY: 4001**               // Inappropriate key format (e.g. key too long)
+- **ERR_HEARTBEAT = 4002**        // Heart-beats error
+- **ERR_MESSAGE = 4003**          // Any error due to message: type, format etc.
+- **ERR_BLOCKING_MEMBER** = 4004  // When only one member left in the group and new peers could not join via him.

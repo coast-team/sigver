@@ -4,12 +4,12 @@ message Message {
   oneof type {
     Content content = 1;
 
-    // Server response to the peer wanted to join a peer to peer network.
+    // Server's response to the peer wanted to join a peer to peer network.
     // True if the first peer in the network.
     bool isFirst = 2; // Only outcoming message
 
-    // Peer response to the server when he joined the peer to peer network
-    // successfully and is ready to help other peers to join this network.
+    // Peer's response to the server when he joined the group
+    // successfully and is ready to help other peers to join.
     bool stable = 3; // Only incoming
 
     // Server sends `heartbeat` message each 5 seconds and expects getting the
@@ -17,6 +17,7 @@ message Message {
     // connection.
     bool heartbeat = 4;
 
+    // Peer's request to try another group member for joining.
     bool tryAnother = 5; // Only incoming
   }
 }
