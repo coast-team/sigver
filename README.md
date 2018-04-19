@@ -55,7 +55,7 @@ Assuming that the server is listening on `wss://mysigver.org`, then the server o
 
 Server uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) for encode/decode all messages.
 
-```proto
+```protobuf
 syntax = "proto3";
 
 message Message {
@@ -82,13 +82,7 @@ message Message {
 
 message Content {
   uint32 id = 1; // Peer id to route data.
-
-  // Data to be transmitted to the sibling peer
-  oneof type {
-    bytes data = 2; // WebRTC data (in fact could be any array of bytes)
-    bool isError = 3; // Indicating that error occurred and thus signaling unsubscribes from the problematic peer
-    bool isEnd = 4; // Indicating that the peer finished to send all data to another peer
-  }
+  bytes data = 2; // if data === undefined, then it the end of the subscription
 }
 ```
 
