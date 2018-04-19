@@ -85,12 +85,12 @@ function test(Source) {
         con2.send({ content: { data: msg2 } })
 
         msg = yield
-        expect(msg.content.id).not.toEqual(0)
+        expect(msg.content.id).not.toEqual(1)
         expect(msg.content.data).toEqual(msg2)
         con1.send({ content: { id: msg.content.id, data: msg1 } })
 
         msg = yield
-        expect(msg.content.id).toEqual(0)
+        expect(msg.content.id).toEqual(1)
         expect(msg.content.data).toEqual(msg1)
         done()
       })()
@@ -122,22 +122,22 @@ function test(Source) {
         con2.send({ content: { data: msg2 } })
 
         msg = yield
-        expect(msg.content.id).not.toEqual(0)
+        expect(msg.content.id).not.toEqual(1)
         expect(msg.content.data).toEqual(msg2)
         con1.send({ content: { id: msg.content.id, data: msg12 } })
 
         msg = yield
-        expect(msg.content.id).toEqual(0)
+        expect(msg.content.id).toEqual(1)
         expect(msg.content.data).toEqual(msg12)
         con3.send({ content: { data: msg3 } })
 
         msg = yield
-        expect(msg.content.id).not.toEqual(0)
+        expect(msg.content.id).not.toEqual(1)
         expect(msg.content.data).toEqual(msg3)
         con1.send({ content: { id: msg.content.id, data: msg13 } })
 
         msg = yield
-        expect(msg.content.id).toEqual(0)
+        expect(msg.content.id).toEqual(1)
         expect(msg.content.data).toEqual(msg13)
         done()
       })()

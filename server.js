@@ -11076,8 +11076,6 @@ const Content = $root.Content = (() => {
      * @interface IContent
      * @property {number|null} [id] Content id
      * @property {Uint8Array|null} [data] Content data
-     * @property {boolean|null} [isError] Content isError
-     * @property {boolean|null} [isEnd] Content isEnd
      */
 
     /**
@@ -11112,36 +11110,6 @@ const Content = $root.Content = (() => {
     Content.prototype.data = $util.newBuffer([]);
 
     /**
-     * Content isError.
-     * @member {boolean} isError
-     * @memberof Content
-     * @instance
-     */
-    Content.prototype.isError = false;
-
-    /**
-     * Content isEnd.
-     * @member {boolean} isEnd
-     * @memberof Content
-     * @instance
-     */
-    Content.prototype.isEnd = false;
-
-    // OneOf field names bound to virtual getters and setters
-    let $oneOfFields;
-
-    /**
-     * Content type.
-     * @member {"data"|"isError"|"isEnd"|undefined} type
-     * @memberof Content
-     * @instance
-     */
-    Object.defineProperty(Content.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["data", "isError", "isEnd"]),
-        set: $util.oneOfSetter($oneOfFields)
-    });
-
-    /**
      * Creates a new Content instance using the specified properties.
      * @function create
      * @memberof Content
@@ -11169,10 +11137,6 @@ const Content = $root.Content = (() => {
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
         if (message.data != null && message.hasOwnProperty("data"))
             writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.data);
-        if (message.isError != null && message.hasOwnProperty("isError"))
-            writer.uint32(/* id 3, wireType 0 =*/24).bool(message.isError);
-        if (message.isEnd != null && message.hasOwnProperty("isEnd"))
-            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.isEnd);
         return writer;
     };
 
@@ -11199,12 +11163,6 @@ const Content = $root.Content = (() => {
                 break;
             case 2:
                 message.data = reader.bytes();
-                break;
-            case 3:
-                message.isError = reader.bool();
-                break;
-            case 4:
-                message.isEnd = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -11255,10 +11213,18 @@ class Peer extends Subject_2 {
             heartbeatFunc(heartBeatMsg);
         }, HEARTBEAT_INTERVAL);
     }
-    send(msg) { this._send(msg); }
-    close(code, reason) { this._close(code, reason); }
-    sendFirstTrue() { this._sendFirstTrue(); }
-    sendFirstFalse() { this._sendFirstFalse(); }
+    send(msg) {
+        this._send(msg);
+    }
+    close(code, reason) {
+        this._close(code, reason);
+    }
+    sendFirstTrue() {
+        this._sendFirstTrue();
+    }
+    sendFirstFalse() {
+        this._sendFirstFalse();
+    }
     onMessage(bytes) {
         try {
             this.next(Message.decode(new Uint8Array(bytes)));
@@ -11287,107 +11253,22 @@ class Peer extends Subject_2 {
         }
         this.id = generateId();
         this.triedMembers.push(member.id);
-        this.joiningToMember(member);
-        this.memberToJoining(member);
-    }
-    /**
-     * Joining subscribes to the group member.
-     * @param  {Peer} member a member of the group
-     */
-    joiningToMember(member) {
-        let isEnd = false;
-        this.subToMember = member.pipe(filter$1((msg) => {
-            return msg.type === 'content' && msg.content !== null
-                && msg.content !== undefined && msg.content.id === this.id;
-        }), pluck$1('content')).subscribe((obj) => {
-            const msg = obj;
-            switch (msg.type) {
-                case 'data':
-                    this.send({ content: { id: 0, data: msg.data } });
-                    break;
-                case 'isError':
-                    this.send({ content: { id: 0, isError: true } });
-                    if (this.subToMember) {
-                        this.subToMember.unsubscribe();
-                    }
-                    if (this.subToJoining) {
-                        this.subToJoining.unsubscribe();
-                    }
-                    // decline member rating
-                    break;
-                case 'isEnd':
-                    isEnd = true;
-                    this.send({ content: { id: 0, isEnd } });
-                    if (this.subToMember) {
-                        this.subToMember.unsubscribe();
-                    }
-                    break;
-                default: {
-                    const err = new SigError(ERR_MESSAGE, `Unknown message type "${msg.type}" from a group member`);
-                    log.error(err);
-                    member.close(err.code, err.message);
-                    if (this.subToMember) {
-                        this.subToMember.unsubscribe();
-                    }
-                }
+        // Joining subscribes to the group member.
+        this.subToMember = member
+            .pipe(filter$1(({ content }) => !!content && content.id === this.id), pluck$1('content'))
+            .subscribe(({ data }) => {
+            this.send({ content: { id: 1, data } });
+            if (!!data && this.subToMember) {
+                this.subToMember.unsubscribe();
             }
-        }, () => {
-            if (!isEnd) {
-                this.send({ content: { id: 0, isError: true } });
+        }, () => this.send({ content: { id: 1 } }), () => this.send({ content: { id: 1 } }));
+        // Groum member subscribes to the joining peer.
+        this.subToJoining = this.pipe(filter$1((msg) => msg.type === 'content'), pluck$1('content')).subscribe(({ data }) => {
+            member.send({ content: { id: this.id, data } });
+            if (!!data && this.subToJoining) {
+                this.subToJoining.unsubscribe();
             }
-        }, () => {
-            if (!isEnd) {
-                this.send({ content: { id: 0, isError: true } });
-            }
-        });
-    }
-    /**
-     * Network member subscribes to the joining peer.
-     * @param  {Peer} member a member of the group
-     */
-    memberToJoining(member) {
-        let isEnd = false;
-        this.subToJoining = this.pipe(filter$1((msg) => msg.type === 'content'), pluck$1('content')).subscribe((obj) => {
-            const msg = obj;
-            switch (msg.type) {
-                case 'data':
-                    member.send({ content: { id: this.id, data: msg.data } });
-                    break;
-                case 'isError':
-                    member.send({ content: { id: this.id, isError: true } });
-                    if (this.subToMember) {
-                        this.subToMember.unsubscribe();
-                    }
-                    if (this.subToJoining) {
-                        this.subToJoining.unsubscribe();
-                    }
-                    // decline member rating
-                    break;
-                case 'isEnd':
-                    isEnd = true;
-                    member.send({ content: { id: this.id, isEnd } });
-                    if (this.subToJoining) {
-                        this.subToJoining.unsubscribe();
-                    }
-                    break;
-                default: {
-                    const err = new SigError(ERR_MESSAGE, `Unknown message type "${msg.type}" from the ${this.id} joining peer`);
-                    log.error(err);
-                    this.close(err.code, err.message);
-                    if (this.subToJoining) {
-                        this.subToJoining.unsubscribe();
-                    }
-                }
-            }
-        }, () => {
-            if (!isEnd) {
-                member.send({ content: { id: this.id, isError: true } });
-            }
-        }, () => {
-            if (!isEnd) {
-                member.send({ content: { id: this.id, isError: true } });
-            }
-        });
+        }, () => member.send({ content: { id: this.id } }), () => member.send({ content: { id: this.id } }));
     }
 }
 

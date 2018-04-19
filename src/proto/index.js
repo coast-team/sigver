@@ -178,8 +178,6 @@ export const Content = $root.Content = (() => {
      * @interface IContent
      * @property {number|null} [id] Content id
      * @property {Uint8Array|null} [data] Content data
-     * @property {boolean|null} [isError] Content isError
-     * @property {boolean|null} [isEnd] Content isEnd
      */
 
     /**
@@ -214,36 +212,6 @@ export const Content = $root.Content = (() => {
     Content.prototype.data = $util.newBuffer([]);
 
     /**
-     * Content isError.
-     * @member {boolean} isError
-     * @memberof Content
-     * @instance
-     */
-    Content.prototype.isError = false;
-
-    /**
-     * Content isEnd.
-     * @member {boolean} isEnd
-     * @memberof Content
-     * @instance
-     */
-    Content.prototype.isEnd = false;
-
-    // OneOf field names bound to virtual getters and setters
-    let $oneOfFields;
-
-    /**
-     * Content type.
-     * @member {"data"|"isError"|"isEnd"|undefined} type
-     * @memberof Content
-     * @instance
-     */
-    Object.defineProperty(Content.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["data", "isError", "isEnd"]),
-        set: $util.oneOfSetter($oneOfFields)
-    });
-
-    /**
      * Creates a new Content instance using the specified properties.
      * @function create
      * @memberof Content
@@ -271,10 +239,6 @@ export const Content = $root.Content = (() => {
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
         if (message.data != null && message.hasOwnProperty("data"))
             writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.data);
-        if (message.isError != null && message.hasOwnProperty("isError"))
-            writer.uint32(/* id 3, wireType 0 =*/24).bool(message.isError);
-        if (message.isEnd != null && message.hasOwnProperty("isEnd"))
-            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.isEnd);
         return writer;
     };
 
@@ -301,12 +265,6 @@ export const Content = $root.Content = (() => {
                 break;
             case 2:
                 message.data = reader.bytes();
-                break;
-            case 3:
-                message.isError = reader.bool();
-                break;
-            case 4:
-                message.isEnd = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);

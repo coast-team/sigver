@@ -3,15 +3,15 @@ import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
 
 import { Group } from './Group'
-import { Content, IMessage, Message } from './proto/index'
-import { ERR_HEARTBEAT, ERR_MESSAGE, SigError } from './SigError'
+import { IMessage, Message } from './proto/index'
+import { ERR_HEARTBEAT, ERR_MESSAGE } from './SigError'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
 const ID_MAX_VALUE = 4294967295
 const generatedIds = new Set()
 
-function generateId (): number {
+function generateId(): number {
   const id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE)
   if (generatedIds.has(id)) {
     return generateId()
@@ -25,7 +25,6 @@ const firstTrueMsg = Message.encode(Message.create({ isFirst: true })).finish()
 const firstFalseMsg = Message.encode(Message.create({ isFirst: false })).finish()
 
 export class Peer extends Subject<Message> {
-
   readonly key: string
   public id: number
   public group: Group | undefined
@@ -41,11 +40,11 @@ export class Peer extends Subject<Message> {
   private _sendFirstTrue: () => void
   private _sendFirstFalse: () => void
 
-  constructor (
+  constructor(
     key: string,
     sendFunc: (msg: Uint8Array) => void,
     closeFunc: (code: number, reason: string) => void,
-    heartbeatFunc: (msg: Uint8Array) => void,
+    heartbeatFunc: (msg: Uint8Array) => void
   ) {
     super()
     this.key = key
@@ -71,15 +70,23 @@ export class Peer extends Subject<Message> {
     }, HEARTBEAT_INTERVAL)
   }
 
-  send (msg: IMessage) { this._send(msg) }
+  send(msg: IMessage) {
+    this._send(msg)
+  }
 
-  close (code: number, reason: string) { this._close(code, reason) }
+  close(code: number, reason: string) {
+    this._close(code, reason)
+  }
 
-  sendFirstTrue () { this._sendFirstTrue() }
+  sendFirstTrue() {
+    this._sendFirstTrue()
+  }
 
-  sendFirstFalse () { this._sendFirstFalse() }
+  sendFirstFalse() {
+    this._sendFirstFalse()
+  }
 
-  onMessage (bytes: ArrayBuffer) {
+  onMessage(bytes: ArrayBuffer) {
     try {
       this.next(Message.decode(new Uint8Array(bytes)))
     } catch (err) {
@@ -87,7 +94,7 @@ export class Peer extends Subject<Message> {
     }
   }
 
-  onClose (code: number, reason: string) {
+  onClose(code: number, reason: string) {
     clearInterval(this.heartbeatInterval)
     if (this.group !== undefined) {
       this.group.removeMember(this)
@@ -99,7 +106,7 @@ export class Peer extends Subject<Message> {
     }
   }
 
-  bindWith (member: Peer) {
+  bindWith(member: Peer) {
     if (this.subToMember) {
       this.subToMember.unsubscribe()
     }
@@ -108,128 +115,34 @@ export class Peer extends Subject<Message> {
     }
     this.id = generateId()
     this.triedMembers.push(member.id)
-    this.joiningToMember(member)
-    this.memberToJoining(member)
-  }
 
-  /**
-   * Joining subscribes to the group member.
-   * @param  {Peer} member a member of the group
-   */
-  joiningToMember (member: Peer) {
-    let isEnd = false
-    this.subToMember = member.pipe(
-      filter((msg: Message) => {
-        return msg.type === 'content' && msg.content !== null
-        && msg.content !== undefined && msg.content.id === this.id
-      }),
-      pluck('content'),
-    ).subscribe(
-      (obj: any) => {
-        const msg = obj as Content
-        switch (msg.type) {
-        case 'data':
-          this.send({ content: { id: 0, data: msg.data } })
-          break
-        case 'isError':
-          this.send({ content: { id: 0, isError: true } })
-          if (this.subToMember) {
+    // Joining subscribes to the group member.
+    this.subToMember = member
+      .pipe(filter(({ content }: Message) => !!content && content.id === this.id), pluck('content'))
+      .subscribe(
+        ({ data }: any) => {
+          this.send({ content: { id: 1, data } })
+          if (!!data && this.subToMember) {
             this.subToMember.unsubscribe()
           }
-          if (this.subToJoining) {
-            this.subToJoining.unsubscribe()
-          }
-          // decline member rating
-          break
-        case 'isEnd':
-          isEnd = true
-          this.send({ content: { id: 0, isEnd } })
-          if (this.subToMember) {
-            this.subToMember.unsubscribe()
-          }
-          break
-        default: {
-          const err = new SigError(
-            ERR_MESSAGE,
-            `Unknown message type "${msg.type}" from a group member`,
-          )
-          log.error(err)
-          member.close(err.code, err.message)
-          if (this.subToMember) {
-            this.subToMember.unsubscribe()
-          }
-        }
-        }
-      },
-      () => {
-        if (!isEnd) {
-          this.send({ content: { id: 0, isError: true } })
-        }
-      },
-      () => {
-        if (!isEnd) {
-          this.send({ content: { id: 0, isError: true } })
-        }
-      },
-    )
-  }
+        },
+        () => this.send({ content: { id: 1 } }),
+        () => this.send({ content: { id: 1 } })
+      )
 
-  /**
-   * Network member subscribes to the joining peer.
-   * @param  {Peer} member a member of the group
-   */
-  memberToJoining (member: Peer) {
-    let isEnd = false
+    // Groum member subscribes to the joining peer.
     this.subToJoining = this.pipe(
       filter((msg) => msg.type === 'content'),
-      pluck('content'),
+      pluck('content')
     ).subscribe(
-      (obj: any) => {
-        const msg = obj as Content
-        switch (msg.type) {
-        case 'data':
-          member.send({ content: { id: this.id, data: msg.data } })
-          break
-        case 'isError':
-          member.send({ content: { id: this.id, isError: true } })
-          if (this.subToMember) {
-            this.subToMember.unsubscribe()
-          }
-          if (this.subToJoining) {
-            this.subToJoining.unsubscribe()
-          }
-          // decline member rating
-          break
-        case 'isEnd':
-          isEnd = true
-          member.send({ content: { id: this.id, isEnd } })
-          if (this.subToJoining) {
-            this.subToJoining.unsubscribe()
-          }
-          break
-        default: {
-          const err = new SigError(
-            ERR_MESSAGE,
-            `Unknown message type "${msg.type}" from the ${this.id} joining peer`,
-          )
-          log.error(err)
-          this.close(err.code, err.message)
-          if (this.subToJoining) {
-            this.subToJoining.unsubscribe()
-          }
-        }
+      ({ data }: any) => {
+        member.send({ content: { id: this.id, data } })
+        if (!!data && this.subToJoining) {
+          this.subToJoining.unsubscribe()
         }
       },
-      () => {
-        if (!isEnd) {
-          member.send({ content: { id: this.id, isError: true } })
-        }
-      },
-      () => {
-        if (!isEnd) {
-          member.send({ content: { id: this.id, isError: true } })
-        }
-      },
+      () => member.send({ content: { id: this.id } }),
+      () => member.send({ content: { id: this.id } })
     )
   }
 }

@@ -80,12 +80,6 @@ export interface IContent {
 
     /** Content data */
     data?: (Uint8Array|null);
-
-    /** Content isError */
-    isError?: (boolean|null);
-
-    /** Content isEnd */
-    isEnd?: (boolean|null);
 }
 
 /** Represents a Content. */
@@ -102,15 +96,6 @@ export class Content implements IContent {
 
     /** Content data. */
     public data: Uint8Array;
-
-    /** Content isError. */
-    public isError: boolean;
-
-    /** Content isEnd. */
-    public isEnd: boolean;
-
-    /** Content type. */
-    public type?: ("data"|"isError"|"isEnd");
 
     /**
      * Creates a new Content instance using the specified properties.
