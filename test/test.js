@@ -7,7 +7,7 @@ describe('', () => {
   // test(RichEventSource)
 })
 
-function test (Source) {
+function test(Source) {
   let url = null
   if (Source.name === 'WebSocket') {
     url = 'ws://localhost:8034'
@@ -18,15 +18,16 @@ function test (Source) {
   describe(Source.name, () => {
     const channels = new Set()
 
-    function getConnection (key) {
+    function getConnection(key) {
       const ws = new Source(`${url}/${key}`)
       ws.binaryType = 'arraybuffer'
-      ws.onclose = closeEvt => fail(closeEvt.reason)
-      ws.onerror = err => fail(err.message)
+      ws.onclose = (closeEvt) => fail(closeEvt.reason)
+      ws.onerror = (err) => fail(err.message)
       ws.onopen = () => channels.add(ws)
-      return { /* eslint accessor-pairs: "off" */
-        set onmessage (cb) {
-          ws.onmessage = msgEvt => {
+      return {
+        /* eslint accessor-pairs: "off" */
+        set onmessage(cb) {
+          ws.onmessage = (msgEvt) => {
             const msg = h.decode(msgEvt.data)
             if (msg.type === 'heartbeat') {
               ws.send(h.encode({ pong: true }))
@@ -35,7 +36,7 @@ function test (Source) {
             }
           }
         },
-        send: msg => ws.send(h.encode(msg))
+        send: (msg) => ws.send(h.encode(msg)),
       }
     }
 
@@ -47,37 +48,37 @@ function test (Source) {
       channels.clear()
     })
 
-    it('Should be the first in the network', done => {
+    it('Should be the first in the network', (done) => {
       const con = getConnection(h.randomKey())
-      con.onmessage = msg => {
+      con.onmessage = (msg) => {
         expect(msg.isFirst).toBeTruthy()
         done()
       }
     })
 
-    it('Should NOT be the first in the network', done => {
+    it('Should NOT be the first in the network', (done) => {
       const key = h.randomKey()
       const con1 = getConnection(key)
-      con1.onmessage = msg => {
+      con1.onmessage = (msg) => {
         expect(msg.isFirst).toBeTruthy()
         const con2 = getConnection(key)
-        con2.onmessage = msg => {
+        con2.onmessage = (msg) => {
           expect(msg.isFirst).toBeFalsy()
           done()
         }
       }
     })
 
-    it('Should transmit data between a network member and a joining peer', done => {
+    it('Should transmit data between a network member and a joining peer', (done) => {
       const key = h.randomKey()
       const msg1 = h.randomBytes()
       const msg2 = h.randomBytes()
       const con1 = getConnection(key)
-      const msgSeq = (function * () {
+      const msgSeq = (function*() {
         let msg = yield
         expect(msg.isFirst).toBeTruthy()
         const con2 = getConnection(key)
-        con2.onmessage = msg => msgSeq.next(msg)
+        con2.onmessage = (msg) => msgSeq.next(msg)
 
         msg = yield
         expect(msg.isFirst).toBeFalsy()
@@ -94,10 +95,10 @@ function test (Source) {
         done()
       })()
       msgSeq.next()
-      con1.onmessage = msg => msgSeq.next(msg)
+      con1.onmessage = (msg) => msgSeq.next(msg)
     })
 
-    it('Should transmit data between a network member and 2 joining peers', done => {
+    it('Should transmit data between a network member and 2 joining peers', (done) => {
       const key = h.randomKey()
       const msg12 = h.randomBytes()
       const msg13 = h.randomBytes()
@@ -105,16 +106,16 @@ function test (Source) {
       const msg3 = h.randomBytes()
 
       const con1 = getConnection(key)
-      const msgSeq = (function * () {
+      const msgSeq = (function*() {
         let msg = yield
         expect(msg.isFirst).toBeTruthy()
         const con2 = getConnection(key)
-        con2.onmessage = msg => msgSeq.next(msg)
+        con2.onmessage = (msg) => msgSeq.next(msg)
 
         msg = yield
         expect(msg.isFirst).toBeFalsy()
         const con3 = getConnection(key)
-        con3.onmessage = msg => msgSeq.next(msg)
+        con3.onmessage = (msg) => msgSeq.next(msg)
 
         msg = yield
         expect(msg.isFirst).toBeFalsy()
@@ -141,27 +142,28 @@ function test (Source) {
         done()
       })()
       msgSeq.next()
-      con1.onmessage = msg => msgSeq.next(msg)
+      con1.onmessage = (msg) => msgSeq.next(msg)
     })
 
     describe('Should fail to connect', () => {
-      it(`with code: ${ERR_KEY} because the key is too long`, done => {
-        const key = 'Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.'
+      it(`with code: ${ERR_KEY} because the key is too long`, (done) => {
+        const key =
+          'Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.Nullam et orci eu lorem consequat tincidunt vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus pharetra. Pellentesque condimentum sem. In efficitur ligula tate urna. Maecenas laoreet massa vel lacinia pellentesque lorem ipsum dolor. Nullam et orci eu lorem consequat tincidunt. Vivamus et sagittis libero. Mauris aliquet magna magna sed nunc rhoncus amet feugiat tempus.'
         const ws = new Source(`${url}/${key}`)
-        ws.onclose = closeEvt => {
+        ws.onclose = (closeEvt) => {
           expect(closeEvt.code).toEqual(ERR_KEY)
           done()
         }
-        ws.onerror = err => fail(err.message)
+        ws.onerror = (err) => fail(err.message)
       })
 
-      it(`with code: ${ERR_KEY} because the key is empty`, done => {
+      it(`with code: ${ERR_KEY} because the key is empty`, (done) => {
         const ws = new Source(`${url}`)
-        ws.onclose = closeEvt => {
+        ws.onclose = (closeEvt) => {
           expect(closeEvt.code).toEqual(ERR_KEY)
           done()
         }
-        ws.onerror = err => fail(err.message)
+        ws.onerror = (err) => fail(err.message)
       })
     })
   })

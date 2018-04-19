@@ -1,4 +1,5 @@
 # <p align="center">Sigver</p>
+
 <p align="center">
 Signaling server for WebRTC listening on <strong style="font-weight: bold">WebSocket</strong>.
 <br />Used by <strong style="font-weight: bold">Netflux</strong>, Javascript client and server side transport API for creating a peer to peer network.
@@ -22,6 +23,7 @@ Signaling server for WebRTC listening on <strong style="font-weight: bold">WebSo
 <p>
 
 ## Install
+
 ```shell
 npm install -g sigver
 ```
@@ -29,6 +31,7 @@ npm install -g sigver
 Sigver is built on top of [µWebSockets](https://github.com/uNetworking/uWebSockets) server. µWebSockets will try te recompile itself during installation. If this fails it will silently fall back to using the precompiled binaries. If this fails too, then please check the project's repository.
 
 ## Run
+
 ```shell
 Usage: server [options]
 
@@ -53,14 +56,14 @@ Examples:
 ```
 
 ## How to use
+
 Assuming that the server is listening on `wss://mysigver.org`, then the server only accepts
 `wss://mysigver.org/:key` where **key** is any valid string less than 512 characters (key identifies peer-to-peer network). For example:
 
 `wss://mysigver.org/Lt71z0rspEqBKoConPJpr3NoODiO0kgAtM3fYc3VLH`
 
-
-
 ## Server protocol
+
 Server uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) for encode/decode all messages.
 
 ```
@@ -102,7 +105,7 @@ message Content {
 
 Server may close the socket with the following codes:
 
-- **ERR_KEY: 4001**               // Inappropriate key format (e.g. key too long)
-- **ERR_HEARTBEAT = 4002**        // Heart-beats error
-- **ERR_MESSAGE = 4003**          // Any error due to message: type, format etc.
-- **ERR_BLOCKING_MEMBER** = 4004  // When only one member left in the group and new peers could not join via him.
+* **ERR_KEY: 4001** // Inappropriate key format (e.g. key too long)
+* **ERR_HEARTBEAT = 4002** // Heart-beats error
+* **ERR_MESSAGE = 4003** // Any error due to message: type, format etc.
+* **ERR_BLOCKING_MEMBER** = 4004 // When only one member left in the group and new peers could not join via him.
