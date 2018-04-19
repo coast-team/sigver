@@ -1,26 +1,15 @@
-# <p align="center">Sigver</p>
+# Sigver
 
-<p align="center">
-Signaling server for WebRTC listening on <strong style="font-weight: bold">WebSocket</strong>.
-<br />Used by <strong style="font-weight: bold">Netflux</strong>, Javascript client and server side transport API for creating a peer to peer network.
-<p>
-<p align="center">
-  <a href="https://www.npmjs.com/package/sigver" target="_blank">
-    <img src="https://img.shields.io/npm/v/sigver.svg?style=flat-square" />
-  </a>
-  <a href="">
-    <img src="https://img.shields.io/node/v/sigver.svg?style=flat-square" />
-  </a>
-  <a href="https://travis-ci.org/coast-team/sigver" target="_blank">
-    <img src="https://travis-ci.org/coast-team/sigver.svg?branch=master&style=flat-square" />
-  </a>
-  <a href="https://github.com/semantic-release/semantic-release" target="_blank">
-    <img src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square" />
-  </a>
-  <a href="http://commitizen.github.io/cz-cli" target="_blank">
-    <img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=flat-square" />
-  </a>
-<p>
+Signaling server for WebRTC listening on **WebSocket**.
+
+Used by **Netflux**, Javascript client and server side transport API for creating a peer to peer network.
+
+[![version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)
+[![node-version](https://img.shields.io/node/v/sigver.svg?style=flat-square)](https://nodejs.org/en/)
+
+[![travis](https://travis-ci.org/coast-team/sigver.svg?branch=master&style=flat-square)](https://travis-ci.org/coast-team/sigver)
+[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/semantic-release/semantic-release)
+[![commitizen](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=flat-square)](http://commitizen.github.io/cz-cli)
 
 ## Install
 
@@ -66,7 +55,7 @@ Assuming that the server is listening on `wss://mysigver.org`, then the server o
 
 Server uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) for encode/decode all messages.
 
-```
+```proto
 syntax = "proto3";
 
 message Message {
