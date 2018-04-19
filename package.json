@@ -21,7 +21,7 @@
     "pretest": "npm run build && pm2 gracefulReload process.yml",
     "test": "karma start karma.conf.js",
     "test:chrome": "npm run test -- --browsers Chrome",
-    "precommit": "npm run lint && npm test -- --no-auto-watch --single-run",
+    "precommit": "lint-staged && npm test -- --no-auto-watch --single-run",
     "commitmsg": "validate-commit-msg",
     "cz": "git-cz",
     "semantic-release": "semantic-release"
@@ -61,6 +61,7 @@
     "karma-jasmine": "^1.1.1",
     "karma-rollup-preprocessor": "^5.1.1",
     "karma-spec-reporter": "0.0.32",
+    "lint-staged": "^7.0.4",
     "pm2": "^2.10.1",
     "prettier": "^1.12.1",
     "rollup": "^0.57.1",
@@ -79,5 +80,22 @@
     "commitizen": {
       "path": "node_modules/cz-conventional-changelog"
     }
+  },
+  "lint-staged": {
+    "linters": {
+      "*.md": [
+        "prettier --write --list-different",
+        "git add"
+      ],
+      "*.ts": [
+        "tslint --fix -p tsconfig.json -e",
+        "git add"
+      ],
+      "*.{ts,json,scss,css}": [
+        "prettier --write --list-different",
+        "git add"
+      ]
+    },
+    "concurrent": false
   }
 }
