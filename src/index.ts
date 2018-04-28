@@ -1,7 +1,7 @@
 /* tslint:disable:max-line-length */
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { Subject } from 'rxjs/Subject'
+import { Subject } from 'rxjs'
 
 import { Group } from './Group'
 import { Peer } from './Peer'

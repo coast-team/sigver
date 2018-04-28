@@ -1,7 +1,7 @@
 /// <reference types="node"/>
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { Subject } from 'rxjs/Subject'
+import { Subject } from 'rxjs'
 import * as URL from 'url'
 import * as WebSocket from 'uws'
 

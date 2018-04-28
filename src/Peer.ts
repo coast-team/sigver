@@ -1,6 +1,5 @@
+import { Subject, Subscription } from 'rxjs'
 import { filter, pluck } from 'rxjs/operators'
-import { Subject } from 'rxjs/Subject'
-import { Subscription } from 'rxjs/Subscription'
 
 import { Group } from './Group'
 import { IMessage, Message } from './proto/index'
