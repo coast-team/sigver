@@ -11,7 +11,7 @@ import { setupWebSocketServer } from './wsPeers'
 // Retreive version from package.json
 let version: string
 try {
-  version = require('./package.json').version
+  version = require('../package.json').version
 } catch (err) {
   version = ''
 }
@@ -118,5 +118,5 @@ setupWebSocketServer(httpServer, peers)
 
 httpServer.listen(port, host, () => {
   const address = httpServer.address()
-  log.info(`Server is listening on ${address.address}:${address.port}`)
+  log.info(`Signaling server is listening on ${address.address}:${address.port}`)
 })

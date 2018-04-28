@@ -11432,7 +11432,7 @@ class Peer extends Subject_2 {
     }
 }
 
-console.log('Server ...: ', WebSocket);
+console.log('Server NEW content: ', WebSocket);
 function setupWebSocketServer(httpServer, peers) {
     // Configure server
     const wss = new WebSocket.Server({
@@ -11465,6 +11465,7 @@ function setupWebSocketServer(httpServer, peers) {
             socket.close(err.code, err.message);
         }
     });
+    return wss;
 }
 function getKey(url) {
     if (url === undefined) {

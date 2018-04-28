@@ -8,8 +8,6 @@ import * as WebSocket from 'uws'
 import { Peer } from './Peer'
 import { ERR_MESSAGE, ERR_NO_KEY, SigError, validateKey } from './Util'
 
-console.log('Server ...: ', WebSocket)
-
 export function setupWebSocketServer(
   httpServer: HttpServer | HttpsServer,
   peers: Subject<Peer>
