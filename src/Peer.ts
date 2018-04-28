@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs/Subscription'
 
 import { Group } from './Group'
 import { IMessage, Message } from './proto/index'
-import { ERR_HEARTBEAT, ERR_MESSAGE } from './SigError'
+import { ERR_HEARTBEAT, ERR_MESSAGE } from './Util'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000

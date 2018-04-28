@@ -46,7 +46,6 @@
     "rxjs": "^5.5.6",
     "uws": "^9.148.0"
   },
-  "peerDependencies": {},
   "devDependencies": {
     "@types/bunyan": "^1.8.4",
     "@types/uws": "^0.13.1",

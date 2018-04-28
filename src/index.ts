@@ -6,7 +6,7 @@ import { Subject } from 'rxjs/Subject'
 import { Group } from './Group'
 import { Peer } from './Peer'
 import * as proto from './proto'
-import { WsServer } from './WsServer'
+import { setupWebSocketServer } from './wsPeers'
 
 // Retreive version from package.json
 let version: string
@@ -114,8 +114,9 @@ peers.subscribe(
 )
 
 // Start listen
-const wsServer = new WsServer(httpServer, host, port, peers)
-wsServer.start(() => {
+setupWebSocketServer(httpServer, peers)
+
+httpServer.listen(port, host, () => {
   const address = httpServer.address()
-  log.info(`WebSocket server is listening on ${address.address}:${address.port}`)
+  log.info(`Server is listening on ${address.address}:${address.port}`)
 })

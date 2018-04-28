@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+var URL = require('url');
+var WebSocket = require('uws');
+
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 function createCommonjsModule(fn, module) {
@@ -1259,14 +1262,25 @@ class SigError extends Error {
         this.message = `${code}: ${message}`;
     }
 }
-// Inappropriate key format (e.g. key too long)
-const ERR_KEY = 4001;
-// Heartbeat error
-const ERR_HEARTBEAT = 4002;
+// Inappropriate key format (e.g. key too long).
+const ERR_KEY = 4741;
+// Could not get the key.
+const ERR_NO_KEY = 4742;
+// Heartbeat error.
+const ERR_HEARTBEAT = 4743;
 // Any error due to message: type, format etc.
-const ERR_MESSAGE = 4003;
-// When one member left and new peers could not join via him.
-const ERR_BLOCKING_MEMBER = 4004;
+const ERR_MESSAGE = 4744;
+// When only one member left in the group the joining peer could not establish a connection with him.
+const ERR_BLOCKING_MEMBER = 4745;
+const KEY_LENGTH_LIMIT = 512;
+function validateKey(key) {
+    if (key === '') {
+        throw new SigError(ERR_KEY, `The key ${key} is an empty string`);
+    }
+    if (key.length > KEY_LENGTH_LIMIT) {
+        throw new SigError(ERR_KEY, `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`);
+    }
+}
 
 class Group {
     constructor(peer, onNoMembers) {
@@ -11418,74 +11432,49 @@ class Peer extends Subject_2 {
     }
 }
 
-const url = require('url');
-const KEY_LENGTH_LIMIT = 512;
-/**
- * WebSocket server able to use ws or uws modules.
- */
-class WsServer {
-    constructor(httpServer, host, port, peers) {
-        this.httpServer = httpServer;
-        this.host = host;
-        this.port = port;
-        this.peers = peers;
-    }
-    /**
-     * Start the server.
-     * @param {Function} cb Callback to execute after the server has been started
-     */
-    start(cb = () => { }) {
-        this.httpServer.listen(this.port, this.host, cb);
-        const WebSocketServer = require('uws').Server;
-        // Starting server
-        const wss = new WebSocketServer({
-            perMessageDeflate: false,
-            server: this.httpServer,
-        });
-        this.webSocketServer = wss;
-        wss.on('error', (err) => log.error('Server error', err));
-        wss.on('connection', (socket) => {
-            const { pathname } = url.parse(socket.upgradeReq.url, true);
-            // Check key
-            const key = pathname.substr(1);
-            try {
-                this.validateKey(key);
-            }
-            catch (err) {
-                log.error('Validate key error ', err);
-                socket.close(err.code, err.message);
-            }
+console.log('Server ...: ', WebSocket);
+function setupWebSocketServer(httpServer, peers) {
+    // Configure server
+    const wss = new WebSocket.Server({
+        perMessageDeflate: false,
+        server: httpServer,
+    });
+    wss.on('error', (err) => log.fatal('WebSocketServer error', err));
+    wss.on('connection', (socket) => {
+        try {
+            const key = getKey(socket.upgradeReq.url);
+            validateKey(key);
             // Initialize peer
             const peer = new Peer(key, (bytes) => {
                 try {
                     socket.send(bytes, { binary: true });
                 }
                 catch (err) {
-                    log.error('Socket "send" error', err);
+                    log.error('Close socket', err);
                     socket.close(ERR_MESSAGE, err.message);
                 }
             }, (code, reason) => socket.close(code, reason), (bytes) => socket.send(bytes, { binary: true }));
             // Socket config
-            socket.onmessage = (evt) => peer.onMessage(evt.data);
+            socket.onmessage = ({ data }) => peer.onMessage(data);
             socket.onerror = (err) => peer.error(err);
             socket.onclose = (closeEvt) => peer.onClose(closeEvt.code, closeEvt.reason);
-            this.peers.next(peer);
-        });
-    }
-    close(cb) {
-        if (this.webSocketServer) {
-            log.info('Server has stopped successfully');
-            this.webSocketServer.close(cb);
+            peers.next(peer);
         }
-    }
-    validateKey(key) {
-        if (key === '') {
-            throw new SigError(ERR_KEY, `The key ${key} is an empty string`);
+        catch (err) {
+            log.error('Close socket: ', err);
+            socket.close(err.code, err.message);
         }
-        if (key.length > KEY_LENGTH_LIMIT) {
-            throw new SigError(ERR_KEY, `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`);
-        }
+    });
+}
+function getKey(url) {
+    if (url === undefined) {
+        throw new SigError(ERR_NO_KEY, 'Could not get the key: the URL is undefined');
     }
+    const { pathname } = URL.parse(url, true);
+    if (!pathname) {
+        throw new SigError(ERR_NO_KEY, 'Could not get the key: the URL is undefined');
+    }
+    return pathname.substr(1);
 }
 
 // Retreive version from package.json
@@ -11583,8 +11572,8 @@ peers.subscribe((peer) => {
     });
 }, (err) => log.fatal('WebSocket server peers error', err));
 // Start listen
-const wsServer = new WsServer(httpServer, host, port, peers);
-wsServer.start(() => {
+setupWebSocketServer(httpServer, peers);
+httpServer.listen(port, host, () => {
     const address = httpServer.address();
-    log.info(`WebSocket server is listening on ${address.address}:${address.port}`);
+    log.info(`Server is listening on ${address.address}:${address.port}`);
 });

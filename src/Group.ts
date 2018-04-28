@@ -1,5 +1,5 @@
 import { Peer } from './Peer'
-import { ERR_BLOCKING_MEMBER } from './SigError'
+import { ERR_BLOCKING_MEMBER } from './Util'
 
 export class Group {
   private onNoMembers: () => void

@@ -13,6 +13,7 @@ export default {
       banner: '#!/usr/bin/env node',
     },
   ],
+  external: ['url', 'uws', 'http', 'https'],
   plugins: [
     typescript(),
     replace({
@@ -23,7 +24,7 @@ export default {
         },
       ],
     }),
-    resolve({ preferBuiltins: false }),
+    resolve(),
     commonjs({
       namedExports: { 'node_modules/protobufjs/minimal.js': ['Reader', 'Writer', 'util', 'roots'] },
     }),
