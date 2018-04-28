@@ -2,6 +2,10 @@ syntax = "proto3";
 
 message Message {
   oneof type {
+    /*
+    * Incoming and outcoming messages
+    */
+
     // Server sends `heartbeat` message each 5 seconds and expects getting the
     // same message back. If after 3 tentatives still no response then close the
     // connection.
@@ -9,24 +13,27 @@ message Message {
 
     Content content = 2;
 
+    /*
+    * Incoming message
+    */
     // Server's response to the peer wanted to join a peer to peer network.
-    // True if the first peer in the network.
-    Check check = 3; // Only incoming message
+    // True if the first peer in the group.
+    Check check = 3; 
 
-    // Peer's request to try another group member for joining.
-    bool tryAnother = 4; // Only incoming
-
-    bool connected = 5; // Only outcoming
+    /*
+    * Outcoming message
+    */
+    bool connected = 4; // Only outcoming
   }
 }
 
 message Content {
-  uint32 id = 1; // Peer id to route data.
+  uint32 id = 1; // Peer id to route data to.
   bool unsubscribe = 2; // Forward last data and unsubscribe from the peer
-  bytes data = 3;
+  bytes data = 3; // Any data sent by the peer
 }
 
 message Check {
-  uint32 myId = 1;
+  uint32 id = 1;
   repeated uint32 members = 2;
 }

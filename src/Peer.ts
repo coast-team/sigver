@@ -3,20 +3,12 @@ import { filter, pluck } from 'rxjs/operators'
 
 import { Group } from './Group'
 import { IMessage, Message } from './proto/index'
-import { ERR_HEARTBEAT, ERR_MESSAGE } from './Util'
+import { ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './Util'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
-const ID_MAX_VALUE = 4294967295
-const generatedIds = new Set()
 
-function generateId(): number {
-  const id = 1 + Math.ceil(Math.random() * ID_MAX_VALUE)
-  if (generatedIds.has(id)) {
-    return generateId()
-  }
-  return id
-}
+const generatedIds = new Set()
 
 // Preconstructed messages for optimisation
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
@@ -33,11 +25,8 @@ export class Peer extends Subject<Message> {
   private heartbeatInterval: NodeJS.Timer
   private subToMember: Subscription | undefined
   private subToJoining: Subscription | undefined
-
-  private _send: (msg: IMessage) => void
-  private _close: (code: number, reason: string) => void
-  private _sendConnectedTrue: () => void
-  private _sendConnectedFalse: () => void
+  private sendFunc: (msg: Uint8Array) => void
+  private closeFunc: (code: number, reason: string) => void
 
   constructor(
     key: string,
@@ -49,13 +38,9 @@ export class Peer extends Subject<Message> {
     this.key = key
     this.missedHeartbeat = 0
     this.triedMembers = []
-    this.id = generateId()
-
-    // Set methods
-    this._send = (msg: IMessage) => sendFunc(Message.encode(Message.create(msg)).finish())
-    this._close = (code, reason) => closeFunc(code, reason)
-    this._sendConnectedTrue = () => sendFunc(connectedTrueMsg)
-    this._sendConnectedFalse = () => sendFunc(connectedFalseMsg)
+    this.id = generateId(generatedIds)
+    this.closeFunc = closeFunc
+    this.sendFunc = sendFunc
 
     // Start heartbeat interval
     this.missedHeartbeat = 0
@@ -70,25 +55,26 @@ export class Peer extends Subject<Message> {
   }
 
   send(msg: IMessage) {
-    this._send(msg)
+    this.sendFunc(Message.encode(Message.create(msg)).finish())
   }
 
   close(code: number, reason: string) {
-    this._close(code, reason)
+    this.closeFunc(code, reason)
   }
 
   sendConnectedTrue() {
-    this._sendConnectedTrue()
+    this.sendFunc(connectedTrueMsg)
   }
 
   sendConnectedFalse() {
-    this._sendConnectedFalse()
+    this.sendFunc(connectedFalseMsg)
   }
 
   onMessage(bytes: ArrayBuffer) {
     try {
       this.next(Message.decode(new Uint8Array(bytes)))
     } catch (err) {
+      log.error(err)
       this.close(ERR_MESSAGE, err.message)
     }
   }
@@ -112,7 +98,7 @@ export class Peer extends Subject<Message> {
     if (this.subToJoining) {
       this.subToJoining.unsubscribe()
     }
-    this.id = generateId()
+    this.id = generateId(generatedIds)
     this.triedMembers.push(member.id)
 
     // Joining subscribes to the group member.

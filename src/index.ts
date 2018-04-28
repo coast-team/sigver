@@ -79,21 +79,21 @@ peers.subscribe(
     peer.subscribe((msg: proto.Message) => {
       switch (msg.type) {
         case 'check': {
-          const { myId, members } = msg.check as proto.Check
+          const { id, members } = msg.check as proto.Check
           let connected = false
           const group = groups.get(peer.key)
           if (group) {
             if (members.length === 0) {
               connected = group.subscribeToOrReplaceMember(peer)
             } else if (group.isConnectedToAtLeastOneMember(members)) {
-              peer.id = myId
+              peer.id = id
               connected = group.addMember(peer)
             } else {
               group.removeMember(peer)
               connected = group.subscribeToOrReplaceMember(peer)
             }
           } else {
-            peer.id = myId
+            peer.id = id
             groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)))
             connected = true
           }
@@ -113,9 +113,15 @@ peers.subscribe(
   (err: Error) => log.fatal('WebSocket server peers error', err)
 )
 
-// Start listen
+// Setup WebSocket server
 setupWebSocketServer(httpServer, peers)
 
+httpServer.on('clientError', (err, socket) => {
+  log.error('Client error: ', err)
+  socket.end()
+})
+
+// Start listen
 httpServer.listen(port, host, () => {
   const address = httpServer.address()
   log.info(`Signaling server is listening on ${address.address}:${address.port}`)

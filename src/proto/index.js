@@ -25,7 +25,6 @@
          * @property {boolean|null} [heartbeat] Message heartbeat
          * @property {IContent|null} [content] Message content
          * @property {ICheck|null} [check] Message check
-         * @property {boolean|null} [tryAnother] Message tryAnother
          * @property {boolean|null} [connected] Message connected
          */
     
@@ -69,14 +68,6 @@
         Message.prototype.check = null;
     
         /**
-         * Message tryAnother.
-         * @member {boolean} tryAnother
-         * @memberof Message
-         * @instance
-         */
-        Message.prototype.tryAnother = false;
-    
-        /**
          * Message connected.
          * @member {boolean} connected
          * @memberof Message
@@ -89,12 +80,12 @@
     
         /**
          * Message type.
-         * @member {"heartbeat"|"content"|"check"|"tryAnother"|"connected"|undefined} type
+         * @member {"heartbeat"|"content"|"check"|"connected"|undefined} type
          * @memberof Message
          * @instance
          */
         Object.defineProperty(Message.prototype, "type", {
-            get: $util.oneOfGetter($oneOfFields = ["heartbeat", "content", "check", "tryAnother", "connected"]),
+            get: $util.oneOfGetter($oneOfFields = ["heartbeat", "content", "check", "connected"]),
             set: $util.oneOfSetter($oneOfFields)
         });
     
@@ -128,10 +119,8 @@
                 $root.Content.encode(message.content, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             if (message.check != null && message.hasOwnProperty("check"))
                 $root.Check.encode(message.check, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-            if (message.tryAnother != null && message.hasOwnProperty("tryAnother"))
-                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.tryAnother);
             if (message.connected != null && message.hasOwnProperty("connected"))
-                writer.uint32(/* id 5, wireType 0 =*/40).bool(message.connected);
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.connected);
             return writer;
         };
     
@@ -163,9 +152,6 @@
                     message.check = $root.Check.decode(reader, reader.uint32());
                     break;
                 case 4:
-                    message.tryAnother = reader.bool();
-                    break;
-                case 5:
                     message.connected = reader.bool();
                     break;
                 default:
@@ -306,7 +292,7 @@
          * Properties of a Check.
          * @exports ICheck
          * @interface ICheck
-         * @property {number|null} [myId] Check myId
+         * @property {number|null} [id] Check id
          * @property {Array.<number>|null} [members] Check members
          */
     
@@ -327,12 +313,12 @@
         }
     
         /**
-         * Check myId.
-         * @member {number} myId
+         * Check id.
+         * @member {number} id
          * @memberof Check
          * @instance
          */
-        Check.prototype.myId = 0;
+        Check.prototype.id = 0;
     
         /**
          * Check members.
@@ -366,8 +352,8 @@
         Check.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.myId != null && message.hasOwnProperty("myId"))
-                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.myId);
+            if (message.id != null && message.hasOwnProperty("id"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
             if (message.members != null && message.members.length) {
                 writer.uint32(/* id 2, wireType 2 =*/18).fork();
                 for (var i = 0; i < message.members.length; ++i)
@@ -396,7 +382,7 @@
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
-                    message.myId = reader.uint32();
+                    message.id = reader.uint32();
                     break;
                 case 2:
                     if (!(message.members && message.members.length))

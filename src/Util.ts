@@ -1,3 +1,6 @@
+/// <reference types="node"/>
+import * as crypto from 'crypto'
+
 export class SigError extends Error {
   readonly code: number
   readonly name: string
@@ -37,4 +40,9 @@ export function validateKey(key: string) {
       `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
     )
   }
+}
+
+export function generateId(exclude: Set<number>): number {
+  const id = crypto.randomBytes(4).readUInt32BE(0, true)
+  return exclude.has(id) ? generateId(exclude) : id
 }

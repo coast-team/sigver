@@ -12,9 +12,6 @@ export interface IMessage {
     /** Message check */
     check?: (ICheck|null);
 
-    /** Message tryAnother */
-    tryAnother?: (boolean|null);
-
     /** Message connected */
     connected?: (boolean|null);
 }
@@ -37,14 +34,11 @@ export class Message implements IMessage {
     /** Message check. */
     public check?: (ICheck|null);
 
-    /** Message tryAnother. */
-    public tryAnother: boolean;
-
     /** Message connected. */
     public connected: boolean;
 
     /** Message type. */
-    public type?: ("heartbeat"|"content"|"check"|"tryAnother"|"connected");
+    public type?: ("heartbeat"|"content"|"check"|"connected");
 
     /**
      * Creates a new Message instance using the specified properties.
@@ -132,8 +126,8 @@ export class Content implements IContent {
 /** Properties of a Check. */
 export interface ICheck {
 
-    /** Check myId */
-    myId?: (number|null);
+    /** Check id */
+    id?: (number|null);
 
     /** Check members */
     members?: (number[]|null);
@@ -148,8 +142,8 @@ export class Check implements ICheck {
      */
     constructor(properties?: ICheck);
 
-    /** Check myId. */
-    public myId: number;
+    /** Check id. */
+    public id: number;
 
     /** Check members. */
     public members: number[];
