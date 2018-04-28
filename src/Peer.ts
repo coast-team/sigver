@@ -21,8 +21,8 @@ function generateId(): number {
 
 // Preconstructed messages for optimisation
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
-const firstTrueMsg = Message.encode(Message.create({ isFirst: true })).finish()
-const firstFalseMsg = Message.encode(Message.create({ isFirst: false })).finish()
+const connectedTrueMsg = Message.encode(Message.create({ connected: true })).finish()
+const connectedFalseMsg = Message.encode(Message.create({ connected: false })).finish()
 
 export class Peer extends Subject<Message> {
   readonly key: string
@@ -37,8 +37,8 @@ export class Peer extends Subject<Message> {
 
   private _send: (msg: IMessage) => void
   private _close: (code: number, reason: string) => void
-  private _sendFirstTrue: () => void
-  private _sendFirstFalse: () => void
+  private _sendConnectedTrue: () => void
+  private _sendConnectedFalse: () => void
 
   constructor(
     key: string,
@@ -55,8 +55,8 @@ export class Peer extends Subject<Message> {
     // Set methods
     this._send = (msg: IMessage) => sendFunc(Message.encode(Message.create(msg)).finish())
     this._close = (code, reason) => closeFunc(code, reason)
-    this._sendFirstTrue = () => sendFunc(firstTrueMsg)
-    this._sendFirstFalse = () => sendFunc(firstFalseMsg)
+    this._sendConnectedTrue = () => sendFunc(connectedTrueMsg)
+    this._sendConnectedFalse = () => sendFunc(connectedFalseMsg)
 
     // Start heartbeat interval
     this.missedHeartbeat = 0
@@ -78,12 +78,12 @@ export class Peer extends Subject<Message> {
     this._close(code, reason)
   }
 
-  sendFirstTrue() {
-    this._sendFirstTrue()
+  sendConnectedTrue() {
+    this._sendConnectedTrue()
   }
 
-  sendFirstFalse() {
-    this._sendFirstFalse()
+  sendConnectedFalse() {
+    this._sendConnectedFalse()
   }
 
   onMessage(bytes: ArrayBuffer) {
@@ -118,11 +118,11 @@ export class Peer extends Subject<Message> {
 
     // Joining subscribes to the group member.
     this.subToMember = member
-      .pipe(filter(({ content }: Message) => !!content && content.id === this.id), pluck('content'))
+      .pipe(filter(({ content }) => !!content && content.id === this.id), pluck('content'))
       .subscribe(
-        ({ data }: any) => {
+        ({ unsubscribe, data }: any) => {
           this.send({ content: { id: 1, data } })
-          if (!!data && this.subToMember) {
+          if (unsubscribe && this.subToMember) {
             this.subToMember.unsubscribe()
           }
         },
@@ -130,14 +130,11 @@ export class Peer extends Subject<Message> {
         () => this.send({ content: { id: 1 } })
       )
 
-    // Groum member subscribes to the joining peer.
-    this.subToJoining = this.pipe(
-      filter((msg) => msg.type === 'content'),
-      pluck('content')
-    ).subscribe(
-      ({ data }: any) => {
+    // Group member subscribes to the joining peer.
+    this.subToJoining = this.pipe(filter(({ content }) => !!content), pluck('content')).subscribe(
+      ({ unsubscribe, data }: any) => {
         member.send({ content: { id: this.id, data } })
-        if (!!data && this.subToJoining) {
+        if (unsubscribe && this.subToJoining) {
           this.subToJoining.unsubscribe()
         }
       },

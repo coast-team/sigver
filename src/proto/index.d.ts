@@ -3,20 +3,20 @@ import * as $protobuf from "protobufjs";
 /** Properties of a Message. */
 export interface IMessage {
 
-    /** Message content */
-    content?: (IContent|null);
-
-    /** Message isFirst */
-    isFirst?: (boolean|null);
-
-    /** Message stable */
-    stable?: (boolean|null);
-
     /** Message heartbeat */
     heartbeat?: (boolean|null);
 
+    /** Message content */
+    content?: (IContent|null);
+
+    /** Message check */
+    check?: (ICheck|null);
+
     /** Message tryAnother */
     tryAnother?: (boolean|null);
+
+    /** Message connected */
+    connected?: (boolean|null);
 }
 
 /** Represents a Message. */
@@ -28,23 +28,23 @@ export class Message implements IMessage {
      */
     constructor(properties?: IMessage);
 
+    /** Message heartbeat. */
+    public heartbeat: boolean;
+
     /** Message content. */
     public content?: (IContent|null);
 
-    /** Message isFirst. */
-    public isFirst: boolean;
-
-    /** Message stable. */
-    public stable: boolean;
-
-    /** Message heartbeat. */
-    public heartbeat: boolean;
+    /** Message check. */
+    public check?: (ICheck|null);
 
     /** Message tryAnother. */
     public tryAnother: boolean;
 
+    /** Message connected. */
+    public connected: boolean;
+
     /** Message type. */
-    public type?: ("content"|"isFirst"|"stable"|"heartbeat"|"tryAnother");
+    public type?: ("heartbeat"|"content"|"check"|"tryAnother"|"connected");
 
     /**
      * Creates a new Message instance using the specified properties.
@@ -78,6 +78,9 @@ export interface IContent {
     /** Content id */
     id?: (number|null);
 
+    /** Content unsubscribe */
+    unsubscribe?: (boolean|null);
+
     /** Content data */
     data?: (Uint8Array|null);
 }
@@ -93,6 +96,9 @@ export class Content implements IContent {
 
     /** Content id. */
     public id: number;
+
+    /** Content unsubscribe. */
+    public unsubscribe: boolean;
 
     /** Content data. */
     public data: Uint8Array;
@@ -121,4 +127,55 @@ export class Content implements IContent {
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
     public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Content;
+}
+
+/** Properties of a Check. */
+export interface ICheck {
+
+    /** Check myId */
+    myId?: (number|null);
+
+    /** Check members */
+    members?: (number[]|null);
+}
+
+/** Represents a Check. */
+export class Check implements ICheck {
+
+    /**
+     * Constructs a new Check.
+     * @param [properties] Properties to set
+     */
+    constructor(properties?: ICheck);
+
+    /** Check myId. */
+    public myId: number;
+
+    /** Check members. */
+    public members: number[];
+
+    /**
+     * Creates a new Check instance using the specified properties.
+     * @param [properties] Properties to set
+     * @returns Check instance
+     */
+    public static create(properties?: ICheck): Check;
+
+    /**
+     * Encodes the specified Check message. Does not implicitly {@link Check.verify|verify} messages.
+     * @param message Check message or plain object to encode
+     * @param [writer] Writer to encode to
+     * @returns Writer
+     */
+    public static encode(message: ICheck, writer?: $protobuf.Writer): $protobuf.Writer;
+
+    /**
+     * Decodes a Check message from the specified reader or buffer.
+     * @param reader Reader or buffer to decode from
+     * @param [length] Message length if known beforehand
+     * @returns Check
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Check;
 }

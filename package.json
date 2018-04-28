@@ -44,7 +44,7 @@
     "commander": "^2.13.0",
     "protobufjs": "^6.8.5",
     "rxjs": "^5.5.6",
-    "uws": "^9.14.0"
+    "uws": "^9.148.0"
   },
   "peerDependencies": {},
   "devDependencies": {
@@ -55,15 +55,15 @@
     "husky": "^0.14.3",
     "jasmine": "^3.0.0",
     "jasmine-spec-reporter": "^4.2.1",
-    "karma": "^2.0.0",
+    "karma": "^2.0.2",
     "karma-chrome-launcher": "^2.1.1",
     "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "^1.1.1",
     "karma-rollup-preprocessor": "^5.1.1",
     "karma-spec-reporter": "0.0.32",
-    "lint-staged": "^7.0.4",
+    "lint-staged": "^7.0.5",
     "markdownlint-cli": "^0.8.1",
-    "pm2": "^2.10.1",
+    "pm2": "^2.10.3",
     "prettier": "^1.12.1",
     "rollup": "^0.57.1",
     "rollup-plugin-commonjs": "^9.1.0",
@@ -73,8 +73,8 @@
     "rollup-plugin-typescript2": "^0.13.0",
     "semantic-release": "^15.1.7",
     "tslint": "^5.9.1",
-    "tslint-config-prettier": "^1.10.0",
-    "typescript": "~2.8.1",
+    "tslint-config-prettier": "^1.12.0",
+    "typescript": "^2.8.3",
     "validate-commit-msg": "^2.14.0"
   },
   "config": {

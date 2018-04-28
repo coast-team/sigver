@@ -13,11 +13,11 @@ export const Message = $root.Message = (() => {
      * Properties of a Message.
      * @exports IMessage
      * @interface IMessage
-     * @property {IContent|null} [content] Message content
-     * @property {boolean|null} [isFirst] Message isFirst
-     * @property {boolean|null} [stable] Message stable
      * @property {boolean|null} [heartbeat] Message heartbeat
+     * @property {IContent|null} [content] Message content
+     * @property {ICheck|null} [check] Message check
      * @property {boolean|null} [tryAnother] Message tryAnother
+     * @property {boolean|null} [connected] Message connected
      */
 
     /**
@@ -36,6 +36,14 @@ export const Message = $root.Message = (() => {
     }
 
     /**
+     * Message heartbeat.
+     * @member {boolean} heartbeat
+     * @memberof Message
+     * @instance
+     */
+    Message.prototype.heartbeat = false;
+
+    /**
      * Message content.
      * @member {IContent|null|undefined} content
      * @memberof Message
@@ -44,28 +52,12 @@ export const Message = $root.Message = (() => {
     Message.prototype.content = null;
 
     /**
-     * Message isFirst.
-     * @member {boolean} isFirst
+     * Message check.
+     * @member {ICheck|null|undefined} check
      * @memberof Message
      * @instance
      */
-    Message.prototype.isFirst = false;
-
-    /**
-     * Message stable.
-     * @member {boolean} stable
-     * @memberof Message
-     * @instance
-     */
-    Message.prototype.stable = false;
-
-    /**
-     * Message heartbeat.
-     * @member {boolean} heartbeat
-     * @memberof Message
-     * @instance
-     */
-    Message.prototype.heartbeat = false;
+    Message.prototype.check = null;
 
     /**
      * Message tryAnother.
@@ -75,17 +67,25 @@ export const Message = $root.Message = (() => {
      */
     Message.prototype.tryAnother = false;
 
+    /**
+     * Message connected.
+     * @member {boolean} connected
+     * @memberof Message
+     * @instance
+     */
+    Message.prototype.connected = false;
+
     // OneOf field names bound to virtual getters and setters
     let $oneOfFields;
 
     /**
      * Message type.
-     * @member {"content"|"isFirst"|"stable"|"heartbeat"|"tryAnother"|undefined} type
+     * @member {"heartbeat"|"content"|"check"|"tryAnother"|"connected"|undefined} type
      * @memberof Message
      * @instance
      */
     Object.defineProperty(Message.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "stable", "heartbeat", "tryAnother"]),
+        get: $util.oneOfGetter($oneOfFields = ["heartbeat", "content", "check", "tryAnother", "connected"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -113,16 +113,16 @@ export const Message = $root.Message = (() => {
     Message.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.content != null && message.hasOwnProperty("content"))
-            $root.Content.encode(message.content, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-        if (message.isFirst != null && message.hasOwnProperty("isFirst"))
-            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.isFirst);
-        if (message.stable != null && message.hasOwnProperty("stable"))
-            writer.uint32(/* id 3, wireType 0 =*/24).bool(message.stable);
         if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
-            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.heartbeat);
+            writer.uint32(/* id 1, wireType 0 =*/8).bool(message.heartbeat);
+        if (message.content != null && message.hasOwnProperty("content"))
+            $root.Content.encode(message.content, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+        if (message.check != null && message.hasOwnProperty("check"))
+            $root.Check.encode(message.check, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
         if (message.tryAnother != null && message.hasOwnProperty("tryAnother"))
-            writer.uint32(/* id 5, wireType 0 =*/40).bool(message.tryAnother);
+            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.tryAnother);
+        if (message.connected != null && message.hasOwnProperty("connected"))
+            writer.uint32(/* id 5, wireType 0 =*/40).bool(message.connected);
         return writer;
     };
 
@@ -145,19 +145,19 @@ export const Message = $root.Message = (() => {
             let tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.content = $root.Content.decode(reader, reader.uint32());
-                break;
-            case 2:
-                message.isFirst = reader.bool();
-                break;
-            case 3:
-                message.stable = reader.bool();
-                break;
-            case 4:
                 message.heartbeat = reader.bool();
                 break;
-            case 5:
+            case 2:
+                message.content = $root.Content.decode(reader, reader.uint32());
+                break;
+            case 3:
+                message.check = $root.Check.decode(reader, reader.uint32());
+                break;
+            case 4:
                 message.tryAnother = reader.bool();
+                break;
+            case 5:
+                message.connected = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -177,6 +177,7 @@ export const Content = $root.Content = (() => {
      * @exports IContent
      * @interface IContent
      * @property {number|null} [id] Content id
+     * @property {boolean|null} [unsubscribe] Content unsubscribe
      * @property {Uint8Array|null} [data] Content data
      */
 
@@ -202,6 +203,14 @@ export const Content = $root.Content = (() => {
      * @instance
      */
     Content.prototype.id = 0;
+
+    /**
+     * Content unsubscribe.
+     * @member {boolean} unsubscribe
+     * @memberof Content
+     * @instance
+     */
+    Content.prototype.unsubscribe = false;
 
     /**
      * Content data.
@@ -237,8 +246,10 @@ export const Content = $root.Content = (() => {
             writer = $Writer.create();
         if (message.id != null && message.hasOwnProperty("id"))
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
+        if (message.unsubscribe != null && message.hasOwnProperty("unsubscribe"))
+            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.unsubscribe);
         if (message.data != null && message.hasOwnProperty("data"))
-            writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.data);
+            writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.data);
         return writer;
     };
 
@@ -264,6 +275,9 @@ export const Content = $root.Content = (() => {
                 message.id = reader.uint32();
                 break;
             case 2:
+                message.unsubscribe = reader.bool();
+                break;
+            case 3:
                 message.data = reader.bytes();
                 break;
             default:
@@ -275,6 +289,125 @@ export const Content = $root.Content = (() => {
     };
 
     return Content;
+})();
+
+export const Check = $root.Check = (() => {
+
+    /**
+     * Properties of a Check.
+     * @exports ICheck
+     * @interface ICheck
+     * @property {number|null} [myId] Check myId
+     * @property {Array.<number>|null} [members] Check members
+     */
+
+    /**
+     * Constructs a new Check.
+     * @exports Check
+     * @classdesc Represents a Check.
+     * @implements ICheck
+     * @constructor
+     * @param {ICheck=} [properties] Properties to set
+     */
+    function Check(properties) {
+        this.members = [];
+        if (properties)
+            for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                if (properties[keys[i]] != null)
+                    this[keys[i]] = properties[keys[i]];
+    }
+
+    /**
+     * Check myId.
+     * @member {number} myId
+     * @memberof Check
+     * @instance
+     */
+    Check.prototype.myId = 0;
+
+    /**
+     * Check members.
+     * @member {Array.<number>} members
+     * @memberof Check
+     * @instance
+     */
+    Check.prototype.members = $util.emptyArray;
+
+    /**
+     * Creates a new Check instance using the specified properties.
+     * @function create
+     * @memberof Check
+     * @static
+     * @param {ICheck=} [properties] Properties to set
+     * @returns {Check} Check instance
+     */
+    Check.create = function create(properties) {
+        return new Check(properties);
+    };
+
+    /**
+     * Encodes the specified Check message. Does not implicitly {@link Check.verify|verify} messages.
+     * @function encode
+     * @memberof Check
+     * @static
+     * @param {ICheck} message Check message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
+    Check.encode = function encode(message, writer) {
+        if (!writer)
+            writer = $Writer.create();
+        if (message.myId != null && message.hasOwnProperty("myId"))
+            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.myId);
+        if (message.members != null && message.members.length) {
+            writer.uint32(/* id 2, wireType 2 =*/18).fork();
+            for (let i = 0; i < message.members.length; ++i)
+                writer.uint32(message.members[i]);
+            writer.ldelim();
+        }
+        return writer;
+    };
+
+    /**
+     * Decodes a Check message from the specified reader or buffer.
+     * @function decode
+     * @memberof Check
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @param {number} [length] Message length if known beforehand
+     * @returns {Check} Check
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    Check.decode = function decode(reader, length) {
+        if (!(reader instanceof $Reader))
+            reader = $Reader.create(reader);
+        let end = length === undefined ? reader.len : reader.pos + length, message = new $root.Check();
+        while (reader.pos < end) {
+            let tag = reader.uint32();
+            switch (tag >>> 3) {
+            case 1:
+                message.myId = reader.uint32();
+                break;
+            case 2:
+                if (!(message.members && message.members.length))
+                    message.members = [];
+                if ((tag & 7) === 2) {
+                    let end2 = reader.uint32() + reader.pos;
+                    while (reader.pos < end2)
+                        message.members.push(reader.uint32());
+                } else
+                    message.members.push(reader.uint32());
+                break;
+            default:
+                reader.skipType(tag & 7);
+                break;
+            }
+        }
+        return message;
+    };
+
+    return Check;
 })();
 
 export { $root as default };

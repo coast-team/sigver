@@ -2,37 +2,63 @@ import { Peer } from './Peer'
 import { ERR_BLOCKING_MEMBER } from './SigError'
 
 export class Group {
-
   private onNoMembers: () => void
   private members: Set<Peer>
 
-  constructor (peer: Peer, onNoMembers: () => void) {
+  constructor(peer: Peer, onNoMembers: () => void) {
     this.members = new Set()
     this.onNoMembers = onNoMembers
     this.addMember(peer)
   }
 
-  get size () {
+  get size() {
     return this.members.size
   }
 
-  switchPeers (peer: Peer) {
-    if (this.size === 1) {
-      const blockingMember = this.members.values().next().value
-      this.addMember(peer)
-      blockingMember.close(ERR_BLOCKING_MEMBER, 'prevent other peers from joining the group')
-    }
-  }
-
-  oneLeftAndAlreadyTried (peer: Peer): boolean {
-    if (this.size === 1) {
-      const id = this.members.values().next().value.id
-      return peer.triedMembers.includes(id)
+  isConnectedToAtLeastOneMember(members: number[]) {
+    for (const peer of this.members) {
+      if (members.includes(peer.id)) {
+        return true
+      }
     }
     return false
   }
 
-  selectMemberFor (joining: Peer): Peer {
+  subscribeToOrReplaceMember(peer: Peer): boolean {
+    if (this.size === 1) {
+      if (this.members.has(peer)) {
+        return true
+      }
+      const member = this.members.values().next().value
+      if (peer.triedMembers.includes(member.id)) {
+        log.info('ONE LEFT AND ALREADY TRIED: replace him', { key: peer.key })
+        this.addMember(peer)
+        member.close(ERR_BLOCKING_MEMBER, 'prevents other peers from joining the group')
+        return true
+      }
+    }
+    peer.bindWith(this.selectMemberFor(peer))
+    return false
+  }
+
+  addMember(peer: Peer): boolean {
+    peer.group = this
+    peer.triedMembers = []
+    this.members.add(peer)
+    return true
+    // log.info('Member JOINED', { key: peer.key, id: peer.id, size: this.members.size })
+  }
+
+  removeMember(peer: Peer) {
+    peer.group = undefined
+    this.members.delete(peer)
+    // log.info('Member LEFT', { key: peer.key, id: peer.id, size: this.members.size })
+    if (this.members.size === 0) {
+      this.onNoMembers()
+    }
+  }
+
+  private selectMemberFor(joining: Peer): Peer {
     const peersToTry: Peer[] = []
     this.members.forEach((member) => {
       if (!joining.triedMembers.includes(member.id)) {
@@ -46,19 +72,4 @@ export class Group {
       return this.selectMemberFor(joining)
     }
   }
-
-  addMember (peer: Peer) {
-    peer.group = this
-    this.members.add(peer)
-    log.info('Member JOINED', {key: peer.key, id: peer.id, size: this.members.size})
-  }
-
-  removeMember (peer: Peer) {
-    this.members.delete(peer)
-    log.info('Member LEFT', { key: peer.key, id: peer.id, size: this.members.size })
-    if (this.members.size === 0) {
-      this.onNoMembers()
-    }
-  }
-
 }

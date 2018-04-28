@@ -1277,19 +1277,44 @@ class Group {
     get size() {
         return this.members.size;
     }
-    switchPeers(peer) {
-        if (this.size === 1) {
-            const blockingMember = this.members.values().next().value;
-            this.addMember(peer);
-            blockingMember.close(ERR_BLOCKING_MEMBER, 'prevent other peers from joining the group');
-        }
-    }
-    oneLeftAndAlreadyTried(peer) {
-        if (this.size === 1) {
-            const id = this.members.values().next().value.id;
-            return peer.triedMembers.includes(id);
+    isConnectedToAtLeastOneMember(members) {
+        for (const peer of this.members) {
+            if (members.includes(peer.id)) {
+                return true;
+            }
         }
         return false;
+    }
+    subscribeToOrReplaceMember(peer) {
+        if (this.size === 1) {
+            if (this.members.has(peer)) {
+                return true;
+            }
+            const member = this.members.values().next().value;
+            if (peer.triedMembers.includes(member.id)) {
+                log.info('ONE LEFT AND ALREADY TRIED: replace him', { key: peer.key });
+                this.addMember(peer);
+                member.close(ERR_BLOCKING_MEMBER, 'prevents other peers from joining the group');
+                return true;
+            }
+        }
+        peer.bindWith(this.selectMemberFor(peer));
+        return false;
+    }
+    addMember(peer) {
+        peer.group = this;
+        peer.triedMembers = [];
+        this.members.add(peer);
+        return true;
+        // log.info('Member JOINED', { key: peer.key, id: peer.id, size: this.members.size })
+    }
+    removeMember(peer) {
+        peer.group = undefined;
+        this.members.delete(peer);
+        // log.info('Member LEFT', { key: peer.key, id: peer.id, size: this.members.size })
+        if (this.members.size === 0) {
+            this.onNoMembers();
+        }
     }
     selectMemberFor(joining) {
         const peersToTry = [];
@@ -1304,18 +1329,6 @@ class Group {
         else {
             joining.triedMembers = [];
             return this.selectMemberFor(joining);
-        }
-    }
-    addMember(peer) {
-        peer.group = this;
-        this.members.add(peer);
-        log.info('Member JOINED', { key: peer.key, id: peer.id, size: this.members.size });
-    }
-    removeMember(peer) {
-        this.members.delete(peer);
-        log.info('Member LEFT', { key: peer.key, id: peer.id, size: this.members.size });
-        if (this.members.size === 0) {
-            this.onNoMembers();
         }
     }
 }
@@ -10911,11 +10924,11 @@ const Message = $root.Message = (() => {
      * Properties of a Message.
      * @exports IMessage
      * @interface IMessage
-     * @property {IContent|null} [content] Message content
-     * @property {boolean|null} [isFirst] Message isFirst
-     * @property {boolean|null} [stable] Message stable
      * @property {boolean|null} [heartbeat] Message heartbeat
+     * @property {IContent|null} [content] Message content
+     * @property {ICheck|null} [check] Message check
      * @property {boolean|null} [tryAnother] Message tryAnother
+     * @property {boolean|null} [connected] Message connected
      */
 
     /**
@@ -10934,6 +10947,14 @@ const Message = $root.Message = (() => {
     }
 
     /**
+     * Message heartbeat.
+     * @member {boolean} heartbeat
+     * @memberof Message
+     * @instance
+     */
+    Message.prototype.heartbeat = false;
+
+    /**
      * Message content.
      * @member {IContent|null|undefined} content
      * @memberof Message
@@ -10942,28 +10963,12 @@ const Message = $root.Message = (() => {
     Message.prototype.content = null;
 
     /**
-     * Message isFirst.
-     * @member {boolean} isFirst
+     * Message check.
+     * @member {ICheck|null|undefined} check
      * @memberof Message
      * @instance
      */
-    Message.prototype.isFirst = false;
-
-    /**
-     * Message stable.
-     * @member {boolean} stable
-     * @memberof Message
-     * @instance
-     */
-    Message.prototype.stable = false;
-
-    /**
-     * Message heartbeat.
-     * @member {boolean} heartbeat
-     * @memberof Message
-     * @instance
-     */
-    Message.prototype.heartbeat = false;
+    Message.prototype.check = null;
 
     /**
      * Message tryAnother.
@@ -10973,17 +10978,25 @@ const Message = $root.Message = (() => {
      */
     Message.prototype.tryAnother = false;
 
+    /**
+     * Message connected.
+     * @member {boolean} connected
+     * @memberof Message
+     * @instance
+     */
+    Message.prototype.connected = false;
+
     // OneOf field names bound to virtual getters and setters
     let $oneOfFields;
 
     /**
      * Message type.
-     * @member {"content"|"isFirst"|"stable"|"heartbeat"|"tryAnother"|undefined} type
+     * @member {"heartbeat"|"content"|"check"|"tryAnother"|"connected"|undefined} type
      * @memberof Message
      * @instance
      */
     Object.defineProperty(Message.prototype, "type", {
-        get: $util.oneOfGetter($oneOfFields = ["content", "isFirst", "stable", "heartbeat", "tryAnother"]),
+        get: $util.oneOfGetter($oneOfFields = ["heartbeat", "content", "check", "tryAnother", "connected"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -11011,16 +11024,16 @@ const Message = $root.Message = (() => {
     Message.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.content != null && message.hasOwnProperty("content"))
-            $root.Content.encode(message.content, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-        if (message.isFirst != null && message.hasOwnProperty("isFirst"))
-            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.isFirst);
-        if (message.stable != null && message.hasOwnProperty("stable"))
-            writer.uint32(/* id 3, wireType 0 =*/24).bool(message.stable);
         if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
-            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.heartbeat);
+            writer.uint32(/* id 1, wireType 0 =*/8).bool(message.heartbeat);
+        if (message.content != null && message.hasOwnProperty("content"))
+            $root.Content.encode(message.content, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+        if (message.check != null && message.hasOwnProperty("check"))
+            $root.Check.encode(message.check, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
         if (message.tryAnother != null && message.hasOwnProperty("tryAnother"))
-            writer.uint32(/* id 5, wireType 0 =*/40).bool(message.tryAnother);
+            writer.uint32(/* id 4, wireType 0 =*/32).bool(message.tryAnother);
+        if (message.connected != null && message.hasOwnProperty("connected"))
+            writer.uint32(/* id 5, wireType 0 =*/40).bool(message.connected);
         return writer;
     };
 
@@ -11043,19 +11056,19 @@ const Message = $root.Message = (() => {
             let tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.content = $root.Content.decode(reader, reader.uint32());
-                break;
-            case 2:
-                message.isFirst = reader.bool();
-                break;
-            case 3:
-                message.stable = reader.bool();
-                break;
-            case 4:
                 message.heartbeat = reader.bool();
                 break;
-            case 5:
+            case 2:
+                message.content = $root.Content.decode(reader, reader.uint32());
+                break;
+            case 3:
+                message.check = $root.Check.decode(reader, reader.uint32());
+                break;
+            case 4:
                 message.tryAnother = reader.bool();
+                break;
+            case 5:
+                message.connected = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -11075,6 +11088,7 @@ const Content = $root.Content = (() => {
      * @exports IContent
      * @interface IContent
      * @property {number|null} [id] Content id
+     * @property {boolean|null} [unsubscribe] Content unsubscribe
      * @property {Uint8Array|null} [data] Content data
      */
 
@@ -11100,6 +11114,14 @@ const Content = $root.Content = (() => {
      * @instance
      */
     Content.prototype.id = 0;
+
+    /**
+     * Content unsubscribe.
+     * @member {boolean} unsubscribe
+     * @memberof Content
+     * @instance
+     */
+    Content.prototype.unsubscribe = false;
 
     /**
      * Content data.
@@ -11135,8 +11157,10 @@ const Content = $root.Content = (() => {
             writer = $Writer.create();
         if (message.id != null && message.hasOwnProperty("id"))
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
+        if (message.unsubscribe != null && message.hasOwnProperty("unsubscribe"))
+            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.unsubscribe);
         if (message.data != null && message.hasOwnProperty("data"))
-            writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.data);
+            writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.data);
         return writer;
     };
 
@@ -11162,6 +11186,9 @@ const Content = $root.Content = (() => {
                 message.id = reader.uint32();
                 break;
             case 2:
+                message.unsubscribe = reader.bool();
+                break;
+            case 3:
                 message.data = reader.bytes();
                 break;
             default:
@@ -11173,6 +11200,125 @@ const Content = $root.Content = (() => {
     };
 
     return Content;
+})();
+
+const Check = $root.Check = (() => {
+
+    /**
+     * Properties of a Check.
+     * @exports ICheck
+     * @interface ICheck
+     * @property {number|null} [myId] Check myId
+     * @property {Array.<number>|null} [members] Check members
+     */
+
+    /**
+     * Constructs a new Check.
+     * @exports Check
+     * @classdesc Represents a Check.
+     * @implements ICheck
+     * @constructor
+     * @param {ICheck=} [properties] Properties to set
+     */
+    function Check(properties) {
+        this.members = [];
+        if (properties)
+            for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                if (properties[keys[i]] != null)
+                    this[keys[i]] = properties[keys[i]];
+    }
+
+    /**
+     * Check myId.
+     * @member {number} myId
+     * @memberof Check
+     * @instance
+     */
+    Check.prototype.myId = 0;
+
+    /**
+     * Check members.
+     * @member {Array.<number>} members
+     * @memberof Check
+     * @instance
+     */
+    Check.prototype.members = $util.emptyArray;
+
+    /**
+     * Creates a new Check instance using the specified properties.
+     * @function create
+     * @memberof Check
+     * @static
+     * @param {ICheck=} [properties] Properties to set
+     * @returns {Check} Check instance
+     */
+    Check.create = function create(properties) {
+        return new Check(properties);
+    };
+
+    /**
+     * Encodes the specified Check message. Does not implicitly {@link Check.verify|verify} messages.
+     * @function encode
+     * @memberof Check
+     * @static
+     * @param {ICheck} message Check message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
+    Check.encode = function encode(message, writer) {
+        if (!writer)
+            writer = $Writer.create();
+        if (message.myId != null && message.hasOwnProperty("myId"))
+            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.myId);
+        if (message.members != null && message.members.length) {
+            writer.uint32(/* id 2, wireType 2 =*/18).fork();
+            for (let i = 0; i < message.members.length; ++i)
+                writer.uint32(message.members[i]);
+            writer.ldelim();
+        }
+        return writer;
+    };
+
+    /**
+     * Decodes a Check message from the specified reader or buffer.
+     * @function decode
+     * @memberof Check
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @param {number} [length] Message length if known beforehand
+     * @returns {Check} Check
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    Check.decode = function decode(reader, length) {
+        if (!(reader instanceof $Reader))
+            reader = $Reader.create(reader);
+        let end = length === undefined ? reader.len : reader.pos + length, message = new $root.Check();
+        while (reader.pos < end) {
+            let tag = reader.uint32();
+            switch (tag >>> 3) {
+            case 1:
+                message.myId = reader.uint32();
+                break;
+            case 2:
+                if (!(message.members && message.members.length))
+                    message.members = [];
+                if ((tag & 7) === 2) {
+                    let end2 = reader.uint32() + reader.pos;
+                    while (reader.pos < end2)
+                        message.members.push(reader.uint32());
+                } else
+                    message.members.push(reader.uint32());
+                break;
+            default:
+                reader.skipType(tag & 7);
+                break;
+            }
+        }
+        return message;
+    };
+
+    return Check;
 })();
 
 const MAXIMUM_MISSED_HEARTBEAT = 3;
@@ -11188,8 +11334,8 @@ function generateId() {
 }
 // Preconstructed messages for optimisation
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish();
-const firstTrueMsg = Message.encode(Message.create({ isFirst: true })).finish();
-const firstFalseMsg = Message.encode(Message.create({ isFirst: false })).finish();
+const connectedTrueMsg = Message.encode(Message.create({ connected: true })).finish();
+const connectedFalseMsg = Message.encode(Message.create({ connected: false })).finish();
 class Peer extends Subject_2 {
     constructor(key, sendFunc, closeFunc, heartbeatFunc) {
         super();
@@ -11200,8 +11346,8 @@ class Peer extends Subject_2 {
         // Set methods
         this._send = (msg) => sendFunc(Message.encode(Message.create(msg)).finish());
         this._close = (code, reason) => closeFunc(code, reason);
-        this._sendFirstTrue = () => sendFunc(firstTrueMsg);
-        this._sendFirstFalse = () => sendFunc(firstFalseMsg);
+        this._sendConnectedTrue = () => sendFunc(connectedTrueMsg);
+        this._sendConnectedFalse = () => sendFunc(connectedFalseMsg);
         // Start heartbeat interval
         this.missedHeartbeat = 0;
         this.heartbeatInterval = setInterval(() => {
@@ -11219,11 +11365,11 @@ class Peer extends Subject_2 {
     close(code, reason) {
         this._close(code, reason);
     }
-    sendFirstTrue() {
-        this._sendFirstTrue();
+    sendConnectedTrue() {
+        this._sendConnectedTrue();
     }
-    sendFirstFalse() {
-        this._sendFirstFalse();
+    sendConnectedFalse() {
+        this._sendConnectedFalse();
     }
     onMessage(bytes) {
         try {
@@ -11256,16 +11402,16 @@ class Peer extends Subject_2 {
         // Joining subscribes to the group member.
         this.subToMember = member
             .pipe(filter$1(({ content }) => !!content && content.id === this.id), pluck$1('content'))
-            .subscribe(({ data }) => {
+            .subscribe(({ unsubscribe, data }) => {
             this.send({ content: { id: 1, data } });
-            if (!!data && this.subToMember) {
+            if (unsubscribe && this.subToMember) {
                 this.subToMember.unsubscribe();
             }
         }, () => this.send({ content: { id: 1 } }), () => this.send({ content: { id: 1 } }));
-        // Groum member subscribes to the joining peer.
-        this.subToJoining = this.pipe(filter$1((msg) => msg.type === 'content'), pluck$1('content')).subscribe(({ data }) => {
+        // Group member subscribes to the joining peer.
+        this.subToJoining = this.pipe(filter$1(({ content }) => !!content), pluck$1('content')).subscribe(({ unsubscribe, data }) => {
             member.send({ content: { id: this.id, data } });
-            if (!!data && this.subToJoining) {
+            if (unsubscribe && this.subToJoining) {
                 this.subToJoining.unsubscribe();
             }
         }, () => member.send({ content: { id: this.id } }), () => member.send({ content: { id: this.id } }));
@@ -11398,53 +11544,44 @@ else {
 const peers = new Subject_2();
 const groups = new Map();
 peers.subscribe((peer) => {
-    bindToMember(peer);
-    // Subscribe to peer messages
-    peer.subscribe(({ type }) => {
-        switch (type) {
-            case 'stable':
-                becomeMember(peer);
+    peer.subscribe((msg) => {
+        switch (msg.type) {
+            case 'check': {
+                const { myId, members } = msg.check;
+                let connected = false;
+                const group = groups.get(peer.key);
+                if (group) {
+                    if (members.length === 0) {
+                        connected = group.subscribeToOrReplaceMember(peer);
+                    }
+                    else if (group.isConnectedToAtLeastOneMember(members)) {
+                        peer.id = myId;
+                        connected = group.addMember(peer);
+                    }
+                    else {
+                        group.removeMember(peer);
+                        connected = group.subscribeToOrReplaceMember(peer);
+                    }
+                }
+                else {
+                    peer.id = myId;
+                    groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)));
+                    connected = true;
+                }
+                if (connected) {
+                    peer.sendConnectedTrue();
+                }
+                else {
+                    peer.sendConnectedFalse();
+                }
                 break;
+            }
             case 'heartbeat':
                 peer.missedHeartbeat = 0;
                 break;
-            case 'tryAnother': {
-                bindToMember(peer);
-                break;
-            }
         }
     });
 }, (err) => log.fatal('WebSocket server peers error', err));
-function bindToMember(peer) {
-    const group = groups.get(peer.key);
-    // Check whether the first peer or not in the group identified by the key
-    if (group) {
-        if (group.oneLeftAndAlreadyTried(peer)) {
-            log.info('ONE LEFT AND ALREADY TRIED: switch peers', { key: peer.key });
-            group.switchPeers(peer);
-            peer.sendFirstTrue();
-        }
-        else {
-            peer.bindWith(group.selectMemberFor(peer));
-            peer.sendFirstFalse();
-        }
-    }
-    else {
-        groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)));
-        peer.sendFirstTrue();
-    }
-}
-function becomeMember(peer) {
-    if (peer.group === undefined) {
-        const group = groups.get(peer.key);
-        if (group) {
-            group.addMember(peer);
-        }
-        else {
-            groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)));
-        }
-    }
-}
 // Start listen
 const wsServer = new WsServer(httpServer, host, port, peers);
 wsServer.start(() => {
