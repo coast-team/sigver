@@ -1,17 +1,13 @@
 /// <reference types="node"/>
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { Subject } from 'rxjs'
 import * as URL from 'url'
 import * as WebSocket from 'uws'
 
 import { Peer } from './Peer'
 import { ERR_MESSAGE, ERR_NO_KEY, SigError, validateKey } from './Util'
 
-export function setupWebSocketServer(
-  httpServer: HttpServer | HttpsServer,
-  peers: Subject<Peer>
-): WebSocket.Server {
+export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebSocket.Server {
   // Configure server
   const wss = new WebSocket.Server({
     perMessageDeflate: false,
@@ -22,10 +18,11 @@ export function setupWebSocketServer(
 
   wss.on('connection', (socket) => {
     try {
+      // Get and validate the key
       const key = getKey(socket.upgradeReq.url)
       validateKey(key)
 
-      // Initialize peer
+      // Initialize peer object
       const peer = new Peer(
         key,
         (bytes) => {
@@ -36,16 +33,13 @@ export function setupWebSocketServer(
             socket.close(ERR_MESSAGE, err.message)
           }
         },
-        (code, reason) => socket.close(code, reason),
-        (bytes) => socket.send(bytes, { binary: true })
+        (code, reason) => socket.close(code, reason)
       )
 
-      // Socket config
+      // Handle socket callbacks
       socket.onmessage = ({ data }) => peer.onMessage(data)
       socket.onerror = (err) => peer.error(err)
       socket.onclose = (closeEvt) => peer.onClose(closeEvt.code, closeEvt.reason)
-
-      peers.next(peer)
     } catch (err) {
       log.error('Close socket: ', err)
       socket.close(err.code, err.message)
@@ -55,10 +49,7 @@ export function setupWebSocketServer(
 }
 
 function getKey(url: string | undefined): string {
-  if (url === undefined) {
-    throw new SigError(ERR_NO_KEY, 'Could not get the key: the URL is undefined')
-  }
-  const { pathname } = URL.parse(url, true)
+  const pathname = url !== undefined ? URL.parse(url, true).pathname : undefined
   if (!pathname) {
     throw new SigError(ERR_NO_KEY, 'Could not get the key: the URL is undefined')
   }

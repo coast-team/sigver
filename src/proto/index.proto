@@ -5,25 +5,27 @@ message Message {
     /*
     * Incoming and outcoming messages
     */
-
     // Server sends `heartbeat` message each 5 seconds and expects getting the
     // same message back. If after 3 tentatives still no response then close the
     // connection.
     bool heartbeat = 1;
-
-    Content content = 2;
+    Content content = 2; // Message to be exchanged between two peers.
 
     /*
     * Incoming message
     */
-    // Server's response to the peer wanted to join a peer to peer network.
-    // True if the first peer in the group.
-    Check check = 3; 
+    // Peer either wants to make sure that he is still a group member or wants
+    // to become one.
+    GroupData connect = 3;
 
     /*
     * Outcoming message
     */
-    bool connected = 4; // Only outcoming
+    // Response to the connect request above. True if the peer is the only member
+    // of the group or he is connected to at least one group member. Otherwise the
+    // signaling server subscribes this peer to one of the group member (i.e. the 
+    // content message maybe exchanged) .
+    bool connected = 4; 
   }
 }
 
@@ -33,7 +35,7 @@ message Content {
   bytes data = 3; // Any data sent by the peer
 }
 
-message Check {
-  uint32 id = 1;
-  repeated uint32 members = 2;
+message GroupData {
+  uint32 id = 1; // Current peer id in the group
+  repeated uint32 members = 2; // Peer's members view. Maybe an empty array.
 }

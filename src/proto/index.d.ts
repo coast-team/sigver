@@ -9,8 +9,8 @@ export interface IMessage {
     /** Message content */
     content?: (IContent|null);
 
-    /** Message check */
-    check?: (ICheck|null);
+    /** Message connect */
+    connect?: (IGroupData|null);
 
     /** Message connected */
     connected?: (boolean|null);
@@ -31,14 +31,14 @@ export class Message implements IMessage {
     /** Message content. */
     public content?: (IContent|null);
 
-    /** Message check. */
-    public check?: (ICheck|null);
+    /** Message connect. */
+    public connect?: (IGroupData|null);
 
     /** Message connected. */
     public connected: boolean;
 
     /** Message type. */
-    public type?: ("heartbeat"|"content"|"check"|"connected");
+    public type?: ("heartbeat"|"content"|"connect"|"connected");
 
     /**
      * Creates a new Message instance using the specified properties.
@@ -123,53 +123,53 @@ export class Content implements IContent {
     public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Content;
 }
 
-/** Properties of a Check. */
-export interface ICheck {
+/** Properties of a GroupData. */
+export interface IGroupData {
 
-    /** Check id */
+    /** GroupData id */
     id?: (number|null);
 
-    /** Check members */
+    /** GroupData members */
     members?: (number[]|null);
 }
 
-/** Represents a Check. */
-export class Check implements ICheck {
+/** Represents a GroupData. */
+export class GroupData implements IGroupData {
 
     /**
-     * Constructs a new Check.
+     * Constructs a new GroupData.
      * @param [properties] Properties to set
      */
-    constructor(properties?: ICheck);
+    constructor(properties?: IGroupData);
 
-    /** Check id. */
+    /** GroupData id. */
     public id: number;
 
-    /** Check members. */
+    /** GroupData members. */
     public members: number[];
 
     /**
-     * Creates a new Check instance using the specified properties.
+     * Creates a new GroupData instance using the specified properties.
      * @param [properties] Properties to set
-     * @returns Check instance
+     * @returns GroupData instance
      */
-    public static create(properties?: ICheck): Check;
+    public static create(properties?: IGroupData): GroupData;
 
     /**
-     * Encodes the specified Check message. Does not implicitly {@link Check.verify|verify} messages.
-     * @param message Check message or plain object to encode
+     * Encodes the specified GroupData message. Does not implicitly {@link GroupData.verify|verify} messages.
+     * @param message GroupData message or plain object to encode
      * @param [writer] Writer to encode to
      * @returns Writer
      */
-    public static encode(message: ICheck, writer?: $protobuf.Writer): $protobuf.Writer;
+    public static encode(message: IGroupData, writer?: $protobuf.Writer): $protobuf.Writer;
 
     /**
-     * Decodes a Check message from the specified reader or buffer.
+     * Decodes a GroupData message from the specified reader or buffer.
      * @param reader Reader or buffer to decode from
      * @param [length] Message length if known beforehand
-     * @returns Check
+     * @returns GroupData
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Check;
+    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): GroupData;
 }

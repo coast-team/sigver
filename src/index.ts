@@ -1,11 +1,8 @@
-/* tslint:disable:max-line-length */
+import { createLogger } from 'bunyan'
+import * as commander from 'commander'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { Subject } from 'rxjs'
 
-import { Group } from './Group'
-import { Peer } from './Peer'
-import * as proto from './proto'
 import { setupWebSocketServer } from './wsPeers'
 
 // Retreive version from package.json
@@ -13,16 +10,14 @@ let version: string
 try {
   version = require('../package.json').version
 } catch (err) {
+  log.error(err)
   version = ''
 }
 
 // Config LOGGER
-global.log = require('bunyan').createLogger({
-  name: 'sigver',
-  level: 'trace',
-})
+global.log = createLogger({ name: 'sigver', level: 'trace' })
 
-// Default options for commander
+// Default options for cli
 const defaults = {
   host: '0.0.0.0',
   port: 8000,
@@ -31,15 +26,15 @@ const defaults = {
   ca: '',
 }
 
-const commander = require('commander')
+commander
   .version(version)
   .description(
     'Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)'
   )
-  .option('-h, --host <ip>', `Select host address to bind to.`, defaults.host)
-  .option('-p, --port <number>', `Select port to use.`, defaults.port)
-  .option('-k, --key <file path>', `Private key for the certificate`)
-  .option('-c, --cert <file path>', `The server certificate`)
+  .option('-h, --host <ip>', `Select host address to bind to`, defaults.host)
+  .option('-p, --port <number>', `Select port to use`, defaults.port)
+  .option('-k, --key <file path>', `Private key for the certificate.`)
+  .option('-c, --cert <file path>', `The server certificate.`)
   .option(
     '-a, --ca <file path>',
     `The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.`
@@ -49,16 +44,17 @@ const commander = require('commander')
       `
   Examples:
 
-     $ sigver                       # Server is listening on ws://0.0.0.0:8000
-     $ sigver -h 192.168.0.1 -p 80  # Server is listening on ws://192.168.0.1:80
-     $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Server is listening on wss://0.0.0.0:443`
+    $ sigver                       # Signaling server is listening on 0.0.0.0:8000
+    $ sigver -h 192.168.0.1 -p 80  # Signaling server is listening on 192.168.0.1:80
+    $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Signaling server is listening on 0.0.0.0:443`
     )
   })
   .parse(process.argv)
 
+// Get user cli options
 const { host, port, key, cert, ca } = commander
 
-// Choose between HTTP & HTTPS
+// Create HTTP or HTTPS server
 let httpServer: HttpServer | HttpsServer
 if (key && cert && ca) {
   const fs = require('fs')
@@ -71,57 +67,15 @@ if (key && cert && ca) {
   httpServer = require('http').createServer()
 }
 
-// Setup main signaling logic
-const peers = new Subject<Peer>()
-const groups = new Map<string, Group>()
-peers.subscribe(
-  (peer: Peer) => {
-    peer.subscribe((msg: proto.Message) => {
-      switch (msg.type) {
-        case 'check': {
-          const { id, members } = msg.check as proto.Check
-          let connected = false
-          const group = groups.get(peer.key)
-          if (group) {
-            if (members.length === 0) {
-              connected = group.subscribeToOrReplaceMember(peer)
-            } else if (group.isConnectedToAtLeastOneMember(members)) {
-              peer.id = id
-              connected = group.addMember(peer)
-            } else {
-              group.removeMember(peer)
-              connected = group.subscribeToOrReplaceMember(peer)
-            }
-          } else {
-            peer.id = id
-            groups.set(peer.key, new Group(peer, () => groups.delete(peer.key)))
-            connected = true
-          }
-          if (connected) {
-            peer.sendConnectedTrue()
-          } else {
-            peer.sendConnectedFalse()
-          }
-          break
-        }
-        case 'heartbeat':
-          peer.missedHeartbeat = 0
-          break
-      }
-    })
-  },
-  (err: Error) => log.fatal('WebSocket server peers error', err)
-)
-
 // Setup WebSocket server
-setupWebSocketServer(httpServer, peers)
+setupWebSocketServer(httpServer)
 
+// Handle httpServer callbacks and start listen
 httpServer.on('clientError', (err, socket) => {
   log.error('Client error: ', err)
   socket.end()
 })
 
-// Start listen
 httpServer.listen(port, host, () => {
   const address = httpServer.address()
   log.info(`Signaling server is listening on ${address.address}:${address.port}`)

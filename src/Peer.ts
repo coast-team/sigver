@@ -1,8 +1,8 @@
 import { Subject, Subscription } from 'rxjs'
 import { filter, pluck } from 'rxjs/operators'
 
-import { Group } from './Group'
-import { IMessage, Message } from './proto/index'
+import { Group, isAGroupMember } from './groups'
+import { GroupData, IMessage, Message } from './proto/index'
 import { ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './Util'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
@@ -16,11 +16,9 @@ const connectedTrueMsg = Message.encode(Message.create({ connected: true })).fin
 const connectedFalseMsg = Message.encode(Message.create({ connected: false })).finish()
 
 export class Peer extends Subject<Message> {
-  readonly key: string
   public id: number
   public group: Group | undefined
   public triedMembers: number[]
-  public missedHeartbeat: number
 
   private heartbeatInterval: NodeJS.Timer
   private subToMember: Subscription | undefined
@@ -31,26 +29,41 @@ export class Peer extends Subject<Message> {
   constructor(
     key: string,
     sendFunc: (msg: Uint8Array) => void,
-    closeFunc: (code: number, reason: string) => void,
-    heartbeatFunc: (msg: Uint8Array) => void
+    closeFunc: (code: number, reason: string) => void
   ) {
     super()
-    this.key = key
-    this.missedHeartbeat = 0
     this.triedMembers = []
     this.id = generateId(generatedIds)
     this.closeFunc = closeFunc
     this.sendFunc = sendFunc
 
+    // Handle all incoming messages for this peer, but content which is handled in bindWith method.
+    this.subscribe((msg: Message) => {
+      switch (msg.type) {
+        case 'connect': {
+          const { id, members } = msg.connect as GroupData
+          if (isAGroupMember(this, id, members, key)) {
+            sendFunc(connectedTrueMsg)
+          } else {
+            sendFunc(connectedFalseMsg)
+          }
+          break
+        }
+        case 'heartbeat':
+          missedHeartbeat = 0
+          break
+      }
+    })
+
     // Start heartbeat interval
-    this.missedHeartbeat = 0
+    let missedHeartbeat = 0
     this.heartbeatInterval = setInterval(() => {
-      this.missedHeartbeat++
-      if (this.missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
+      missedHeartbeat++
+      if (missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
         clearInterval(this.heartbeatInterval)
         this.close(ERR_HEARTBEAT, 'Too many missed hearbeats')
       }
-      heartbeatFunc(heartBeatMsg)
+      sendFunc(heartBeatMsg)
     }, HEARTBEAT_INTERVAL)
   }
 
@@ -60,14 +73,6 @@ export class Peer extends Subject<Message> {
 
   close(code: number, reason: string) {
     this.closeFunc(code, reason)
-  }
-
-  sendConnectedTrue() {
-    this.sendFunc(connectedTrueMsg)
-  }
-
-  sendConnectedFalse() {
-    this.sendFunc(connectedFalseMsg)
   }
 
   onMessage(bytes: ArrayBuffer) {
@@ -87,7 +92,7 @@ export class Peer extends Subject<Message> {
     this.complete()
     generatedIds.delete(this.id)
     if (code !== 1000) {
-      log.info('Connection with peer has closed', { key: this.key, id: this.id, code, reason })
+      log.info('Connection with peer has closed', { id: this.id, code, reason })
     }
   }
 

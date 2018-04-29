@@ -24,7 +24,7 @@
          * @interface IMessage
          * @property {boolean|null} [heartbeat] Message heartbeat
          * @property {IContent|null} [content] Message content
-         * @property {ICheck|null} [check] Message check
+         * @property {IGroupData|null} [connect] Message connect
          * @property {boolean|null} [connected] Message connected
          */
     
@@ -60,12 +60,12 @@
         Message.prototype.content = null;
     
         /**
-         * Message check.
-         * @member {ICheck|null|undefined} check
+         * Message connect.
+         * @member {IGroupData|null|undefined} connect
          * @memberof Message
          * @instance
          */
-        Message.prototype.check = null;
+        Message.prototype.connect = null;
     
         /**
          * Message connected.
@@ -80,12 +80,12 @@
     
         /**
          * Message type.
-         * @member {"heartbeat"|"content"|"check"|"connected"|undefined} type
+         * @member {"heartbeat"|"content"|"connect"|"connected"|undefined} type
          * @memberof Message
          * @instance
          */
         Object.defineProperty(Message.prototype, "type", {
-            get: $util.oneOfGetter($oneOfFields = ["heartbeat", "content", "check", "connected"]),
+            get: $util.oneOfGetter($oneOfFields = ["heartbeat", "content", "connect", "connected"]),
             set: $util.oneOfSetter($oneOfFields)
         });
     
@@ -117,8 +117,8 @@
                 writer.uint32(/* id 1, wireType 0 =*/8).bool(message.heartbeat);
             if (message.content != null && message.hasOwnProperty("content"))
                 $root.Content.encode(message.content, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-            if (message.check != null && message.hasOwnProperty("check"))
-                $root.Check.encode(message.check, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.connect != null && message.hasOwnProperty("connect"))
+                $root.GroupData.encode(message.connect, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             if (message.connected != null && message.hasOwnProperty("connected"))
                 writer.uint32(/* id 4, wireType 0 =*/32).bool(message.connected);
             return writer;
@@ -149,7 +149,7 @@
                     message.content = $root.Content.decode(reader, reader.uint32());
                     break;
                 case 3:
-                    message.check = $root.Check.decode(reader, reader.uint32());
+                    message.connect = $root.GroupData.decode(reader, reader.uint32());
                     break;
                 case 4:
                     message.connected = reader.bool();
@@ -286,25 +286,25 @@
         return Content;
     })();
     
-    $root.Check = (function() {
+    $root.GroupData = (function() {
     
         /**
-         * Properties of a Check.
-         * @exports ICheck
-         * @interface ICheck
-         * @property {number|null} [id] Check id
-         * @property {Array.<number>|null} [members] Check members
+         * Properties of a GroupData.
+         * @exports IGroupData
+         * @interface IGroupData
+         * @property {number|null} [id] GroupData id
+         * @property {Array.<number>|null} [members] GroupData members
          */
     
         /**
-         * Constructs a new Check.
-         * @exports Check
-         * @classdesc Represents a Check.
-         * @implements ICheck
+         * Constructs a new GroupData.
+         * @exports GroupData
+         * @classdesc Represents a GroupData.
+         * @implements IGroupData
          * @constructor
-         * @param {ICheck=} [properties] Properties to set
+         * @param {IGroupData=} [properties] Properties to set
          */
-        function Check(properties) {
+        function GroupData(properties) {
             this.members = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
@@ -313,43 +313,43 @@
         }
     
         /**
-         * Check id.
+         * GroupData id.
          * @member {number} id
-         * @memberof Check
+         * @memberof GroupData
          * @instance
          */
-        Check.prototype.id = 0;
+        GroupData.prototype.id = 0;
     
         /**
-         * Check members.
+         * GroupData members.
          * @member {Array.<number>} members
-         * @memberof Check
+         * @memberof GroupData
          * @instance
          */
-        Check.prototype.members = $util.emptyArray;
+        GroupData.prototype.members = $util.emptyArray;
     
         /**
-         * Creates a new Check instance using the specified properties.
+         * Creates a new GroupData instance using the specified properties.
          * @function create
-         * @memberof Check
+         * @memberof GroupData
          * @static
-         * @param {ICheck=} [properties] Properties to set
-         * @returns {Check} Check instance
+         * @param {IGroupData=} [properties] Properties to set
+         * @returns {GroupData} GroupData instance
          */
-        Check.create = function create(properties) {
-            return new Check(properties);
+        GroupData.create = function create(properties) {
+            return new GroupData(properties);
         };
     
         /**
-         * Encodes the specified Check message. Does not implicitly {@link Check.verify|verify} messages.
+         * Encodes the specified GroupData message. Does not implicitly {@link GroupData.verify|verify} messages.
          * @function encode
-         * @memberof Check
+         * @memberof GroupData
          * @static
-         * @param {ICheck} message Check message or plain object to encode
+         * @param {IGroupData} message GroupData message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        Check.encode = function encode(message, writer) {
+        GroupData.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
             if (message.id != null && message.hasOwnProperty("id"))
@@ -364,20 +364,20 @@
         };
     
         /**
-         * Decodes a Check message from the specified reader or buffer.
+         * Decodes a GroupData message from the specified reader or buffer.
          * @function decode
-         * @memberof Check
+         * @memberof GroupData
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {Check} Check
+         * @returns {GroupData} GroupData
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        Check.decode = function decode(reader, length) {
+        GroupData.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Check();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.GroupData();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -402,7 +402,7 @@
             return message;
         };
     
-        return Check;
+        return GroupData;
     })();
 
     return $root;

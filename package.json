@@ -1,6 +1,6 @@
 {
   "name": "sigver",
-  "description": "WebRTC signaling server based on WebSocket and Server-Sent-Event",
+  "description": "WebRTC signaling server based on WebSocket",
   "version": "0.0.0-development",
   "main": "dist/server.js",
   "bin": {
@@ -16,7 +16,7 @@
     "dev": "nodemon -e ts -w ./src -x ts-node ./src/index.ts -- --port 8010 | bunyan",
     "lint": "tslint --fix -p tsconfig.json && prettier --write --list-different src/**/*.ts test/**/*.{js} ./*.{ts,js,json,md} && markdownlint ./*.md",
     "build": "npm run proto && webpack",
-    "proto": "pbjs -t static-module   --no-verify --no-delimited --no-convert -o src/proto/index.js src/proto/index.proto && pbts src/proto/index.js -o src/proto/index.d.ts",
+    "proto": "pbjs -t static-module --no-verify --no-delimited --no-convert -o src/proto/index.js src/proto/index.proto && pbts src/proto/index.js -o src/proto/index.d.ts",
     "pretest": "npm run build && pm2 gracefulReload process.yml",
     "test": "karma start karma.conf.js",
     "test:chrome": "npm run test -- --browsers Chrome",
@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.4",
+    "@types/commander": "^2.12.2",
     "@types/uws": "^0.13.1",
     "commitizen": "^2.5.0",
     "cz-conventional-changelog": "^2.1.0",
@@ -57,7 +58,7 @@
     "karma-chrome-launcher": "^2.1.1",
     "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "^1.1.1",
-    "karma-rollup-preprocessor": "^5.1.1",
+    "karma-rollup-preprocessor": "^6.0.0",
     "karma-spec-reporter": "0.0.32",
     "lint-staged": "^7.0.5",
     "markdownlint-cli": "^0.8.1",
@@ -66,7 +67,7 @@
     "prettier": "^1.12.1",
     "semantic-release": "^15.1.7",
     "ts-loader": "^4.2.0",
-    "ts-node": "^6.0.1",
+    "ts-node": "^6.0.2",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.12.0",
     "typescript": "^2.8.3",
