@@ -1,4 +1,4 @@
 apps:
-  - script : server.js
+  - script : dist/server.js
     name: 'sigver-test'
-    args: '--port 8034'
+    args: '--port 8010'

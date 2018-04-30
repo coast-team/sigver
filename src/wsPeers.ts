@@ -5,7 +5,7 @@ import * as URL from 'url'
 import * as WebSocket from 'uws'
 
 import { Peer } from './Peer'
-import { ERR_MESSAGE, ERR_NO_KEY, SigError, validateKey } from './Util'
+import { ERR_MESSAGE, SigError, validateKey } from './Util'
 
 export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebSocket.Server {
   // Configure server
@@ -51,7 +51,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
 function getKey(url: string | undefined): string {
   const pathname = url !== undefined ? URL.parse(url, true).pathname : undefined
   if (!pathname) {
-    throw new SigError(ERR_NO_KEY, 'Could not get the key: the URL is undefined')
+    throw new SigError(ERR_MESSAGE, 'Could not get the key: the URL is undefined')
   }
   return pathname.substr(1)
 }

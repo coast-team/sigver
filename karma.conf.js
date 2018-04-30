@@ -11,7 +11,7 @@ module.exports = function(config) {
     frameworks: ['jasmine'],
 
     // list of files / patterns to load in the browser
-    files: ['test/**/*test.js'],
+    files: [{ pattern: 'test/test.js' }, { pattern: 'src/**/*', included: false, served: false }],
 
     // list of files to exclude
     exclude: [],
@@ -19,31 +19,15 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'test/**/*test.js': ['rollup'],
+      'test/**/*test.js': ['webpack'],
     },
 
-    rollupPreprocessor: {
-      output: {
-        format: 'iife',
-        name: 'sigver',
-      },
-      plugins: [
-        require('rollup-plugin-re')({
-          patterns: [
-            {
-              test: /eval.*\(moduleName\);/g,
-              replace: 'undefined;',
-            },
-          ],
-        }),
-        require('rollup-plugin-node-resolve')(),
-        require('rollup-plugin-commonjs')({
-          include: 'node_modules/**',
-          namedExports: {
-            'node_modules/protobufjs/minimal.js': ['Reader', 'Writer', 'util', 'roots'],
-          },
-        }),
-      ],
+    webpack: {
+      mode: 'none',
+    },
+
+    webpackMiddleware: {
+      stats: 'errors-only',
     },
 
     // test results reporter to use
@@ -84,6 +68,8 @@ module.exports = function(config) {
     // Concurrency level
     // how many browser should be started simultaneous
     concurrency: Infinity,
+
+    browserNoActivityTimeout: 30000,
   })
 
   /*

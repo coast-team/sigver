@@ -2,7 +2,7 @@ import { Subject, Subscription } from 'rxjs'
 import { filter, pluck } from 'rxjs/operators'
 
 import { Group, isAGroupMember } from './groups'
-import { GroupData, IMessage, Message } from './proto/index'
+import { GroupData, IMessage, Message } from './proto'
 import { ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './Util'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
@@ -39,6 +39,9 @@ export class Peer extends Subject<Message> {
 
     // Handle all incoming messages for this peer, but content which is handled in bindWith method.
     this.subscribe((msg: Message) => {
+      if (!msg.type) {
+        this.close(ERR_MESSAGE, 'Wrong message format or unknown message')
+      }
       switch (msg.type) {
         case 'connect': {
           const { id, members } = msg.connect as GroupData
@@ -79,7 +82,7 @@ export class Peer extends Subject<Message> {
     try {
       this.next(Message.decode(new Uint8Array(bytes)))
     } catch (err) {
-      log.error(err)
+      log.error('Message error: ', err)
       this.close(ERR_MESSAGE, err.message)
     }
   }

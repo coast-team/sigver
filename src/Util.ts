@@ -17,17 +17,14 @@ export class SigError extends Error {
 // Inappropriate key format (e.g. key too long).
 export const ERR_KEY = 4741
 
-// Could not get the key.
-export const ERR_NO_KEY = 4742
-
 // Heartbeat error.
-export const ERR_HEARTBEAT = 4743
+export const ERR_HEARTBEAT = 4742
 
 // Any error due to message: type, format etc.
-export const ERR_MESSAGE = 4744
+export const ERR_MESSAGE = 4743
 
 // When only one member left in the group the joining peer could not establish a connection with him.
-export const ERR_BLOCKING_MEMBER = 4745
+export const ERR_BLOCKING_MEMBER = 4744
 
 const KEY_LENGTH_LIMIT = 512
 
