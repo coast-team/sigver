@@ -39,7 +39,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
       // Handle socket callbacks
       socket.onmessage = ({ data }) => peer.onMessage(data)
       socket.onerror = (err) => peer.error(err)
-      socket.onclose = (closeEvt) => peer.onClose(closeEvt.code, closeEvt.reason)
+      socket.onclose = () => peer.onClose()
     } catch (err) {
       log.error('Close socket: ', err)
       socket.close(err.code, err.message)

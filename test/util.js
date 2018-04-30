@@ -21,3 +21,26 @@ export function randomBytes() {
   }
   return array
 }
+
+export class Queue {
+  constructor(length, afterAllDone) {
+    this.counter = 0
+    this.promises = []
+    this.resolvers = []
+    this.afterAllDone = afterAllDone
+    for (let i = 0; i < length; i++) {
+      this.promises.push(
+        new Promise((resolve) => {
+          this.resolvers.push(() => resolve())
+        })
+      )
+    }
+    Promise.all(this.promises).then(() => afterAllDone())
+  }
+
+  done() {
+    if (this.counter < this.resolvers.length) {
+      this.resolvers[this.counter++]()
+    }
+  }
+}

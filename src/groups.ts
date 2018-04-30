@@ -4,28 +4,33 @@ import { ERR_BLOCKING_MEMBER } from './Util'
 const groups = new Map<string, Group>()
 
 export function isAGroupMember(peer: Peer, id: number, members: number[], key: string): boolean {
-  const group = peer.group || groups.get(key) || new Group(key)
-  if (peer.group) {
-    if (group.size === 1 || group.hasMembersInCommon(members)) {
+  let group = peer.group || groups.get(key)
+  if (!group) {
+    group = new Group(key)
+    group.addMember(peer, id)
+    groups.set(key, group)
+    return true
+  }
+
+  if (group.size === 1) {
+    if (peer.group) {
       return true
     }
-    group.removeMember(peer)
-  } else {
-    if (group.size === 0) {
+    const member = group.getFirstMember()
+    if (peer.triedMembers.includes(member.id)) {
       group.addMember(peer, id)
+      group.removeMember(member)
+      member.close(
+        ERR_BLOCKING_MEMBER,
+        'replaced by a peer as prevented him from joining the group'
+      )
       return true
-    } else if (group.size === 1) {
-      const member = group.getFirstMember()
-      if (peer.triedMembers.includes(member.id)) {
-        group.addMember(peer, id)
-        group.removeMember(member)
-        member.close(
-          ERR_BLOCKING_MEMBER,
-          'replaced by a peer as prevents him from joining the group'
-        )
-        return true
-      }
     }
+  }
+  if (group.hasMembersInCommon(members)) {
+    return true
+  } else {
+    group.removeMember(peer)
   }
   peer.bindWith(group.selectMemberFor(peer))
   return false
@@ -50,9 +55,11 @@ export class Group {
   }
 
   hasMembersInCommon(members: number[]) {
-    for (const m of this.members) {
-      if (members.includes(m.id)) {
-        return true
+    if (members.length !== 0) {
+      for (const m of this.members) {
+        if (members.includes(m.id)) {
+          return true
+        }
       }
     }
     return false
@@ -74,18 +81,16 @@ export class Group {
     }
   }
 
-  selectMemberFor(joining: Peer): Peer {
-    const peersToTry: Peer[] = []
-    this.members.forEach((member) => {
-      if (!joining.triedMembers.includes(member.id)) {
-        peersToTry.push(member)
-      }
-    })
-    if (peersToTry.length !== 0) {
-      return peersToTry[0]
-    } else {
-      joining.triedMembers = []
-      return this.selectMemberFor(joining)
+  selectMemberFor(joiningPeer: Peer): Peer {
+    if (this.members.size === 0) {
+      log.error('members are EMPTY...................................')
     }
+    for (const member of this.members) {
+      if (!joiningPeer.triedMembers.includes(member.id)) {
+        return member
+      }
+    }
+    joiningPeer.triedMembers = []
+    return this.selectMemberFor(joiningPeer)
   }
 }

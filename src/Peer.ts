@@ -87,16 +87,13 @@ export class Peer extends Subject<Message> {
     }
   }
 
-  onClose(code: number, reason: string) {
+  onClose() {
     clearInterval(this.heartbeatInterval)
     if (this.group !== undefined) {
       this.group.removeMember(this)
     }
     this.complete()
     generatedIds.delete(this.id)
-    if (code !== 1000) {
-      log.info('Connection with peer has closed', { id: this.id, code, reason })
-    }
   }
 
   bindWith(member: Peer) {
