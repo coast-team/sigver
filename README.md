@@ -2,7 +2,7 @@
 
 Signaling server for WebRTC listening on **WebSocket**.
 
-Used by [**Netflux**](https://coast-team.github.io/netflux), Javascript client and server side transport API for establishing a peer to peer network.
+Used by [**Netflux**](https://coast-team.github.io/netflux), Javascript client and server side transport API for establishing peer to peer network.
 
 [![version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)
 [![node-version](https://img.shields.io/node/v/sigver.svg?style=flat-square)](https://nodejs.org/en/)
@@ -43,13 +43,6 @@ Examples:
   $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Signaling server is listening on 0.0.0.0:443
 ```
 
-## How to use
-
-If the server is listening on `wss://mysigver.org`, then he only accepts
-`wss://mysigver.org/:key` URLs where **key** is any valid string less than 512 characters (key identifies peer-to-peer network).
-
-For example: `wss://mysigver.org/Lt71z0rspEqBKoConPJpr3NoODiO0kgAtM3fYc3VLH`
-
 ## Server protocol
 
 Server uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) for encode/decode all messages.
@@ -88,7 +81,7 @@ message Message {
 
 message Content {
   uint32 id = 1; // Peer id to route data to.
-  bool unsubscribe = 2; // Forward last data and unsubscribe from the peer
+  bool lastData = 2; // Indicates that this is the last data to be forwarded
   bytes data = 3; // Any data sent by the peer
 }
 
@@ -101,7 +94,6 @@ message GroupData {
 Server may close the socket with the following codes:
 
 * **ERR_KEY: 4741** // Inappropriate key format (e.g. key too long)
-* **ERR_NO_KEY: 4742** // Incorrect URL format
-* **ERR_HEARTBEAT = 4743** // Heart-beats error
-* **ERR_MESSAGE = 4744** // Any error due to message: type, format etc.
-* **ERR_BLOCKING_MEMBER = 4745** // When only one member left in the group and new peers could not join via him.
+* **ERR_HEARTBEAT = 4742** // Heart-beats error
+* **ERR_MESSAGE = 4743** // Any error due to message: type, format etc.
+* **ERR_BLOCKING_MEMBER = 4744** // When only one member left in the group and new peers could not join via him.
