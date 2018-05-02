@@ -163,7 +163,7 @@ export const Content = $root.Content = (() => {
      * @exports IContent
      * @interface IContent
      * @property {number|null} [id] Content id
-     * @property {boolean|null} [unsubscribe] Content unsubscribe
+     * @property {boolean|null} [lastData] Content lastData
      * @property {Uint8Array|null} [data] Content data
      */
 
@@ -191,12 +191,12 @@ export const Content = $root.Content = (() => {
     Content.prototype.id = 0;
 
     /**
-     * Content unsubscribe.
-     * @member {boolean} unsubscribe
+     * Content lastData.
+     * @member {boolean} lastData
      * @memberof Content
      * @instance
      */
-    Content.prototype.unsubscribe = false;
+    Content.prototype.lastData = false;
 
     /**
      * Content data.
@@ -232,8 +232,8 @@ export const Content = $root.Content = (() => {
             writer = $Writer.create();
         if (message.id != null && message.hasOwnProperty("id"))
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
-        if (message.unsubscribe != null && message.hasOwnProperty("unsubscribe"))
-            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.unsubscribe);
+        if (message.lastData != null && message.hasOwnProperty("lastData"))
+            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.lastData);
         if (message.data != null && message.hasOwnProperty("data"))
             writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.data);
         return writer;
@@ -261,7 +261,7 @@ export const Content = $root.Content = (() => {
                 message.id = reader.uint32();
                 break;
             case 2:
-                message.unsubscribe = reader.bool();
+                message.lastData = reader.bool();
                 break;
             case 3:
                 message.data = reader.bytes();

@@ -1,4 +1,4 @@
-import * as h from './util.js'
+import * as h from './helper.js'
 
 const ERR_KEY = 4741
 const ERR_HEARTBEAT = 4742
@@ -9,29 +9,13 @@ const URL = 'ws://localhost:8010'
 describe('Signaling WebSocket server', () => {
   const sockets = []
 
-  // function getConnection(key) {
-  //   const ws = new WebSocket(`${URL}/${key}`)
-  //   ws.binaryType = 'arraybuffer'
-  //   ws.onclose = (closeEvt) => fail(closeEvt.reason)
-  //   ws.onerror = (err) => fail(err.message)
-  //   ws.onopen = () => channels.add(ws)
-  //   return {
-  //     set onmessage(cb) {
-  //       ws.onmessage = (msgEvt) => {
-  //         const msg = h.decode(msgEvt.data)
-  //         if (msg.type === 'heartbeat') {
-  //           ws.send(h.encode({ pong: true }))
-  //         } else {
-  //           cb(msg)
-  //         }
-  //       }
-  //     },
-  //     send: (msg) => ws.send(h.encode(msg)),
-  //   }
-  // }
-
   afterEach(() =>
-    sockets.filter((ws) => ws.readyState === WebSocket.OPEN).forEach((ws) => ws.close()))
+    sockets.filter((ws) => ws.readyState === WebSocket.OPEN).forEach((ws) => {
+      ws.onmessage = undefined
+      ws.onclose = undefined
+      ws.onerror = undefined
+      ws.close()
+    }))
 
   describe('Should fail to connect', () => {
     it(`with code: ${ERR_KEY} because the key is too long`, (done) => {
@@ -161,7 +145,7 @@ describe('Signaling WebSocket server', () => {
   describe('🙂 🙂 - group of 2 peers', () => {
     it('Should NOT be the first in the group', (done) => {
       const key = 'Secrets of the stars'
-      const startSecondPeer = () => {
+      const secondePeer = () => {
         const ws = new WebSocket(`${URL}/${key}`)
         sockets.push(ws)
         ws.binaryType = 'arraybuffer'
@@ -181,7 +165,7 @@ describe('Signaling WebSocket server', () => {
       ws.onmessage = ({ data }) => {
         const msg = h.decode(data)
         if (msg.type === 'connected') {
-          startSecondPeer()
+          secondePeer()
         }
       }
       ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
@@ -191,7 +175,7 @@ describe('Signaling WebSocket server', () => {
       let counter = 0
       const key = 'Ira wolf'
       const queue = new h.Queue(2, done)
-      const startSecondPeer = () => {
+      const secondePeer = () => {
         const ws = new WebSocket(`${URL}/${key}`)
         sockets.push(ws)
         ws.binaryType = 'arraybuffer'
@@ -217,7 +201,7 @@ describe('Signaling WebSocket server', () => {
       ws.onmessage = ({ data }) => {
         const msg = h.decode(data)
         if (msg.type === 'connected') {
-          startSecondPeer()
+          secondePeer()
         }
       }
       ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
@@ -229,7 +213,7 @@ describe('Signaling WebSocket server', () => {
 
     it('Should get connected=true when members have at least one member in common', (done) => {
       const key = 'Sunscreen'
-      const startSecondPeer = () => {
+      const secondePeer = () => {
         const ws = new WebSocket(`${URL}/${key}`)
         sockets.push(ws)
         ws.binaryType = 'arraybuffer'
@@ -249,7 +233,7 @@ describe('Signaling WebSocket server', () => {
       ws.onmessage = ({ data }) => {
         const msg = h.decode(data)
         if (msg.type === 'connected') {
-          startSecondPeer()
+          secondePeer()
         }
       }
       ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
@@ -259,7 +243,7 @@ describe('Signaling WebSocket server', () => {
       const key = 'The Civil Wars'
       const msg1 = h.randomBytes()
       const msg2 = h.randomBytes()
-      const startSecondPeer = () => {
+      const secondePeer = () => {
         const ws = new WebSocket(`${URL}/${key}`)
         sockets.push(ws)
         ws.binaryType = 'arraybuffer'
@@ -282,7 +266,7 @@ describe('Signaling WebSocket server', () => {
       ws.onmessage = ({ data }) => {
         const msg = h.decode(data)
         if (msg.type === 'connected') {
-          startSecondPeer()
+          secondePeer()
         } else if (msg.type === 'content') {
           expect(msg.content.data).toEqual(msg2)
           ws.send(h.encode({ content: { id: msg.content.id, data: msg1 } }))
@@ -290,94 +274,281 @@ describe('Signaling WebSocket server', () => {
       }
       ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
     })
+
+    it('Should still be able to exchange data after connected', (done) => {
+      const key = 'По улице моей который год'
+      const msg1 = h.randomBytes()
+      const msg2 = h.randomBytes()
+      const secondePeer = () => {
+        const ws = new WebSocket(`${URL}/${key}`)
+        sockets.push(ws)
+        ws.binaryType = 'arraybuffer'
+        ws.onmessage = ({ data }) => {
+          const msg = h.decode(data)
+          if (msg.type === 'connected') {
+            if (!msg.connected) {
+              ws.send(h.encode({ connect: { members: [1] } }))
+              ws.send(h.encode({ content: { data: msg2 } }))
+            }
+          } else if (msg.type === 'content') {
+            expect(msg.content.id).toEqual(1)
+            expect(msg.content.data).toEqual(msg1)
+            done()
+          }
+        }
+        ws.onopen = () => ws.send(h.encode({ connect: { members: [] } }))
+      }
+
+      const ws = new WebSocket(`${URL}/${key}`)
+      sockets.push(ws)
+      ws.binaryType = 'arraybuffer'
+      ws.onmessage = ({ data }) => {
+        const msg = h.decode(data)
+        if (msg.type === 'connected') {
+          secondePeer()
+        } else if (msg.type === 'content') {
+          expect(msg.content.data).toEqual(msg2)
+          ws.send(h.encode({ content: { id: msg.content.id, data: msg1 } }))
+        }
+      }
+      ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
+    })
+
+    it('Should NOT be able to exchange data after sent the last data', (done) => {
+      const key = 'По улице моей который год'
+      const msg1 = h.randomBytes()
+      const msg2 = h.randomBytes()
+      const secondePeer = () => {
+        const ws = new WebSocket(`${URL}/${key}`)
+        sockets.push(ws)
+        ws.binaryType = 'arraybuffer'
+        const onmessageGen = (function*() {
+          let msg = yield
+          expect(msg.type).toEqual('connected')
+          expect(msg.connected).toBeFalsy()
+          ws.send(h.encode({ content: { lastData: true, data: msg2 } }))
+          ws.send(h.encode({ content: { data: msg3 } }))
+        })()
+        onmessageGen.next()
+        ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+        ws.onopen = () => ws.send(h.encode({ connect: { members: [] } }))
+      }
+
+      const ws = new WebSocket(`${URL}/${key}`)
+      sockets.push(ws)
+      ws.binaryType = 'arraybuffer'
+      const onmessageGen = (function*() {
+        let msg = yield
+        expect(msg.type).toEqual('connected')
+        expect(msg.connected).toBeTruthy()
+
+        msg = yield
+        expect(msg.type).toEqual('content')
+        expect(msg.content.data).toEqual(msg2)
+
+        msg = yield
+        fail('Received a message which should not be received')
+      })()
+      onmessageGen.next()
+      ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+      ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
+      setTimeout(done, 2000)
+    })
+  })
+
+  describe('🙂 🙂 🙂 - group of 3 peers', () => {
+    it('Should try all members', (done) => {
+      const key = 'At last'
+      const msg1 = h.randomBytes()
+      const msg1back = h.randomBytes()
+      const msg2 = h.randomBytes()
+      const msg2back = h.randomBytes()
+      const msg3 = h.randomBytes()
+      const msg3back = h.randomBytes()
+
+      // Code fot the Third peer
+      const thirdPeer = () => {
+        const ws = new WebSocket(`${URL}/${key}`)
+        sockets.push(ws)
+        ws.binaryType = 'arraybuffer'
+        const onmessageGen = (function*() {
+          let msg = yield
+          expect(msg.type).toEqual('connected')
+          expect(msg.connected).toBeFalsy()
+          ws.send(h.encode({ content: { data: msg1 } }))
+
+          msg = yield
+          expect(msg.type).toEqual('content')
+          expect(msg.content.data).toEqual(msg1back)
+          ws.send(h.encode({ connect: { members: [] } }))
+
+          msg = yield
+          expect(msg.type).toEqual('connected')
+          expect(msg.connected).toBeFalsy()
+          ws.send(h.encode({ content: { data: msg2 } }))
+
+          msg = yield
+          expect(msg.type).toEqual('content')
+          expect(msg.content.data).toEqual(msg2back)
+          ws.send(h.encode({ connect: { members: [] } }))
+
+          msg = yield
+          expect(msg.type).toEqual('connected')
+          expect(msg.connected).toBeFalsy()
+          ws.send(h.encode({ content: { data: msg3 } }))
+
+          msg = yield
+          expect(msg.type).toEqual('content')
+          expect(msg.content.data).toEqual(msg3back)
+          done()
+        })()
+        onmessageGen.next()
+        ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+        ws.onopen = () => ws.send(h.encode({ connect: { members: [] } }))
+        ws.onclose = () => fail('Third peer closed the connection')
+      }
+
+      // Code fot the Second peer
+      const secondePeer = () => {
+        const ws = new WebSocket(`${URL}/${key}`)
+        sockets.push(ws)
+        ws.binaryType = 'arraybuffer'
+        const onmessageGen = (function*() {
+          let msg = yield
+          expect(msg.type).toEqual('connected')
+          expect(msg.connected).toBeTruthy()
+          thirdPeer()
+
+          msg = yield
+          expect(msg.type).toEqual('content')
+          expect(msg.content.data).toEqual(msg2)
+          ws.send(h.encode({ content: { id: msg.content.id, data: msg2back } }))
+
+          msg = yield
+          fail('Seconde peer should no longer receive any message')
+        })()
+        onmessageGen.next()
+        ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+        ws.onopen = () => ws.send(h.encode({ connect: { id: 2, members: [1] } }))
+        ws.onclose = () => fail('Second peer closed the connection')
+      }
+
+      // Code fot the First peer
+      const ws = new WebSocket(`${URL}/${key}`)
+      sockets.push(ws)
+      ws.binaryType = 'arraybuffer'
+      ws.binaryType = 'arraybuffer'
+      const onmessageGen = (function*() {
+        let msg = yield
+        expect(msg.type).toEqual('connected')
+        expect(msg.connected).toBeTruthy()
+        secondePeer()
+
+        msg = yield
+        expect(msg.type).toEqual('content')
+        expect(msg.content.data).toEqual(msg1)
+        ws.send(h.encode({ content: { id: msg.content.id, data: msg1back } }))
+
+        msg = yield
+        expect(msg.type).toEqual('content')
+        expect(msg.content.data).toEqual(msg3)
+        ws.send(h.encode({ content: { id: msg.content.id, data: msg3back } }))
+
+        msg = yield
+        fail('First peer should no longer receive any message')
+      })()
+      onmessageGen.next()
+      ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+      ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
+      ws.onclose = () => fail('First peer closed the connection')
+    })
+
+    it('Should exchange data with two joining peers', (done) => {
+      const key = "Let's try this again"
+      let queueInit = new h.Queue(2, () => ws2.send(h.encode({ content: { data: msg2 } })))
+      const msg2 = h.randomBytes()
+      const msg2back = h.randomBytes()
+      const msg3 = h.randomBytes()
+      const msg3back = h.randomBytes()
+      let ws2, ws3
+
+      // Code fot the Third peer
+      const thirdPeer = () => {
+        const ws = new WebSocket(`${URL}/${key}`)
+        ws3 = ws
+        sockets.push(ws)
+        ws.binaryType = 'arraybuffer'
+        ws.onopen = () => ws.send(h.encode({ connect: { members: [] } }))
+        ws.onclose = () => fail('Third peer closed the connection')
+        const onmessageGen = (function*() {
+          let msg = yield
+          expect(msg.type).toEqual('connected')
+          expect(msg.connected).toBeFalsy()
+          queueInit.done()
+
+          msg = yield
+          expect(msg.type).toEqual('content')
+          expect(msg.content.data).toEqual(msg3back)
+          done()
+        })()
+        onmessageGen.next()
+        ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+      }
+
+      // Code fot the Second peer
+      const secondePeer = async () => {
+        const ws = new WebSocket(`${URL}/${key}`)
+        ws2 = ws
+        sockets.push(ws)
+        ws.binaryType = 'arraybuffer'
+        ws.onopen = () => ws.send(h.encode({ connect: { members: [] } }))
+        ws.onclose = () => fail('Second peer closed the connection')
+        const onmessageGen = (function*() {
+          let msg = yield
+          expect(msg.type).toEqual('connected')
+          expect(msg.connected).toBeFalsy()
+          queueInit.done()
+
+          msg = yield
+          expect(msg.type).toEqual('content')
+          expect(msg.content.data).toEqual(msg2back)
+          ws3.send(h.encode({ content: { data: msg3 } }))
+
+          msg = yield
+          fail('Second peer should no longer receive any message')
+        })()
+        onmessageGen.next()
+        ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+      }
+
+      // Code fot the First peer
+      const ws = new WebSocket(`${URL}/${key}`)
+      sockets.push(ws)
+      ws.binaryType = 'arraybuffer'
+      const onmessageGen = (function*() {
+        let msg = yield
+        expect(msg.type).toEqual('connected')
+        expect(msg.connected).toBeTruthy()
+        secondePeer()
+        thirdPeer()
+
+        msg = yield
+        expect(msg.type).toEqual('content')
+        expect(msg.content.data).toEqual(msg2)
+        ws.send(h.encode({ content: { id: msg.content.id, data: msg2back } }))
+
+        msg = yield
+        expect(msg.type).toEqual('content')
+        expect(msg.content.data).toEqual(msg3)
+        ws.send(h.encode({ content: { id: msg.content.id, data: msg3back } }))
+
+        msg = yield
+        fail('First peer should no longer receive any message')
+      })()
+      onmessageGen.next()
+      ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
+      ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
+      ws.onclose = () => fail('First peer closed the connection')
+    })
   })
 })
-
-// it('Should NOT be the first in the network', (done) => {
-//   const key = h.randomKey()
-//   const con1 = getConnection(key)
-//   con1.onmessage = (msg) => {
-//     expect(msg.isFirst).toBeTruthy()
-//     const con2 = getConnection(key)
-//     con2.onmessage = (msg) => {
-//       expect(msg.isFirst).toBeFalsy()
-//       done()
-//     }
-//   }
-// })
-
-// it('Should transmit data between a network member and a joining peer', (done) => {
-//   const key = h.randomKey()
-//   const msg1 = h.randomBytes()
-//   const msg2 = h.randomBytes()
-//   const con1 = getConnection(key)
-//   const msgSeq = (function*() {
-//     let msg = yield
-//     expect(msg.isFirst).toBeTruthy()
-//     const con2 = getConnection(key)
-//     con2.onmessage = (msg) => msgSeq.next(msg)
-
-//     msg = yield
-//     expect(msg.isFirst).toBeFalsy()
-//     con2.send({ content: { data: msg2 } })
-
-//     msg = yield
-//     expect(msg.content.id).not.toEqual(1)
-//     expect(msg.content.data).toEqual(msg2)
-//     con1.send({ content: { id: msg.content.id, data: msg1 } })
-
-//     msg = yield
-//     expect(msg.content.id).toEqual(1)
-//     expect(msg.content.data).toEqual(msg1)
-//     done()
-//   })()
-//   msgSeq.next()
-//   con1.onmessage = (msg) => msgSeq.next(msg)
-// })
-
-// it('Should transmit data between a network member and 2 joining peers', (done) => {
-//   const key = h.randomKey()
-//   const msg12 = h.randomBytes()
-//   const msg13 = h.randomBytes()
-//   const msg2 = h.randomBytes()
-//   const msg3 = h.randomBytes()
-
-//   const con1 = getConnection(key)
-//   const msgSeq = (function*() {
-//     let msg = yield
-//     expect(msg.isFirst).toBeTruthy()
-//     const con2 = getConnection(key)
-//     con2.onmessage = (msg) => msgSeq.next(msg)
-
-//     msg = yield
-//     expect(msg.isFirst).toBeFalsy()
-//     const con3 = getConnection(key)
-//     con3.onmessage = (msg) => msgSeq.next(msg)
-
-//     msg = yield
-//     expect(msg.isFirst).toBeFalsy()
-//     con2.send({ content: { data: msg2 } })
-
-//     msg = yield
-//     expect(msg.content.id).not.toEqual(1)
-//     expect(msg.content.data).toEqual(msg2)
-//     con1.send({ content: { id: msg.content.id, data: msg12 } })
-
-//     msg = yield
-//     expect(msg.content.id).toEqual(1)
-//     expect(msg.content.data).toEqual(msg12)
-//     con3.send({ content: { data: msg3 } })
-
-//     msg = yield
-//     expect(msg.content.id).not.toEqual(1)
-//     expect(msg.content.data).toEqual(msg3)
-//     con1.send({ content: { id: msg.content.id, data: msg13 } })
-
-//     msg = yield
-//     expect(msg.content.id).toEqual(1)
-//     expect(msg.content.data).toEqual(msg13)
-//     done()
-//   })()
-//   msgSeq.next()
-//   con1.onmessage = (msg) => msgSeq.next(msg)
-// })

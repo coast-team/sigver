@@ -3,7 +3,7 @@ import { filter, pluck } from 'rxjs/operators'
 
 import { Group, isAGroupMember } from './groups'
 import { GroupData, IMessage, Message } from './proto'
-import { ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './Util'
+import { ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
@@ -20,6 +20,7 @@ export class Peer extends Subject<Message> {
   public group: Group | undefined
   public triedMembers: number[]
 
+  private joiningId: number
   private heartbeatInterval: NodeJS.Timer
   private subToMember: Subscription | undefined
   private subToJoining: Subscription | undefined
@@ -33,7 +34,8 @@ export class Peer extends Subject<Message> {
   ) {
     super()
     this.triedMembers = []
-    this.id = generateId(generatedIds)
+    this.joiningId = generateId(generatedIds)
+    this.id = this.joiningId
     this.closeFunc = closeFunc
     this.sendFunc = sendFunc
 
@@ -93,7 +95,7 @@ export class Peer extends Subject<Message> {
       this.group.removeMember(this)
     }
     this.complete()
-    generatedIds.delete(this.id)
+    generatedIds.delete(this.joiningId)
   }
 
   bindWith(member: Peer) {
@@ -103,17 +105,17 @@ export class Peer extends Subject<Message> {
     if (this.subToJoining) {
       this.subToJoining.unsubscribe()
     }
-    this.id = generateId(generatedIds)
+    this.joiningId = generateId(generatedIds)
     this.triedMembers.push(member.id)
 
     // Joining subscribes to the group member.
     this.subToMember = member
-      .pipe(filter(({ content }) => !!content && content.id === this.id), pluck('content'))
+      .pipe(filter(({ content }) => !!content && content.id === this.joiningId), pluck('content'))
       .subscribe(
-        ({ unsubscribe, data }: any) => {
+        ({ lastData, data }: any) => {
           this.send({ content: { id: 1, data } })
-          if (unsubscribe && this.subToMember) {
-            this.subToMember.unsubscribe()
+          if (lastData) {
+            ;(this.subToMember as Subscription).unsubscribe()
           }
         },
         () => this.send({ content: { id: 1 } }),
@@ -122,14 +124,14 @@ export class Peer extends Subject<Message> {
 
     // Group member subscribes to the joining peer.
     this.subToJoining = this.pipe(filter(({ content }) => !!content), pluck('content')).subscribe(
-      ({ unsubscribe, data }: any) => {
-        member.send({ content: { id: this.id, data } })
-        if (unsubscribe && this.subToJoining) {
-          this.subToJoining.unsubscribe()
+      ({ lastData, data }: any) => {
+        member.send({ content: { id: this.joiningId, data } })
+        if (lastData) {
+          ;(this.subToJoining as Subscription).unsubscribe()
         }
       },
-      () => member.send({ content: { id: this.id } }),
-      () => member.send({ content: { id: this.id } })
+      () => member.send({ content: { id: this.joiningId } }),
+      () => member.send({ content: { id: this.joiningId } })
     )
   }
 }

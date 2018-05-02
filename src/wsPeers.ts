@@ -4,8 +4,8 @@ import { Server as HttpsServer } from 'https'
 import * as URL from 'url'
 import * as WebSocket from 'uws'
 
-import { Peer } from './Peer'
-import { ERR_MESSAGE, SigError, validateKey } from './Util'
+import { Peer } from './peer'
+import { ERR_MESSAGE, SigError, validateKey } from './util'
 
 export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebSocket.Server {
   // Configure server

@@ -1,5 +1,5 @@
-import { Peer } from './Peer'
-import { ERR_BLOCKING_MEMBER } from './Util'
+import { Peer } from './peer'
+import { ERR_BLOCKING_MEMBER } from './util'
 
 const groups = new Map<string, Group>()
 
@@ -16,6 +16,10 @@ export function isAGroupMember(peer: Peer, id: number, members: number[], key: s
     if (peer.group) {
       return true
     }
+    if (group.hasMembersInCommon(members)) {
+      group.addMember(peer, id)
+      return true
+    }
     const member = group.getFirstMember()
     if (peer.triedMembers.includes(member.id)) {
       group.addMember(peer, id)
@@ -28,6 +32,7 @@ export function isAGroupMember(peer: Peer, id: number, members: number[], key: s
     }
   }
   if (group.hasMembersInCommon(members)) {
+    group.addMember(peer, id)
     return true
   } else {
     group.removeMember(peer)
@@ -82,9 +87,6 @@ export class Group {
   }
 
   selectMemberFor(joiningPeer: Peer): Peer {
-    if (this.members.size === 0) {
-      log.error('members are EMPTY...................................')
-    }
     for (const member of this.members) {
       if (!joiningPeer.triedMembers.includes(member.id)) {
         return member

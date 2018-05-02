@@ -72,8 +72,8 @@ export interface IContent {
     /** Content id */
     id?: (number|null);
 
-    /** Content unsubscribe */
-    unsubscribe?: (boolean|null);
+    /** Content lastData */
+    lastData?: (boolean|null);
 
     /** Content data */
     data?: (Uint8Array|null);
@@ -91,8 +91,8 @@ export class Content implements IContent {
     /** Content id. */
     public id: number;
 
-    /** Content unsubscribe. */
-    public unsubscribe: boolean;
+    /** Content lastData. */
+    public lastData: boolean;
 
     /** Content data. */
     public data: Uint8Array;
