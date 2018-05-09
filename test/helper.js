@@ -44,3 +44,14 @@ export class Queue {
     }
   }
 }
+
+function getKeyPrefix() {
+  if (global && global.window === undefined) {
+    return 'node'
+  } else {
+    const userAgent = window.navigator.userAgent
+    return userAgent.includes('Firefox') ? 'firefox' : 'chrome'
+  }
+}
+
+export const keyPrefix = getKeyPrefix()

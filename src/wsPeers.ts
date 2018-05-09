@@ -5,7 +5,7 @@ import * as URL from 'url'
 import * as WebSocket from 'uws'
 
 import { Peer } from './peer'
-import { ERR_MESSAGE, SigError, validateKey } from './util'
+import { ERR_URL, SigError, validateKey } from './util'
 
 export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebSocket.Server {
   // Configure server
@@ -19,18 +19,22 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
   wss.on('connection', (socket) => {
     try {
       // Get and validate the key
-      const key = getKey(socket.upgradeReq.url)
+      if (!socket.upgradeReq.url) {
+        throw new Error('URL is undefined')
+      }
+      const { key, favored } = parseURL(socket.upgradeReq.url)
       validateKey(key)
 
       // Initialize peer object
       const peer = new Peer(
         key,
+        favored,
         (bytes) => {
           try {
             socket.send(bytes, { binary: true })
           } catch (err) {
             log.error('Close socket', err)
-            socket.close(ERR_MESSAGE, err.message)
+            socket.close(ERR_URL, err.message)
           }
         },
         (code, reason) => socket.close(code, reason)
@@ -48,10 +52,10 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
   return wss
 }
 
-function getKey(url: string | undefined): string {
-  const pathname = url !== undefined ? URL.parse(url, true).pathname : undefined
+function parseURL(url: string): { key: string; favored: boolean } {
+  const { pathname, query } = URL.parse(url, true)
   if (!pathname) {
-    throw new SigError(ERR_MESSAGE, 'Could not get the key: the URL is undefined')
+    throw new SigError(ERR_URL, 'URL pathname is undefined')
   }
-  return pathname.substr(1)
+  return { key: pathname.substr(1), favored: 'favored' in query }
 }

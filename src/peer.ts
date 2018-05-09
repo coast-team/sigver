@@ -19,6 +19,7 @@ export class Peer extends Subject<Message> {
   public id: number
   public group: Group | undefined
   public triedMembers: number[]
+  public favored: boolean
 
   private joiningId: number
   private heartbeatInterval: NodeJS.Timer
@@ -29,10 +30,12 @@ export class Peer extends Subject<Message> {
 
   constructor(
     key: string,
+    favored: boolean,
     sendFunc: (msg: Uint8Array) => void,
     closeFunc: (code: number, reason: string) => void
   ) {
     super()
+    this.favored = favored
     this.triedMembers = []
     this.joiningId = generateId(generatedIds)
     this.id = this.joiningId

@@ -26,6 +26,8 @@ export const ERR_MESSAGE = 4743
 // When only one member left in the group the joining peer could not establish a connection with him.
 export const ERR_BLOCKING_MEMBER = 4744
 
+export const ERR_URL = 4745
+
 const KEY_LENGTH_LIMIT = 512
 
 export function validateKey(key: string) {

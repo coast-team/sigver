@@ -87,10 +87,18 @@ export class Group {
   }
 
   selectMemberFor(joiningPeer: Peer): Peer {
+    let notFavoredMember: Peer | undefined
     for (const member of this.members) {
       if (!joiningPeer.triedMembers.includes(member.id)) {
-        return member
+        if (member.favored) {
+          return member
+        } else if (!notFavoredMember) {
+          notFavoredMember = member
+        }
       }
+    }
+    if (notFavoredMember) {
+      return notFavoredMember
     }
     joiningPeer.triedMembers = []
     return this.selectMemberFor(joiningPeer)
