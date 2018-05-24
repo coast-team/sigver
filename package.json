@@ -23,6 +23,7 @@
     "precommit": "lint-staged && npm test -- --no-auto-watch --single-run",
     "commitmsg": "validate-commit-msg",
     "cz": "git-cz",
+    "travis-deploy-once": "travis-deploy-once",
     "semantic-release": "semantic-release"
   },
   "keywords": [
@@ -67,6 +68,7 @@
     "prettier": "^1.12.1",
     "rxjs-compat": "^6.1.0",
     "semantic-release": "^15.4.0",
+    "travis-deploy-once": "^5.0.0",
     "ts-loader": "^4.3.0",
     "ts-node": "^6.0.3",
     "tslint": "^5.10.0",

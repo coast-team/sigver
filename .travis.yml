@@ -19,4 +19,4 @@ node_js:
 script:
   - npm test
 after_success:
-  - ./node_modules/.bin/semantic-release
+  - npm run travis-deploy-once "npm run semantic-release"
