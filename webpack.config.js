@@ -1,6 +1,14 @@
 const nodeExternals = require('webpack-node-externals')
 const webpack = require('webpack')
 
+function externals(context, request, callback) {
+  if (/package\.json$/.test(request)) {
+    return callback(null, 'commonjs ' + request)
+  } else {
+    return nodeExternals()(context, request, callback)
+  }
+}
+
 module.exports = {
   mode: 'production',
   entry: './src/index.ts',
@@ -8,7 +16,7 @@ module.exports = {
     filename: 'server.js',
   },
   target: 'node',
-  externals: [nodeExternals()],
+  externals: [externals],
   module: {
     rules: [
       {
