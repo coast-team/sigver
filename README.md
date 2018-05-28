@@ -93,7 +93,7 @@ message GroupData {
 
 Server may close the socket with the following codes:
 
-* **ERR_KEY: 4741** // Inappropriate key format (e.g. key too long)
-* **ERR_HEARTBEAT = 4742** // Heart-beats error
-* **ERR_MESSAGE = 4743** // Any error due to message: type, format etc.
-* **ERR_BLOCKING_MEMBER = 4744** // When only one member left in the group and new peers could not join via him.
+- **ERR_KEY: 4741** // Inappropriate key format (e.g. key too long)
+- **ERR_HEARTBEAT = 4742** // Heart-beats error
+- **ERR_MESSAGE = 4743** // Any error due to message: type, format etc.
+- **ERR_BLOCKING_MEMBER = 4744** // When only one member left in the group and new peers could not join via him.

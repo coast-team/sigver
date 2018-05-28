@@ -3,7 +3,7 @@
 /**
  * Extends "global" variable
  */
-declare module NodeJS {
+declare namespace NodeJS {
   interface Global {
     log: any
   }
