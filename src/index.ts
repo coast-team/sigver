@@ -5,6 +5,9 @@ import { Server as HttpsServer } from 'https'
 
 import { setupWebSocketServer } from './wsPeers'
 
+// Config LOGGER
+global.log = createLogger({ name: 'sigver', level: 'trace' })
+
 // Retreive version from package.json
 let version: string
 try {
@@ -13,9 +16,6 @@ try {
   log.error(err)
   version = ''
 }
-
-// Config LOGGER
-global.log = createLogger({ name: 'sigver', level: 'trace' })
 
 // Default options for cli
 const defaults = {
