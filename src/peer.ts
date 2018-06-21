@@ -3,12 +3,10 @@ import { filter, pluck } from 'rxjs/operators'
 
 import { Group, isAGroupMember } from './groups'
 import { GroupData, IMessage, Message } from './proto'
-import { ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util'
+import { dismissId, ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
-
-const generatedIds = new Set()
 
 // Preconstructed messages for optimisation
 const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
@@ -16,17 +14,17 @@ const connectedTrueMsg = Message.encode(Message.create({ connected: true })).fin
 const connectedFalseMsg = Message.encode(Message.create({ connected: false })).finish()
 
 export class Peer extends Subject<Message> {
-  public id: number
+  public netfluxId: number | undefined
   public group: Group | undefined
   public triedMembers: number[]
   public favored: boolean
 
-  private joiningId: number
   private heartbeatInterval: NodeJS.Timer
   private subToMember: Subscription | undefined
   private subToJoining: Subscription | undefined
   private sendFunc: (msg: Uint8Array) => void
   private closeFunc: (code: number, reason: string) => void
+  private signalingId: number
 
   constructor(
     key: string,
@@ -37,8 +35,8 @@ export class Peer extends Subject<Message> {
     super()
     this.favored = favored
     this.triedMembers = []
-    this.joiningId = generateId(generatedIds)
-    this.id = this.joiningId
+    this.netfluxId = undefined
+    this.signalingId = generateId()
     this.closeFunc = closeFunc
     this.sendFunc = sendFunc
 
@@ -92,13 +90,24 @@ export class Peer extends Subject<Message> {
     }
   }
 
+  becomeMember(group: Group, id: number) {
+    this.group = group
+    this.triedMembers = []
+    this.netfluxId = id
+  }
+
+  noLongerAMember() {
+    this.group = undefined
+    this.netfluxId = undefined
+  }
+
   onClose() {
     clearInterval(this.heartbeatInterval)
     if (this.group !== undefined) {
       this.group.removeMember(this)
     }
     this.complete()
-    generatedIds.delete(this.joiningId)
+    dismissId(this.signalingId)
   }
 
   bindWith(member: Peer) {
@@ -108,24 +117,25 @@ export class Peer extends Subject<Message> {
     if (this.subToJoining) {
       this.subToJoining.unsubscribe()
     }
-    this.joiningId = generateId(generatedIds)
-    this.triedMembers.push(member.id)
+    dismissId(this.signalingId)
+    this.signalingId = generateId()
+    this.triedMembers.push(member.netfluxId as number)
 
     // Joining subscribes to the group member.
     this.subToMember = member
       .pipe(
-        filter(({ content }) => !!content && content.id === this.joiningId),
+        filter(({ content }) => !!content && content.recipientId === this.signalingId),
         pluck('content')
       )
       .subscribe(
         ({ lastData, data }: any) => {
-          this.send({ content: { id: 1, data } })
+          this.send({ content: { recipientId: this.signalingId, senderId: 0, data } })
           if (lastData) {
             ;(this.subToMember as Subscription).unsubscribe()
           }
         },
-        () => this.send({ content: { id: 1 } }),
-        () => this.send({ content: { id: 1 } })
+        () => this.send({ content: { recipientId: this.signalingId, senderId: 0 } }),
+        () => this.send({ content: { recipientId: this.signalingId, senderId: 0 } })
       )
 
     // Group member subscribes to the joining peer.
@@ -134,13 +144,13 @@ export class Peer extends Subject<Message> {
       pluck('content')
     ).subscribe(
       ({ lastData, data }: any) => {
-        member.send({ content: { id: this.joiningId, data } })
+        member.send({ content: { recipientId: 0, senderId: this.signalingId, data } })
         if (lastData) {
           ;(this.subToJoining as Subscription).unsubscribe()
         }
       },
-      () => member.send({ content: { id: this.joiningId } }),
-      () => member.send({ content: { id: this.joiningId } })
+      () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
+      () => member.send({ content: { recipientId: 0, senderId: this.signalingId } })
     )
   }
 }

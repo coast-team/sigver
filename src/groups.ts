@@ -21,7 +21,7 @@ export function isAGroupMember(peer: Peer, id: number, members: number[], key: s
       return true
     }
     const member = group.getFirstMember()
-    if (peer.triedMembers.includes(member.id)) {
+    if (peer.triedMembers.includes(member.netfluxId as number)) {
       group.addMember(peer, id)
       group.removeMember(member)
       member.close(
@@ -62,7 +62,7 @@ export class Group {
   hasMembersInCommon(members: number[]) {
     if (members.length !== 0) {
       for (const m of this.members) {
-        if (members.includes(m.id)) {
+        if (members.includes(m.netfluxId as number)) {
           return true
         }
       }
@@ -71,15 +71,13 @@ export class Group {
   }
 
   addMember(peer: Peer, id: number): boolean {
-    peer.group = this
-    peer.triedMembers = []
-    peer.id = id
+    peer.becomeMember(this, id)
     this.members.add(peer)
     return true
   }
 
   removeMember(peer: Peer) {
-    peer.group = undefined
+    peer.noLongerAMember()
     this.members.delete(peer)
     if (this.size === 0) {
       groups.delete(this.key)
@@ -89,7 +87,7 @@ export class Group {
   selectMemberFor(joiningPeer: Peer): Peer {
     let notFavoredMember: Peer | undefined
     for (const member of this.members) {
-      if (!joiningPeer.triedMembers.includes(member.id)) {
+      if (!joiningPeer.triedMembers.includes(member.netfluxId as number)) {
         if (member.favored) {
           return member
         } else if (!notFavoredMember) {

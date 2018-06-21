@@ -250,9 +250,9 @@ describe('Signaling WebSocket server', () => {
         ws.onmessage = ({ data }) => {
           const msg = h.decode(data)
           if (msg.type === 'connected') {
-            ws.send(h.encode({ content: { data: msg2 } }))
+            ws.send(h.encode({ content: { recipientId: 1, data: msg2 } }))
           } else if (msg.type === 'content') {
-            expect(msg.content.id).toEqual(1)
+            expect(msg.content.senderId).toEqual(0)
             expect(msg.content.data).toEqual(msg1)
             done()
           }
@@ -269,7 +269,7 @@ describe('Signaling WebSocket server', () => {
           secondePeer()
         } else if (msg.type === 'content') {
           expect(msg.content.data).toEqual(msg2)
-          ws.send(h.encode({ content: { id: msg.content.id, data: msg1 } }))
+          ws.send(h.encode({ content: { recipientId: msg.content.senderId, data: msg1 } }))
         }
       }
       ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
@@ -287,11 +287,11 @@ describe('Signaling WebSocket server', () => {
           const msg = h.decode(data)
           if (msg.type === 'connected') {
             if (!msg.connected) {
-              ws.send(h.encode({ connect: { members: [1] } }))
-              ws.send(h.encode({ content: { data: msg2 } }))
+              ws.send(h.encode({ connect: { id: 2, members: [1] } }))
+              ws.send(h.encode({ content: { recipientId: 1, data: msg2 } }))
             }
           } else if (msg.type === 'content') {
-            expect(msg.content.id).toEqual(1)
+            expect(msg.content.senderId).toEqual(0)
             expect(msg.content.data).toEqual(msg1)
             done()
           }
@@ -308,7 +308,7 @@ describe('Signaling WebSocket server', () => {
           secondePeer()
         } else if (msg.type === 'content') {
           expect(msg.content.data).toEqual(msg2)
-          ws.send(h.encode({ content: { id: msg.content.id, data: msg1 } }))
+          ws.send(h.encode({ content: { recipientId: msg.content.senderId, data: msg1 } }))
         }
       }
       ws.onopen = () => ws.send(h.encode({ connect: { id: 1, members: [] } }))
@@ -326,8 +326,8 @@ describe('Signaling WebSocket server', () => {
           let msg = yield
           expect(msg.type).toEqual('connected')
           expect(msg.connected).toBeFalsy()
-          ws.send(h.encode({ content: { lastData: true, data: msg1 } }))
-          ws.send(h.encode({ content: { data: msg2 } }))
+          ws.send(h.encode({ content: { recipientId: 1, lastData: true, data: msg1 } }))
+          ws.send(h.encode({ content: { recipientId: 1, data: msg2 } }))
         })()
         onmessageGen.next()
         ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
@@ -423,7 +423,7 @@ describe('Signaling WebSocket server', () => {
           msg = yield
           expect(msg.type).toEqual('content')
           expect(msg.content.data).toEqual(msg2)
-          ws.send(h.encode({ content: { id: msg.content.id, data: msg2back } }))
+          ws.send(h.encode({ content: { recipientId: msg.content.senderId, data: msg2back } }))
 
           msg = yield
           fail('Second peer should no longer receive any message')
@@ -447,12 +447,12 @@ describe('Signaling WebSocket server', () => {
         msg = yield
         expect(msg.type).toEqual('content')
         expect(msg.content.data).toEqual(msg1)
-        ws.send(h.encode({ content: { id: msg.content.id, data: msg1back } }))
+        ws.send(h.encode({ content: { recipientId: msg.content.senderId, data: msg1back } }))
 
         msg = yield
         expect(msg.type).toEqual('content')
         expect(msg.content.data).toEqual(msg3)
-        ws.send(h.encode({ content: { id: msg.content.id, data: msg3back } }))
+        ws.send(h.encode({ content: { recipientId: msg.content.senderId, data: msg3back } }))
 
         msg = yield
         fail('First peer should no longer receive any message')
@@ -535,12 +535,12 @@ describe('Signaling WebSocket server', () => {
         msg = yield
         expect(msg.type).toEqual('content')
         expect(msg.content.data).toEqual(msg2)
-        ws.send(h.encode({ content: { id: msg.content.id, data: msg2back } }))
+        ws.send(h.encode({ content: { recipientId: msg.content.senderId, data: msg2back } }))
 
         msg = yield
         expect(msg.type).toEqual('content')
         expect(msg.content.data).toEqual(msg3)
-        ws.send(h.encode({ content: { id: msg.content.id, data: msg3back } }))
+        ws.send(h.encode({ content: { recipientId: msg.content.senderId, data: msg3back } }))
 
         msg = yield
         fail('First peer should no longer receive any message')

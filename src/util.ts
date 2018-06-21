@@ -2,6 +2,9 @@
 
 import * as crypto from 'crypto'
 
+const MAX_ID = 2147483647
+const generatedIds = new Set()
+
 export class SigError extends Error {
   readonly code: number
   readonly name: string
@@ -42,7 +45,19 @@ export function validateKey(key: string) {
   }
 }
 
-export function generateId(exclude: Set<number>): number {
-  const id = crypto.randomBytes(4).readUInt32BE(0, true)
-  return exclude.has(id) ? generateId(exclude) : id
+export function generateId(): number {
+  let id = crypto.randomBytes(4).readUInt32BE(0, true)
+  if (id > MAX_ID) {
+    id -= MAX_ID
+  }
+  if (id === 0 || generatedIds.has(id)) {
+    return generateId()
+  } else {
+    generatedIds.add(id)
+    return id
+  }
+}
+
+export function dismissId(id: number) {
+  generatedIds.delete(id)
 }
