@@ -1,8 +1,6 @@
 # Sigver
 
-Signaling server for WebRTC listening on **WebSocket**.
-
-Used by [**Netflux**](https://coast-team.github.io/netflux), Javascript client and server side transport API for establishing peer to peer network.
+WebRTC Signaling server based on **WebSocket** for [**Netflux API**](https://coast-team.github.io/netflux), Javascript client and server side transport API for establishing peer to peer network.
 
 [![version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)
 [![node-version](https://img.shields.io/node/v/sigver.svg?style=flat-square)](https://nodejs.org/en/)
@@ -52,25 +50,22 @@ syntax = "proto3";
 
 message Message {
   oneof type {
-    /*
-    * Incoming and outcoming messages
-    */
+    // INCOMING AND OUTCOMING MESSAGES
     // Server sends `heartbeat` message each 5 seconds and expects getting the
     // same message back. If after 3 tentatives still no response then close the
     // connection.
+    // Server sends a heartbeat every 5 seconds and expects to receive it as well. After three missed heartbeats
     bool heartbeat = 1;
-    Content content = 2; // Message to be exchanged between two peers.
+    // Any message to be exchanged between two peers.
+    // For instance WebRTC offer, answer and candidates.
+    Content content = 2;
 
-    /*
-    * Incoming message
-    */
+    // INCOMING MESSAGE
     // Peer either wants to make sure that he is still a group member or wants
     // to become one.
     GroupData connect = 3;
 
-    /*
-    * Outcoming message
-    */
+    // OUTCOMING MESSAGE
     // Response to the connect request above. True if the peer is the only member
     // of the group or he is connected to at least one group member. Otherwise the
     // signaling server subscribes this peer to one of the group member (i.e. the
@@ -80,7 +75,8 @@ message Message {
 }
 
 message Content {
-  uint32 id = 1; // Peer id to route data to.
+  uint32 senderId = 1;
+  uint32 recipientId = 2;
   bool lastData = 2; // Indicates that this is the last data to be forwarded
   bytes data = 3; // Any data sent by the peer
 }
