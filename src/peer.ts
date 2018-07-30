@@ -139,10 +139,7 @@ export class Peer extends Subject<Message> {
       )
 
     // Group member subscribes to the joining peer.
-    this.subToJoining = this.pipe(
-      filter(({ content }) => !!content),
-      pluck('content')
-    ).subscribe(
+    this.subToJoining = this.pipe(filter(({ content }) => !!content), pluck('content')).subscribe(
       ({ lastData, data }: any) => {
         member.send({ content: { recipientId: 0, senderId: this.signalingId, data } })
         if (lastData) {
