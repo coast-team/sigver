@@ -33,7 +33,7 @@
     "signaling",
     "server"
   ],
-  "author": "Philippe Kalitine <philippe.kalitine@gmail.com> (http://philippe.kalitine.name/)",
+  "author": "Philippe Kalitine <philippe.kalitine@gmail.com> (https://philippe.kalitine.name/)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -44,7 +44,7 @@
     "commander": "^2.13.0",
     "protobufjs": "^6.8.5",
     "rxjs": "^6.2.1",
-    "uws": "^10.148.1"
+    "uws": "10.148.1"
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.4",
