@@ -78,5 +78,9 @@ httpServer.on('clientError', (err, socket) => {
 
 httpServer.listen(port, host, () => {
   const address = httpServer.address()
-  log.info(`Signaling server is listening on ${address.address}:${address.port}`)
+  if (typeof address === 'string') {
+    log.info(`Signaling server is listening on ${address}`)
+  } else {
+    log.info(`Signaling server is listening on ${address.address}:${address.port}`)
+  }
 })
