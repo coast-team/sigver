@@ -85,7 +85,6 @@ export class Peer extends Subject<Message> {
     try {
       this.next(Message.decode(new Uint8Array(bytes)))
     } catch (err) {
-      log.error('Message error: ', err)
       this.close(ERR_MESSAGE, err.message)
     }
   }
@@ -139,7 +138,10 @@ export class Peer extends Subject<Message> {
       )
 
     // Group member subscribes to the joining peer.
-    this.subToJoining = this.pipe(filter(({ content }) => !!content), pluck('content')).subscribe(
+    this.subToJoining = this.pipe(
+      filter(({ content }) => !!content),
+      pluck('content')
+    ).subscribe(
       ({ lastData, data }: any) => {
         member.send({ content: { recipientId: 0, senderId: this.signalingId, data } })
         if (lastData) {

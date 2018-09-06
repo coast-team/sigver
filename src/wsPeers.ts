@@ -33,7 +33,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
           try {
             socket.send(bytes, { binary: true })
           } catch (err) {
-            log.error('Close socket', err)
+            log.error('Faild to send', err.message)
             socket.close(ERR_URL, err.message)
           }
         },
@@ -45,7 +45,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
       socket.onerror = (err) => peer.error(err)
       socket.onclose = () => peer.onClose()
     } catch (err) {
-      log.error('Close socket: ', err)
+      log.error('WebSocket connection error: ', err.message)
       socket.close(err.code, err.message)
     }
   })

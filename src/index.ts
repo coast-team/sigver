@@ -13,7 +13,9 @@ let version: string
 try {
   version = require('../package.json').version
 } catch (err) {
-  log.error(err)
+  try {
+    version = require('./package.json').version
+  } catch (err) {}
   version = ''
 }
 
@@ -72,15 +74,15 @@ setupWebSocketServer(httpServer)
 
 // Handle httpServer callbacks and start listen
 httpServer.on('clientError', (err, socket) => {
-  log.error('Client error: ', err)
+  log.fatal('Client error: ', err)
   socket.end()
 })
 
 httpServer.listen(port, host, () => {
   const address = httpServer.address()
   if (typeof address === 'string') {
-    log.info(`Signaling server is listening on ${address}`)
+    console.log(`Signaling server is listening on ${address}`)
   } else {
-    log.info(`Signaling server is listening on ${address.address}:${address.port}`)
+    console.log(`Signaling server is listening on ${address.address}:${address.port}`)
   }
 })
