@@ -44,11 +44,11 @@ commander
   .on('--help', () => {
     console.log(
       `
-  Examples:
+Examples:
 
-    $ sigver                       # Signaling server is listening on 0.0.0.0:8000
-    $ sigver -h 192.168.0.1 -p 80  # Signaling server is listening on 192.168.0.1:80
-    $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Signaling server is listening on 0.0.0.0:443`
+  $ sigver                       # Signaling server is listening on 0.0.0.0:8000
+  $ sigver -h 192.168.0.1 -p 80  # Signaling server is listening on 192.168.0.1:80
+  $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Signaling server is listening on 0.0.0.0:443`
     )
   })
   .parse(process.argv)

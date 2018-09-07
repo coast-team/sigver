@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "bunyan": "^1.8.12",
-    "commander": "^2.17.1",
+    "commander": "^2.18.0",
     "protobufjs": "^6.8.5",
     "rxjs": "^6.3.2",
     "uws": "10.148.1"
@@ -60,7 +60,7 @@
     "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "^1.1.2",
     "karma-spec-reporter": "0.0.32",
-    "karma-webpack": "^3.0.2",
+    "karma-webpack": "^3.0.3",
     "lint-staged": "^7.2.2",
     "markdownlint-cli": "^0.13.0",
     "nodemon": "^1.18.4",
