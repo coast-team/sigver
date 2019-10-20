@@ -20,9 +20,6 @@
     "pretest": "npm run build && pm2 restart process.yml",
     "test": "karma start",
     "test:chrome": "karma start --browsers Chrome",
-    "precommit": "lint-staged && npm test -- --no-auto-watch --single-run",
-    "commitmsg": "validate-commit-msg",
-    "cz": "git-cz",
     "travis-deploy-once": "travis-deploy-once",
     "semantic-release": "semantic-release"
   },
@@ -41,41 +38,45 @@
   },
   "dependencies": {
     "bunyan": "^1.8.12",
-    "commander": "^2.18.0",
     "protobufjs": "^6.8.5",
-    "rxjs": "^6.3.2",
+    "rxjs": "^6.5.3",
     "ws": "^7.2.0"
   },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2"
+  },
   "devDependencies": {
-    "@types/bunyan": "^1.8.4",
+    "@types/bunyan": "^1.8.6",
     "@types/commander": "^2.12.2",
     "@types/uws": "^0.13.1",
     "@types/ws": "^6.0.3",
-    "commitizen": "^2.10.1",
-    "cz-conventional-changelog": "^2.1.0",
-    "husky": "^0.14.3",
-    "jasmine": "^3.2.0",
+    "commander": "^3.0.2",
+    "commitizen": "^4.0.3",
+    "cz-conventional-changelog": "^3.0.2",
+    "husky": "^3.0.9",
+    "jasmine": "^3.5.0",
     "jasmine-spec-reporter": "^4.2.1",
-    "karma": "^3.0.0",
-    "karma-chrome-launcher": "^2.1.1",
-    "karma-firefox-launcher": "^1.1.0",
-    "karma-jasmine": "^1.1.2",
+    "karma": "^4.4.1",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-firefox-launcher": "^1.2.0",
+    "karma-jasmine": "^2.0.1",
     "karma-spec-reporter": "0.0.32",
-    "karma-webpack": "^3.0.3",
-    "lint-staged": "^7.2.2",
-    "nodemon": "^1.18.4",
-    "pm2": "^3.0.4",
-    "prettier": "^1.14.2",
-    "semantic-release": "^15.9.12",
-    "travis-deploy-once": "^5.0.7",
-    "ts-loader": "^5.0.0",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.10.0",
-    "tslint-config-prettier": "^1.15.0",
-    "typescript": "~3.0.3",
+    "karma-webpack": "^4.0.2",
+    "lint-staged": "^9.4.2",
+    "nodemon": "^1.19.4",
+    "pm2": "^4.1.2",
+    "prettier": "^1.18.2",
+    "semantic-release": "^15.13.27",
+    "travis-deploy-once": "^5.0.11",
+    "ts-loader": "^6.2.0",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.20.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "~3.6.4",
     "validate-commit-msg": "^2.14.0",
-    "webpack": "^4.17.2",
-    "webpack-cli": "^3.0.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9",
     "webpack-node-externals": "^1.7.2"
   },
   "config": {
@@ -83,25 +84,20 @@
       "path": "node_modules/cz-conventional-changelog"
     }
   },
-  "lint-staged": {
-    "linters": {
-      "*.md": [
-        "prettier --write --list-different",
-        "git add"
-      ],
-      "*.ts": [
-        "tslint --fix -p tsconfig.json -e src/proto/*",
-        "git add"
-      ],
-      "*.{ts,json,scss,css}": [
-        "prettier --write --list-different",
-        "git add"
-      ]
-    },
-    "concurrent": false
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged && npm test -- --no-auto-watch --single-run",
+      "commitmsg": "validate-commit-msg"
+    }
   },
-  "optionalDependencies": {
-    "bufferutil": "^4.0.1",
-    "utf-8-validate": "^5.0.2"
+  "lint-staged": {
+    "*.{md,ts,json,scss,css}": [
+      "prettier --write --list-different",
+      "git add"
+    ],
+    "*.ts": [
+      "tslint --fix -p tsconfig.json -e src/proto/*",
+      "git add"
+    ]
   }
 }
