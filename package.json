@@ -28,9 +28,10 @@
     "WebSocket",
     "Server-Sent-Event",
     "signaling",
-    "server"
+    "server",
+    "netflux"
   ],
-  "author": "Philippe Kalitine <philippe.kalitine@gmail.com> (https://philippe.kalitine.name/)",
+  "author": "Philippe Kalitine <philippe.kalitine@gmail.com> (https://philippe.kalitine.page)",
   "license": "MIT",
   "repository": {
     "type": "git",
