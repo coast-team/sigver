@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "nodemon -e ts -w ./src -x ts-node ./src/index.ts -- --port 8010 | bunyan",
-    "lint": "tslint --fix -p tsconfig.json && prettier --write --list-different 'src/**/*.ts' 'test/**/*.{js}' './*.{ts,js,json,md}' && markdownlint ./*.md",
+    "lint": "tslint --fix -p tsconfig.json && prettier --write --list-different 'src/**/*.ts' 'test/**/*.{js}' './*.{ts,js,json,md}'",
     "build": "npm run proto && webpack",
     "proto": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-convert -o src/proto/index.js src/proto/index.proto && pbts src/proto/index.js -o src/proto/index.d.ts",
     "pretest": "npm run build && pm2 restart process.yml",
@@ -63,7 +63,6 @@
     "karma-spec-reporter": "0.0.32",
     "karma-webpack": "^3.0.3",
     "lint-staged": "^7.2.2",
-    "markdownlint-cli": "^0.13.0",
     "nodemon": "^1.18.4",
     "pm2": "^3.0.4",
     "prettier": "^1.14.2",
@@ -88,8 +87,7 @@
     "linters": {
       "*.md": [
         "prettier --write --list-different",
-        "git add",
-        "markdownlint"
+        "git add"
       ],
       "*.ts": [
         "tslint --fix -p tsconfig.json -e src/proto/*",
