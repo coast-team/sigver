@@ -44,12 +44,13 @@
     "commander": "^2.18.0",
     "protobufjs": "^6.8.5",
     "rxjs": "^6.3.2",
-    "uws": "10.148.1"
+    "ws": "^7.2.0"
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.4",
     "@types/commander": "^2.12.2",
     "@types/uws": "^0.13.1",
+    "@types/ws": "^6.0.3",
     "commitizen": "^2.10.1",
     "cz-conventional-changelog": "^2.1.0",
     "husky": "^0.14.3",
@@ -100,5 +101,9 @@
       ]
     },
     "concurrent": false
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2"
   }
 }

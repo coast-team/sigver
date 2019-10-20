@@ -2,7 +2,7 @@
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
 import * as URL from 'url'
-import * as WebSocket from 'uws'
+import * as WebSocket from 'ws'
 
 import { Peer } from './peer'
 import { ERR_URL, SigError, validateKey } from './util'
@@ -16,13 +16,13 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
 
   wss.on('error', (err) => log.fatal('WebSocketServer error', err))
 
-  wss.on('connection', (socket) => {
+  wss.on('connection', (socket, request) => {
     try {
       // Get and validate the key
-      if (!socket.upgradeReq.url) {
+      if (!request.url) {
         throw new Error('URL is undefined')
       }
-      const { key, favored } = parseURL(socket.upgradeReq.url)
+      const { key, favored } = parseURL(request.url)
       validateKey(key)
 
       // Initialize peer object
@@ -41,7 +41,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
       )
 
       // Handle socket callbacks
-      socket.onmessage = ({ data }) => peer.onMessage(data)
+      socket.onmessage = ({ data }: any) => peer.onMessage(data)
       socket.onerror = (err) => peer.error(err)
       socket.onclose = () => peer.onClose()
     } catch (err) {
