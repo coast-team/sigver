@@ -22,7 +22,7 @@ try {
 // Default options for cli
 const defaults = {
   host: '0.0.0.0',
-  port: 8000,
+  port: '8000',
   key: '',
   cert: '',
   ca: '',

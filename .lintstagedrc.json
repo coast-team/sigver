@@ -1,0 +1,3 @@
+{
+  "*.{md,ts,json,scss,css}": ["prettier --write --list-different"]
+}
