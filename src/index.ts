@@ -1,4 +1,3 @@
-import bunyan from 'bunyan'
 import commander from 'commander'
 import fs from 'fs'
 import type { Server as HttpServer } from 'http'
@@ -6,10 +5,8 @@ import type { Server as HttpsServer } from 'https'
 import http from 'http'
 import https from 'https'
 
+import { log } from './logger'
 import { setupWebSocketServer } from './wsPeers'
-
-// Config LOGGER
-global.log = bunyan.createLogger({ name: 'sigver', level: 'trace' })
 
 // Retreive version from package.json
 let version: string

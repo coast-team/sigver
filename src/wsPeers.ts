@@ -3,6 +3,7 @@ import type { Server as HttpsServer } from 'https'
 import * as URL from 'url'
 import WebSocket from 'ws'
 
+import { log } from './logger'
 import { Peer } from './peer'
 import { ERR_URL, SigError, validateKey } from './util'
 
