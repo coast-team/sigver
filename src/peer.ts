@@ -2,7 +2,7 @@ import { Subject, Subscription } from 'rxjs'
 import { filter, pluck } from 'rxjs/operators'
 
 import { Group, isAGroupMember } from './groups'
-import { GroupData, IMessage, Message } from './proto'
+import { GroupData, IMessage, Message } from './proto/index.js'
 import { dismissId, ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
@@ -14,17 +14,17 @@ const connectedTrueMsg = Message.encode(Message.create({ connected: true })).fin
 const connectedFalseMsg = Message.encode(Message.create({ connected: false })).finish()
 
 export class Peer extends Subject<Message> {
-  public netfluxId: number | undefined
-  public group: Group | undefined
-  public triedMembers: number[]
-  public favored: boolean
+  declare netfluxId: number | undefined
+  declare group: Group | undefined
+  declare triedMembers: number[]
+  declare readonly favored: boolean
 
-  private heartbeatInterval: NodeJS.Timer
-  private subToMember: Subscription | undefined
-  private subToJoining: Subscription | undefined
-  private sendFunc: (msg: Uint8Array) => void
-  private closeFunc: (code: number, reason: string) => void
-  private signalingId: number
+  private declare readonly heartbeatInterval: NodeJS.Timer
+  private declare subToMember: Subscription | undefined
+  private declare subToJoining: Subscription | undefined
+  private declare readonly sendFunc: (msg: Uint8Array) => void
+  private declare readonly closeFunc: (code: number, reason: string) => void
+  private declare signalingId: number
 
   constructor(
     key: string,

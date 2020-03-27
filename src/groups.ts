@@ -42,9 +42,9 @@ export function isAGroupMember(peer: Peer, id: number, members: number[], key: s
 }
 
 export class Group {
-  public key: string
+  declare readonly key: string
 
-  private members: Set<Peer>
+  private declare readonly members: Set<Peer>
 
   constructor(key: string) {
     this.key = key

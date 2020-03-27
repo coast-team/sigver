@@ -1,13 +1,11 @@
-/// <reference types="node"/>
-
 import * as crypto from 'crypto'
 
 const MAX_ID = 2147483647
 const generatedIds = new Set()
 
 export class SigError extends Error {
-  readonly code: number
-  readonly name: string
+  declare readonly code: number
+  declare readonly name: string
 
   constructor(code: number, message = '') {
     super()
@@ -46,7 +44,7 @@ export function validateKey(key: string) {
 }
 
 export function generateId(): number {
-  let id = crypto.randomBytes(4).readUInt32BE(0, true)
+  let id = crypto.randomBytes(4).readUInt32BE(0)
   if (id > MAX_ID) {
     id -= MAX_ID
   }

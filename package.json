@@ -49,7 +49,7 @@
     "@commitlint/config-conventional": "^8.3.4",
     "@types/bunyan": "^1.8.6",
     "@types/commander": "^2.12.2",
-    "@types/uws": "^0.13.1",
+    "@types/node": "^13.9.5",
     "@types/ws": "^7.2.3",
     "commander": "^5.0.0",
     "husky": "^4.2.3",

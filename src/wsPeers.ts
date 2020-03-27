@@ -1,8 +1,7 @@
-/// <reference types="node"/>
-import { Server as HttpServer } from 'http'
-import { Server as HttpsServer } from 'https'
+import type { Server as HttpServer } from 'http'
+import type { Server as HttpsServer } from 'https'
 import * as URL from 'url'
-import * as WebSocket from 'ws'
+import WebSocket from 'ws'
 
 import { Peer } from './peer'
 import { ERR_URL, SigError, validateKey } from './util'

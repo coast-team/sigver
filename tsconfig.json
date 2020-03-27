@@ -1,17 +1,21 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "module": "commonjs",
-    "outDir": "dist/",
+    "module": "ES2015",
+    "outDir": "./dist/",
     "lib": ["es2017"],
+    "esModuleInterop": true,
     "moduleResolution": "node",
-    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
     "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "types": ["bunyan", "commander", "node", "ws"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/proto/**/*", "**/Message.d.ts", "src/sseserver_depricated/*"]
+  "include": ["src/**/*"]
 }

@@ -1,12 +1,15 @@
-import { createLogger } from 'bunyan'
-import * as commander from 'commander'
-import { Server as HttpServer } from 'http'
-import { Server as HttpsServer } from 'https'
+import bunyan from 'bunyan'
+import commander from 'commander'
+import fs from 'fs'
+import type { Server as HttpServer } from 'http'
+import type { Server as HttpsServer } from 'https'
+import http from 'http'
+import https from 'https'
 
 import { setupWebSocketServer } from './wsPeers'
 
 // Config LOGGER
-global.log = createLogger({ name: 'sigver', level: 'trace' })
+global.log = bunyan.createLogger({ name: 'sigver', level: 'trace' })
 
 // Retreive version from package.json
 let version: string
@@ -59,14 +62,13 @@ const { host, port, key, cert, ca } = commander
 // Create HTTP or HTTPS server
 let httpServer: HttpServer | HttpsServer
 if (key && cert && ca) {
-  const fs = require('fs')
-  httpServer = require('https').createServer({
+  httpServer = https.createServer({
     key: fs.readFileSync(key),
     cert: fs.readFileSync(cert),
     ca: fs.readFileSync(ca),
   })
 } else {
-  httpServer = require('http').createServer()
+  httpServer = http.createServer()
 }
 
 // Setup WebSocket server
@@ -80,7 +82,9 @@ httpServer.on('clientError', (err, socket) => {
 
 httpServer.listen(port, host, () => {
   const address = httpServer.address()
-  if (typeof address === 'string') {
+  if (address == null) {
+    log.fatal('Signaling server has no address')
+  } else if (typeof address === 'string') {
     console.log(`Signaling server is listening on ${address}`)
   } else {
     console.log(`Signaling server is listening on ${address.address}:${address.port}`)
