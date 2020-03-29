@@ -37,15 +37,12 @@
     "url": "https://github.com/coast-team/sigver.git"
   },
   "dependencies": {
+    "bufferutil": "^4.0.1",
     "bunyan": "^1.8.12",
     "commander": "^5.0.0",
     "protobufjs": "^6.8.9",
     "rxjs": "^6.5.4",
     "ws": "^7.2.3"
-  },
-  "optionalDependencies": {
-    "bufferutil": "^4.0.1",
-    "utf-8-validate": "^5.0.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.3.5",
