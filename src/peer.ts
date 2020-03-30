@@ -42,9 +42,6 @@ export class Peer extends Subject<Message> {
 
     // Handle all incoming messages for this peer, but content which is handled in bindWith method.
     this.subscribe((msg: Message) => {
-      if (!msg.type) {
-        this.close(ERR_MESSAGE, 'Wrong message format or unknown message')
-      }
       switch (msg.type) {
         case 'connect': {
           const { id, members } = msg.connect as GroupData
@@ -57,6 +54,9 @@ export class Peer extends Subject<Message> {
         }
         case 'heartbeat':
           missedHeartbeat = 0
+          break
+        case undefined:
+          this.close(ERR_MESSAGE, 'Wrong message format or unknown message')
           break
       }
     })
@@ -81,9 +81,9 @@ export class Peer extends Subject<Message> {
     this.closeFunc(code, reason)
   }
 
-  onMessage(bytes: ArrayBuffer) {
+  onMessage(bytes: Uint8Array) {
     try {
-      this.next(Message.decode(new Uint8Array(bytes)))
+      this.next(Message.decode(bytes))
     } catch (err) {
       this.close(ERR_MESSAGE, err.message)
     }
@@ -110,10 +110,10 @@ export class Peer extends Subject<Message> {
   }
 
   bindWith(member: Peer) {
-    if (this.subToMember) {
+    if (this.subToMember !== undefined) {
       this.subToMember.unsubscribe()
     }
-    if (this.subToJoining) {
+    if (this.subToJoining !== undefined) {
       this.subToJoining.unsubscribe()
     }
     dismissId(this.signalingId)
@@ -123,7 +123,7 @@ export class Peer extends Subject<Message> {
     // Joining subscribes to the group member.
     this.subToMember = member
       .pipe(
-        filter(({ content }) => !!content && content.recipientId === this.signalingId),
+        filter(({ content }) => content != null && content.recipientId === this.signalingId),
         pluck('content')
       )
       .subscribe(
@@ -139,7 +139,7 @@ export class Peer extends Subject<Message> {
 
     // Group member subscribes to the joining peer.
     this.subToJoining = this.pipe(
-      filter(({ content }) => !!content),
+      filter(({ content }) => content != null),
       pluck('content')
     ).subscribe(
       ({ lastData, data }: any) => {

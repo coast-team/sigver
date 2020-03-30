@@ -19,24 +19,18 @@ try {
   version = ''
 }
 
-// Default options for cli
-const defaults = {
-  host: '0.0.0.0',
-  port: '8000',
-  key: '',
-  cert: '',
-  ca: '',
-}
+const DEFAULT_HOST = '0.0.0.0'
+const DEFAULT_PORT = '8000'
 
 commander
   .version(version)
   .description(
     'Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)'
   )
-  .option('-h, --host <ip>', `Select host address to bind to`, defaults.host)
-  .option('-p, --port <number>', `Select port to use`, defaults.port)
-  .option('-k, --key <file path>', `Private key for the certificate.`)
-  .option('-c, --cert <file path>', `The server certificate.`)
+  .option('-h, --host <ip>', 'Select host address to bind to', DEFAULT_HOST)
+  .option('-p, --port <number>', 'Select port to use', DEFAULT_PORT)
+  .option('-k, --key <file path>', 'Private key for the certificate.')
+  .option('-c, --cert <file path>', 'The server certificate.')
   .option(
     '-a, --ca <file path>',
     `The additional intermediate certificate or certificates that web browsers will need in order to validate the server certificate.`

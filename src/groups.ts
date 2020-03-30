@@ -5,7 +5,7 @@ const groups = new Map<string, Group>()
 
 export function isAGroupMember(peer: Peer, id: number, members: number[], key: string): boolean {
   let group = peer.group || groups.get(key)
-  if (!group) {
+  if (group === undefined) {
     group = new Group(key)
     group.addMember(peer, id)
     groups.set(key, group)
@@ -13,7 +13,7 @@ export function isAGroupMember(peer: Peer, id: number, members: number[], key: s
   }
 
   if (group.size === 1) {
-    if (peer.group) {
+    if (peer.group !== undefined) {
       return true
     }
     if (group.hasMembersInCommon(members)) {
@@ -87,15 +87,16 @@ export class Group {
   selectMemberFor(joiningPeer: Peer): Peer {
     let notFavoredMember: Peer | undefined
     for (const member of this.members) {
-      if (!joiningPeer.triedMembers.includes(member.netfluxId as number)) {
+      const netfluxId = member.netfluxId
+      if (netfluxId !== undefined && !joiningPeer.triedMembers.includes(netfluxId)) {
         if (member.favored) {
           return member
-        } else if (!notFavoredMember) {
+        } else if (notFavoredMember === undefined) {
           notFavoredMember = member
         }
       }
     }
-    if (notFavoredMember) {
+    if (notFavoredMember !== undefined) {
       return notFavoredMember
     }
     joiningPeer.triedMembers = []

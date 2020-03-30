@@ -5,7 +5,7 @@ import WebSocket from 'ws'
 
 import { log } from './logger'
 import { Peer } from './peer'
-import { ERR_URL, SigError, validateKey } from './util'
+import { ERR_URL, SigError, validateKey, ERR_MESSAGE } from './util'
 
 export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebSocket.Server {
   // Configure server
@@ -19,7 +19,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
   wss.on('connection', (socket, request) => {
     try {
       // Get and validate the key
-      if (!request.url) {
+      if (request.url === undefined) {
         throw new Error('URL is undefined')
       }
       const { key, favored } = parseURL(request.url)
@@ -31,9 +31,9 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
         favored,
         (bytes) => {
           try {
-            socket.send(bytes, { binary: true })
+            socket.send(bytes)
           } catch (err) {
-            log.error('Faild to send', err.message)
+            log.error('Fail to send data', err.message)
             socket.close(ERR_URL, err.message)
           }
         },
@@ -41,7 +41,14 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
       )
 
       // Handle socket callbacks
-      socket.onmessage = ({ data }: any) => peer.onMessage(data)
+      socket.onmessage = ({ data }) => {
+        if (data instanceof Uint8Array) {
+          peer.onMessage(data)
+        } else {
+          log.error('Wrong data type')
+          peer.close(ERR_MESSAGE, 'Wrong data type')
+        }
+      }
       socket.onerror = (err) => peer.error(err)
       socket.onclose = () => peer.onClose()
     } catch (err) {
@@ -54,7 +61,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
 
 function parseURL(url: string): { key: string; favored: boolean } {
   const { pathname, query } = URL.parse(url, true)
-  if (!pathname) {
+  if (pathname == null) {
     throw new SigError(ERR_URL, 'URL pathname is undefined')
   }
   return { key: pathname.substr(1), favored: 'favored' in query }
