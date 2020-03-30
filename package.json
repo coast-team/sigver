@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "bufferutil": "^4.0.1",
-    "bunyan": "^1.8.12",
     "commander": "^5.0.0",
+    "pino": "^6.0.0",
     "protobufjs": "^6.8.9",
     "rxjs": "^6.5.4",
     "ws": "^7.2.3"
@@ -47,9 +47,9 @@
   "devDependencies": {
     "@commitlint/cli": "^8.3.5",
     "@commitlint/config-conventional": "^8.3.4",
-    "@types/bunyan": "^1.8.6",
     "@types/commander": "^2.12.2",
     "@types/node": "^13.9.5",
+    "@types/pino": "^5.17.0",
     "@types/ws": "^7.2.3",
     "husky": "^4.2.3",
     "jasmine": "^3.5.0",

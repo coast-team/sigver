@@ -15,7 +15,7 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": ["bunyan", "commander", "node", "ws"]
+    "types": ["commander", "node", "pino", "ws"]
   },
   "include": ["src/**/*"]
 }

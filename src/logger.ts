@@ -1,4 +1,5 @@
-import bunyan from 'bunyan'
+import pino from 'pino'
 
-// Config LOGGER
-export const log = bunyan.createLogger({ name: 'sigver', level: 'trace' })
+const level = process.env.NODE_ENV === 'development' ? 'debug' : 'info'
+
+export const log = pino({ name: 'sigver', level })
