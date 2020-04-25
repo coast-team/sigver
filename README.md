@@ -1,21 +1,15 @@
 # Sigver
 
-WebRTC Signaling server based on **WebSocket** for [**Netflux API**](https://coast-team.github.io/netflux), Javascript client and server side transport API for establishing peer to peer network.
-
-[![version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)
-[![node-version](https://img.shields.io/node/v/sigver.svg?style=flat-square)](https://nodejs.org/en/)
-
 [![travis](https://travis-ci.org/coast-team/sigver.svg?branch=master&style=flat-square)](https://travis-ci.org/coast-team/sigver)
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/semantic-release/semantic-release)
-[![commitizen](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=flat-square)](http://commitizen.github.io/cz-cli)
+[![version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)
+
+WebRTC Signaling server based on **WebSocket** for [**Netflux API**](https://coast-team.github.io/netflux), Javascript client and server side transport API for establishing peer to peer network.
 
 ## Install
 
 ```shell
 npm install -g sigver
 ```
-
-Sigver is built on top of [µWebSockets](https://github.com/uNetworking/uWebSockets) server. If you encounter any problem with its installation, please check the project's repository.
 
 ## Run
 
