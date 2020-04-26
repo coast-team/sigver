@@ -20,7 +20,8 @@
     "proto": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-convert -o src/proto/index.js src/proto/index.proto && pbts src/proto/index.js -o src/proto/index.d.ts",
     "pretest": "npm run build && pm2 restart process.yml",
     "test": "karma start",
-    "test:chrome": "karma start --browsers Chrome"
+    "test:chrome": "karma start --browsers Chrome",
+    "postversion": "npm run build"
   },
   "keywords": [
     "WebRTC",

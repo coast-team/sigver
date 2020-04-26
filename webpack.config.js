@@ -1,5 +1,8 @@
 const nodeExternals = require('webpack-node-externals')
 const webpack = require('webpack')
+const packagejson = require('./package.json')
+
+const SIGVER_VERSION = packagejson.version
 
 function externals(context, request, callback) {
   if (/package\.json$/.test(request)) {
@@ -30,6 +33,9 @@ module.exports = {
     extensions: ['.ts', '.js'],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      SIGVER_VERSION: JSON.stringify(SIGVER_VERSION)
+    }),
     new webpack.BannerPlugin({
       banner: '#!/usr/bin/env node',
       raw: true,

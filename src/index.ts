@@ -8,22 +8,13 @@ import https from 'https'
 import { log } from './logger'
 import { setupWebSocketServer } from './wsPeers'
 
-// Retreive version from package.json
-let version: string
-try {
-  version = require('../package.json').version
-} catch (err) {
-  try {
-    version = require('./package.json').version
-  } catch (err) {}
-  version = ''
-}
+declare const SIGVER_VERSION: string // should be replaced during build step
 
 const DEFAULT_HOST = '0.0.0.0'
 const DEFAULT_PORT = '8000'
 
 commander
-  .version(version)
+  .version(SIGVER_VERSION)
   .description(
     'Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)'
   )
