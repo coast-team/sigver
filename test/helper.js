@@ -1,4 +1,4 @@
-import { Message } from '../src/proto'
+import { Message } from '../src/proto/index.js'
 
 export function randomKey() {
   return String(Math.ceil(Math.random() * 99999))

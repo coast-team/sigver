@@ -1,19 +1,21 @@
-import commander from 'commander'
+import { Command } from 'commander'
 import fs from 'fs'
 import type { Server as HttpServer } from 'http'
 import type { Server as HttpsServer } from 'https'
 import http from 'http'
 import https from 'https'
 
-import { log } from './logger'
-import { setupWebSocketServer } from './wsPeers'
+import { log } from './logger.js'
+import { setupWebSocketServer } from './wsPeers.js'
 
 declare const SIGVER_VERSION: string // should be replaced during build step
 
 const DEFAULT_HOST = '0.0.0.0'
 const DEFAULT_PORT = '8000'
 
-commander
+const program = new Command()
+
+program
   .version(SIGVER_VERSION)
   .description(
     'Signaling server for WebRTC. Used by Netflux API (https://coast-team.github.io/netflux/)'
@@ -36,10 +38,11 @@ Examples:
   $ sigver --key ./private.key --cert ./primary.crt --ca ./intermediate.crt --port 443  # Signaling server is listening on 0.0.0.0:443`
     )
   })
-  .parse(process.argv)
+
+program.parse(process.argv)
 
 // Get user cli options
-const { host, port, key, cert, ca } = commander
+const { host, port, key, cert, ca } = program.opts()
 
 // Create HTTP or HTTPS server
 let httpServer: HttpServer | HttpsServer

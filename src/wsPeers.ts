@@ -3,9 +3,9 @@ import type { Server as HttpsServer } from 'https'
 import * as URL from 'url'
 import WebSocket from 'ws'
 
-import { log } from './logger'
-import { Peer } from './peer'
-import { ERR_URL, SigError, validateKey, ERR_MESSAGE } from './util'
+import { log } from './logger.js'
+import { Peer } from './peer.js'
+import { ERR_URL, SigError, validateKey, ERR_MESSAGE } from './util.js'
 
 export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebSocket.Server {
   // Configure server
@@ -64,5 +64,5 @@ function parseURL(url: string): { key: string; favored: boolean } {
   if (pathname == null) {
     throw new SigError(ERR_URL, 'URL pathname is undefined')
   }
-  return { key: pathname.substr(1), favored: 'favored' in query }
+  return { key: pathname.slice(1), favored: 'favored' in query }
 }

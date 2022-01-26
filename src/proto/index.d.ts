@@ -25,7 +25,7 @@ export class Message implements IMessage {
     constructor(properties?: IMessage);
 
     /** Message heartbeat. */
-    public heartbeat: boolean;
+    public heartbeat?: (boolean|null);
 
     /** Message content. */
     public content?: (IContent|null);
@@ -34,7 +34,7 @@ export class Message implements IMessage {
     public connect?: (IGroupData|null);
 
     /** Message connected. */
-    public connected: boolean;
+    public connected?: (boolean|null);
 
     /** Message type. */
     public type?: ("heartbeat"|"content"|"connect"|"connected");

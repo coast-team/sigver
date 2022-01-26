@@ -36,11 +36,11 @@ export const Message = $root.Message = (() => {
 
     /**
      * Message heartbeat.
-     * @member {boolean} heartbeat
+     * @member {boolean|null|undefined} heartbeat
      * @memberof Message
      * @instance
      */
-    Message.prototype.heartbeat = false;
+    Message.prototype.heartbeat = null;
 
     /**
      * Message content.
@@ -60,11 +60,11 @@ export const Message = $root.Message = (() => {
 
     /**
      * Message connected.
-     * @member {boolean} connected
+     * @member {boolean|null|undefined} connected
      * @memberof Message
      * @instance
      */
-    Message.prototype.connected = false;
+    Message.prototype.connected = null;
 
     // OneOf field names bound to virtual getters and setters
     let $oneOfFields;
@@ -104,13 +104,13 @@ export const Message = $root.Message = (() => {
     Message.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.heartbeat != null && message.hasOwnProperty("heartbeat"))
+        if (message.heartbeat != null && Object.hasOwnProperty.call(message, "heartbeat"))
             writer.uint32(/* id 1, wireType 0 =*/8).bool(message.heartbeat);
-        if (message.content != null && message.hasOwnProperty("content"))
+        if (message.content != null && Object.hasOwnProperty.call(message, "content"))
             $root.Content.encode(message.content, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-        if (message.connect != null && message.hasOwnProperty("connect"))
+        if (message.connect != null && Object.hasOwnProperty.call(message, "connect"))
             $root.GroupData.encode(message.connect, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-        if (message.connected != null && message.hasOwnProperty("connected"))
+        if (message.connected != null && Object.hasOwnProperty.call(message, "connected"))
             writer.uint32(/* id 4, wireType 0 =*/32).bool(message.connected);
         return writer;
     };
@@ -239,13 +239,13 @@ export const Content = $root.Content = (() => {
     Content.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.senderId != null && message.hasOwnProperty("senderId"))
+        if (message.senderId != null && Object.hasOwnProperty.call(message, "senderId"))
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.senderId);
-        if (message.recipientId != null && message.hasOwnProperty("recipientId"))
+        if (message.recipientId != null && Object.hasOwnProperty.call(message, "recipientId"))
             writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.recipientId);
-        if (message.lastData != null && message.hasOwnProperty("lastData"))
+        if (message.lastData != null && Object.hasOwnProperty.call(message, "lastData"))
             writer.uint32(/* id 3, wireType 0 =*/24).bool(message.lastData);
-        if (message.data != null && message.hasOwnProperty("data"))
+        if (message.data != null && Object.hasOwnProperty.call(message, "data"))
             writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.data);
         return writer;
     };
@@ -357,7 +357,7 @@ export const GroupData = $root.GroupData = (() => {
     GroupData.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.id != null && message.hasOwnProperty("id"))
+        if (message.id != null && Object.hasOwnProperty.call(message, "id"))
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.id);
         if (message.members != null && message.members.length) {
             writer.uint32(/* id 2, wireType 2 =*/18).fork();

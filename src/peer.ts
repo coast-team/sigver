@@ -1,9 +1,9 @@
 import { Subject, Subscription } from 'rxjs'
 import { filter, pluck } from 'rxjs/operators'
 
-import { Group, isAGroupMember } from './groups'
-import { GroupData, IMessage, Message } from './proto/index.js'
-import { dismissId, ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util'
+import { Group, isAGroupMember } from './groups.js'
+import { GroupData, type IMessage, Message } from './proto/index.js'
+import { dismissId, ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util.js'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000

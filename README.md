@@ -1,7 +1,7 @@
 # Sigver
 
-[![travis](https://travis-ci.org/coast-team/sigver.svg?branch=master&style=flat-square)](https://travis-ci.org/coast-team/sigver)
-[![version](https://img.shields.io/npm/v/sigver.svg?style=flat-square)](https://www.npmjs.com/package/sigver)
+[![CI status][ci-img]][ci-url]
+[![NPM version][npm-img]][npm-url]
 
 WebRTC Signaling server based on **WebSocket** for [**Netflux API**](https://coast-team.github.io/netflux), Javascript client and server side transport API for establishing peer to peer network.
 
@@ -88,3 +88,8 @@ Server may close the socket with the following codes:
 - **ERR_MESSAGE = 4743** // Any error due to message: type, format etc.
 - **ERR_BLOCKING_MEMBER = 4744** // When only one member left in the group and new peers could not join via him.
 
+
+[ci-img]: https://github.com/coast-team/sigver/actions/workflows/ci.yml/badge.svg
+[ci-url]: https://github.com/coast-team/sigver/actions/workflows/ci.yml
+[npm-img]: https://img.shields.io/npm/v/sigver.svg
+[npm-url]: https://www.npmjs.com/package/sigver

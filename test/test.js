@@ -10,12 +10,15 @@ describe('Signaling WebSocket server', () => {
   const sockets = []
 
   afterEach(() =>
-    sockets.filter((ws) => ws.readyState === WebSocket.OPEN).forEach((ws) => {
-      ws.onmessage = undefined
-      ws.onclose = undefined
-      ws.onerror = undefined
-      ws.close()
-    }))
+    sockets
+      .filter((ws) => ws.readyState === WebSocket.OPEN)
+      .forEach((ws) => {
+        ws.onmessage = undefined
+        ws.onclose = undefined
+        ws.onerror = undefined
+        ws.close()
+      })
+  )
 
   describe('Should fail to connect', () => {
     it(`with code: ${ERR_KEY} because the key is too long`, (done) => {
@@ -45,25 +48,21 @@ describe('Signaling WebSocket server', () => {
       }
     })
 
-    it(
-      `with code: ${ERR_HEARTBEAT} because did not send hearbeat message`,
-      (done) => {
-        let heartbeats = 0
-        const ws = new WebSocket(`${URL}/${h.randomKey()}`)
-        ws.binaryType = 'arraybuffer'
-        ws.onmessage = ({ data }) => {
-          heartbeats++
-          const msg = h.decode(data)
-          expect(msg.type).toEqual('heartbeat')
-        }
-        ws.onclose = ({ code }) => {
-          expect(heartbeats).toEqual(2)
-          expect(code).toEqual(ERR_HEARTBEAT)
-          done()
-        }
-      },
-      20000
-    )
+    it(`with code: ${ERR_HEARTBEAT} because did not send hearbeat message`, (done) => {
+      let heartbeats = 0
+      const ws = new WebSocket(`${URL}/${h.randomKey()}`)
+      ws.binaryType = 'arraybuffer'
+      ws.onmessage = ({ data }) => {
+        heartbeats++
+        const msg = h.decode(data)
+        expect(msg.type).toEqual('heartbeat')
+      }
+      ws.onclose = ({ code }) => {
+        expect(heartbeats).toEqual(2)
+        expect(code).toEqual(ERR_HEARTBEAT)
+        done()
+      }
+    }, 20000)
   })
 
   describe('🙂 - group of 1 peer', () => {
@@ -73,21 +72,17 @@ describe('Signaling WebSocket server', () => {
       ws.onopen = done
     })
 
-    it(
-      'Should stay connected to the server after heartbeat timeout',
-      (done) => {
-        const ws = new WebSocket(`${URL}/${h.randomKey()}`)
-        sockets.push(ws)
-        ws.onmessage = () => {
-          ws.send(h.encode({ heartbeat: true }))
-        }
-        setTimeout(() => {
-          expect(ws.readyState).toEqual(WebSocket.OPEN)
-          done()
-        }, 17000)
-      },
-      20000
-    )
+    it('Should stay connected to the server after heartbeat timeout', (done) => {
+      const ws = new WebSocket(`${URL}/${h.randomKey()}`)
+      sockets.push(ws)
+      ws.onmessage = () => {
+        ws.send(h.encode({ heartbeat: true }))
+      }
+      setTimeout(() => {
+        expect(ws.readyState).toEqual(WebSocket.OPEN)
+        done()
+      }, 17000)
+    }, 20000)
 
     it('Should be the first in the group with empty members', (done) => {
       const ws = new WebSocket(`${URL}/${h.randomKey()}`)
@@ -322,7 +317,7 @@ describe('Signaling WebSocket server', () => {
         const ws = new WebSocket(`${URL}/${key}`)
         sockets.push(ws)
         ws.binaryType = 'arraybuffer'
-        const onmessageGen = (function*() {
+        const onmessageGen = (function* () {
           let msg = yield
           expect(msg.type).toEqual('connected')
           expect(msg.connected).toBeFalsy()
@@ -337,7 +332,7 @@ describe('Signaling WebSocket server', () => {
       const ws = new WebSocket(`${URL}/${key}`)
       sockets.push(ws)
       ws.binaryType = 'arraybuffer'
-      const onmessageGen = (function*() {
+      const onmessageGen = (function* () {
         let msg = yield
         expect(msg.type).toEqual('connected')
         expect(msg.connected).toBeTruthy()
@@ -367,12 +362,12 @@ describe('Signaling WebSocket server', () => {
       const msg3 = h.randomBytes()
       const msg3back = h.randomBytes()
 
-      // Code fot the Third peer
+      // Code for the Third peer
       const thirdPeer = () => {
         const ws = new WebSocket(`${URL}/${key}`)
         sockets.push(ws)
         ws.binaryType = 'arraybuffer'
-        const onmessageGen = (function*() {
+        const onmessageGen = (function* () {
           let msg = yield
           expect(msg.type).toEqual('connected')
           expect(msg.connected).toBeFalsy()
@@ -409,12 +404,12 @@ describe('Signaling WebSocket server', () => {
         ws.onclose = () => fail('Third peer closed the connection')
       }
 
-      // Code fot the Second peer
+      // Code for the Second peer
       const secondePeer = () => {
         const ws = new WebSocket(`${URL}/${key}`)
         sockets.push(ws)
         ws.binaryType = 'arraybuffer'
-        const onmessageGen = (function*() {
+        const onmessageGen = (function* () {
           let msg = yield
           expect(msg.type).toEqual('connected')
           expect(msg.connected).toBeTruthy()
@@ -434,11 +429,11 @@ describe('Signaling WebSocket server', () => {
         ws.onclose = () => fail('Second peer closed the connection')
       }
 
-      // Code fot the First peer
+      // Code for the First peer
       const ws = new WebSocket(`${URL}/${key}`)
       sockets.push(ws)
       ws.binaryType = 'arraybuffer'
-      const onmessageGen = (function*() {
+      const onmessageGen = (function* () {
         let msg = yield
         expect(msg.type).toEqual('connected')
         expect(msg.connected).toBeTruthy()
@@ -472,7 +467,7 @@ describe('Signaling WebSocket server', () => {
       const msg3back = h.randomBytes()
       let ws2, ws3
 
-      // Code fot the Third peer
+      // Code for the Third peer
       const thirdPeer = () => {
         const ws = new WebSocket(`${URL}/${key}`)
         ws3 = ws
@@ -480,7 +475,7 @@ describe('Signaling WebSocket server', () => {
         ws.binaryType = 'arraybuffer'
         ws.onopen = () => ws.send(h.encode({ connect: { members: [] } }))
         ws.onclose = () => fail('Third peer closed the connection')
-        const onmessageGen = (function*() {
+        const onmessageGen = (function* () {
           let msg = yield
           expect(msg.type).toEqual('connected')
           expect(msg.connected).toBeFalsy()
@@ -495,7 +490,7 @@ describe('Signaling WebSocket server', () => {
         ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
       }
 
-      // Code fot the Second peer
+      // Code for the Second peer
       const secondePeer = async () => {
         const ws = new WebSocket(`${URL}/${key}`)
         ws2 = ws
@@ -503,7 +498,7 @@ describe('Signaling WebSocket server', () => {
         ws.binaryType = 'arraybuffer'
         ws.onopen = () => ws.send(h.encode({ connect: { members: [] } }))
         ws.onclose = () => fail('Second peer closed the connection')
-        const onmessageGen = (function*() {
+        const onmessageGen = (function* () {
           let msg = yield
           expect(msg.type).toEqual('connected')
           expect(msg.connected).toBeFalsy()
@@ -521,11 +516,11 @@ describe('Signaling WebSocket server', () => {
         ws.onmessage = ({ data }) => onmessageGen.next(h.decode(data))
       }
 
-      // Code fot the First peer
+      // Code for the First peer
       const ws = new WebSocket(`${URL}/${key}`)
       sockets.push(ws)
       ws.binaryType = 'arraybuffer'
-      const onmessageGen = (function*() {
+      const onmessageGen = (function* () {
         let msg = yield
         expect(msg.type).toEqual('connected')
         expect(msg.connected).toBeTruthy()
