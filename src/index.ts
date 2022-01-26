@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Command } from 'commander'
 import fs from 'fs'
 import type { Server as HttpServer } from 'http'
