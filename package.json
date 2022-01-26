@@ -1,5 +1,5 @@
 {
-  "name": "sigver",
+  "name": "@coast-team/sigver",
   "description": "Signaling server for Netflux API based on WebSocket",
   "version": "21.0.0",
   "type": "commonjs",

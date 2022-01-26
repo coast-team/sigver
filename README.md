@@ -8,7 +8,7 @@ WebRTC Signaling server based on **WebSocket** for [**Netflux API**](https://coa
 ## Install
 
 ```shell
-npm install -g sigver
+npm install -g @coast-team/sigver
 ```
 
 ## Run
@@ -91,5 +91,5 @@ Server may close the socket with the following codes:
 
 [ci-img]: https://github.com/coast-team/sigver/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/coast-team/sigver/actions/workflows/ci.yml
-[npm-img]: https://img.shields.io/npm/v/sigver.svg
-[npm-url]: https://www.npmjs.com/package/sigver
+[npm-img]: https://img.shields.io/npm/v/@coast-team/sigver.svg
+[npm-url]: https://www.npmjs.com/package/@coast-team/sigver
