@@ -1,7 +1,7 @@
 {
   "name": "sigver",
   "description": "Signaling server for Netflux API based on WebSocket",
-  "version": "0.0.0-development",
+  "version": "21.0.0",
   "type": "commonjs",
   "main": "./dist/server.js",
   "exports": "./dist/server.js",
