@@ -1,5 +1,5 @@
 import { Subject, Subscription } from 'rxjs'
-import { filter, pluck } from 'rxjs/operators'
+import { filter, map } from 'rxjs/operators'
 
 import { Group, isAGroupMember } from './groups.js'
 import { GroupData, type IMessage, Message } from './proto/index.js'
@@ -124,32 +124,32 @@ export class Peer extends Subject<Message> {
     this.subToMember = member
       .pipe(
         filter(({ content }) => content != null && content.recipientId === this.signalingId),
-        pluck('content')
+        map((x) => x.content)
       )
-      .subscribe(
-        ({ lastData, data }: any) => {
+      .subscribe({
+        next: ({ lastData, data }: any) => {
           this.send({ content: { recipientId: this.signalingId, senderId: 0, data } })
           if (lastData) {
             ;(this.subToMember as Subscription).unsubscribe()
           }
         },
-        () => this.send({ content: { recipientId: this.signalingId, senderId: 0 } }),
-        () => this.send({ content: { recipientId: this.signalingId, senderId: 0 } })
-      )
+        error: () => this.send({ content: { recipientId: this.signalingId, senderId: 0 } }),
+        complete: () => this.send({ content: { recipientId: this.signalingId, senderId: 0 } }),
+      })
 
     // Group member subscribes to the joining peer.
     this.subToJoining = this.pipe(
       filter(({ content }) => content != null),
-      pluck('content')
-    ).subscribe(
-      ({ lastData, data }: any) => {
+      map((x) => x.content)
+    ).subscribe({
+      next: ({ lastData, data }: any) => {
         member.send({ content: { recipientId: 0, senderId: this.signalingId, data } })
         if (lastData) {
           ;(this.subToJoining as Subscription).unsubscribe()
         }
       },
-      () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
-      () => member.send({ content: { recipientId: 0, senderId: this.signalingId } })
-    )
+      error: () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
+      complete: () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
+    })
   }
 }
