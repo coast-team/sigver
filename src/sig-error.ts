@@ -1,12 +1,11 @@
 export class SigError extends Error {
+  declare readonly name: 'SigError'
   declare readonly code: number
-  declare readonly name: string
 
-  constructor(code: number, message = '') {
-    super()
-    this.name = this.constructor.name
+  constructor(code: number, message: string) {
+    super(`${code}: ${message}`)
+    this.name = 'SigError'
     this.code = code
-    this.message = `${code}: ${message}`
   }
 }
 
