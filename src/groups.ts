@@ -1,5 +1,5 @@
 import type { Peer } from './peer.js'
-import { ERR_BLOCKING_MEMBER } from './util.js'
+import { ERR_BLOCKING_MEMBER } from './sig-error.js'
 
 const groups = new Map<string, Group>()
 

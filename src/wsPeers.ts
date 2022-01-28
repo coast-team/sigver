@@ -5,7 +5,7 @@ import WebSocket from 'ws'
 
 import { log } from './logger.js'
 import { Peer } from './peer.js'
-import { ERR_URL, SigError, validateKey, ERR_MESSAGE } from './util.js'
+import { ERR_URL, SigError, validateKey, ERR_MESSAGE } from './sig-error.js'
 
 export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebSocket.Server {
   // Configure server

@@ -1,7 +1,3 @@
-import * as crypto from 'crypto'
-
-const generatedIds = new Set<number>()
-
 export class SigError extends Error {
   declare readonly code: number
   declare readonly name: string
@@ -40,21 +36,4 @@ export function validateKey(key: string): void {
       `The key length exceeds the limit of ${KEY_LENGTH_LIMIT} characters`
     )
   }
-}
-
-function randomU31(): number {
-  return crypto.randomBytes(4).readUInt32BE(0) >>> 1
-}
-
-export function generateId(): number {
-  let id: number
-  do {
-    id = randomU31()
-  } while (id === 0 || generatedIds.has(id))
-  generatedIds.add(id)
-  return id
-}
-
-export function dismissId(id: number): void {
-  generatedIds.delete(id)
 }

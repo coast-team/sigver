@@ -2,8 +2,9 @@ import { Subject, Subscription } from 'rxjs'
 import { filter, map } from 'rxjs/operators'
 
 import { Group, isAGroupMember } from './groups.js'
+import { dismissId, generateId } from './id-generator.js'
 import { GroupData, type IMessage, Message } from './proto/index.js'
-import { dismissId, ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util.js'
+import { ERR_HEARTBEAT, ERR_MESSAGE } from './sig-error.js'
 
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
