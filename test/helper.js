@@ -9,7 +9,7 @@ export function decode(bytes) {
 }
 
 export function encode(msg) {
-  return Message.encode(Message.create(msg)).finish()
+  return Message.encode(msg).finish()
 }
 
 export function randomBytes() {

@@ -17,7 +17,7 @@
   "scripts": {
     "dev": "nodemon -e ts -w ./src -x ts-node ./src/index.ts -- --port 8010 | bunyan",
     "build": "npm run proto && node ./esbuild.cjs",
-    "proto": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-convert -o src/proto/index.js src/proto/index.proto && pbts src/proto/index.js -o src/proto/index.d.ts",
+    "proto": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-convert --no-create -o src/proto/index.js src/proto/index.proto && pbts src/proto/index.js -o src/proto/index.d.ts",
     "pretest": "npm run build && pm2 restart process.yml",
     "test": "karma start",
     "test:watch": "karma start --no-single-run --auto-watch",

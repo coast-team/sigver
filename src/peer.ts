@@ -9,9 +9,9 @@ const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
 
 // Preconstructed messages for optimisation
-const heartBeatMsg = Message.encode(Message.create({ heartbeat: true })).finish()
-const connectedTrueMsg = Message.encode(Message.create({ connected: true })).finish()
-const connectedFalseMsg = Message.encode(Message.create({ connected: false })).finish()
+const heartBeatMsg = Message.encode({ heartbeat: true }).finish()
+const connectedTrueMsg = Message.encode({ connected: true }).finish()
+const connectedFalseMsg = Message.encode({ connected: false }).finish()
 
 export class Peer extends Subject<Message> {
   declare netfluxId: number | undefined
@@ -74,7 +74,7 @@ export class Peer extends Subject<Message> {
   }
 
   send(msg: IMessage) {
-    this.sendFunc(Message.encode(Message.create(msg)).finish())
+    this.sendFunc(Message.encode(msg).finish())
   }
 
   close(code: number, reason: string) {

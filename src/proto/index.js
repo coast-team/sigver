@@ -81,18 +81,6 @@ export const Message = $root.Message = (() => {
     });
 
     /**
-     * Creates a new Message instance using the specified properties.
-     * @function create
-     * @memberof Message
-     * @static
-     * @param {IMessage=} [properties] Properties to set
-     * @returns {Message} Message instance
-     */
-    Message.create = function create(properties) {
-        return new Message(properties);
-    };
-
-    /**
      * Encodes the specified Message message. Does not implicitly {@link Message.verify|verify} messages.
      * @function encode
      * @memberof Message
@@ -216,18 +204,6 @@ export const Content = $root.Content = (() => {
     Content.prototype.data = $util.newBuffer([]);
 
     /**
-     * Creates a new Content instance using the specified properties.
-     * @function create
-     * @memberof Content
-     * @static
-     * @param {IContent=} [properties] Properties to set
-     * @returns {Content} Content instance
-     */
-    Content.create = function create(properties) {
-        return new Content(properties);
-    };
-
-    /**
      * Encodes the specified Content message. Does not implicitly {@link Content.verify|verify} messages.
      * @function encode
      * @memberof Content
@@ -332,18 +308,6 @@ export const GroupData = $root.GroupData = (() => {
      * @instance
      */
     GroupData.prototype.members = $util.emptyArray;
-
-    /**
-     * Creates a new GroupData instance using the specified properties.
-     * @function create
-     * @memberof GroupData
-     * @static
-     * @param {IGroupData=} [properties] Properties to set
-     * @returns {GroupData} GroupData instance
-     */
-    GroupData.create = function create(properties) {
-        return new GroupData(properties);
-    };
 
     /**
      * Encodes the specified GroupData message. Does not implicitly {@link GroupData.verify|verify} messages.

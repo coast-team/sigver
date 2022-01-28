@@ -40,13 +40,6 @@ export class Message implements IMessage {
     public type?: ("heartbeat"|"content"|"connect"|"connected");
 
     /**
-     * Creates a new Message instance using the specified properties.
-     * @param [properties] Properties to set
-     * @returns Message instance
-     */
-    public static create(properties?: IMessage): Message;
-
-    /**
      * Encodes the specified Message message. Does not implicitly {@link Message.verify|verify} messages.
      * @param message Message message or plain object to encode
      * @param [writer] Writer to encode to
@@ -103,13 +96,6 @@ export class Content implements IContent {
     public data: Uint8Array;
 
     /**
-     * Creates a new Content instance using the specified properties.
-     * @param [properties] Properties to set
-     * @returns Content instance
-     */
-    public static create(properties?: IContent): Content;
-
-    /**
      * Encodes the specified Content message. Does not implicitly {@link Content.verify|verify} messages.
      * @param message Content message or plain object to encode
      * @param [writer] Writer to encode to
@@ -152,13 +138,6 @@ export class GroupData implements IGroupData {
 
     /** GroupData members. */
     public members: number[];
-
-    /**
-     * Creates a new GroupData instance using the specified properties.
-     * @param [properties] Properties to set
-     * @returns GroupData instance
-     */
-    public static create(properties?: IGroupData): GroupData;
 
     /**
      * Encodes the specified GroupData message. Does not implicitly {@link GroupData.verify|verify} messages.
