@@ -8,7 +8,7 @@ import { dismissId, ERR_HEARTBEAT, ERR_MESSAGE, generateId } from './util.js'
 const MAXIMUM_MISSED_HEARTBEAT = 3
 const HEARTBEAT_INTERVAL = 5000
 
-// Preconstructed messages for optimisation
+// Preconstructed messages for optimization
 const heartBeatMsg = Message.encode({ heartbeat: true }).finish()
 const connectedTrueMsg = Message.encode({ connected: true }).finish()
 const connectedFalseMsg = Message.encode({ connected: false }).finish()
@@ -67,7 +67,7 @@ export class Peer extends Subject<Message> {
       missedHeartbeat++
       if (missedHeartbeat >= MAXIMUM_MISSED_HEARTBEAT) {
         clearInterval(this.heartbeatInterval)
-        this.close(ERR_HEARTBEAT, 'Too many missed hearbeats')
+        this.close(ERR_HEARTBEAT, 'Too many missed heartbeats')
       }
       sendFunc(heartBeatMsg)
     }, HEARTBEAT_INTERVAL)
