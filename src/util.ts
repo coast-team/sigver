@@ -1,7 +1,7 @@
 import * as crypto from 'crypto'
 
 const MAX_ID = 2147483647
-const generatedIds = new Set()
+const generatedIds = new Set<number>()
 
 export class SigError extends Error {
   declare readonly code: number
@@ -31,7 +31,7 @@ export const ERR_URL = 4745
 
 const KEY_LENGTH_LIMIT = 512
 
-export function validateKey(key: string) {
+export function validateKey(key: string): void {
   if (key === '') {
     throw new SigError(ERR_KEY, `The key ${key} is an empty string`)
   }
@@ -56,6 +56,6 @@ export function generateId(): number {
   }
 }
 
-export function dismissId(id: number) {
+export function dismissId(id: number): void {
   generatedIds.delete(id)
 }

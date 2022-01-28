@@ -73,15 +73,15 @@ export class Peer extends Subject<Message> {
     }, HEARTBEAT_INTERVAL)
   }
 
-  send(msg: IMessage) {
+  send(msg: IMessage): void {
     this.sendFunc(Message.encode(msg).finish())
   }
 
-  close(code: number, reason: string) {
+  close(code: number, reason: string): void {
     this.closeFunc(code, reason)
   }
 
-  onMessage(bytes: Uint8Array) {
+  onMessage(bytes: Uint8Array): void {
     try {
       this.next(Message.decode(bytes))
     } catch (err) {
@@ -89,18 +89,18 @@ export class Peer extends Subject<Message> {
     }
   }
 
-  becomeMember(group: Group, id: number) {
+  becomeMember(group: Group, id: number): void {
     this.group = group
     this.triedMembers = []
     this.netfluxId = id
   }
 
-  noLongerAMember() {
+  noLongerAMember(): void {
     this.group = undefined
     this.netfluxId = undefined
   }
 
-  onClose() {
+  onClose(): void {
     clearInterval(this.heartbeatInterval)
     if (this.group !== undefined) {
       this.group.removeMember(this)
@@ -109,7 +109,7 @@ export class Peer extends Subject<Message> {
     dismissId(this.signalingId)
   }
 
-  bindWith(member: Peer) {
+  bindWith(member: Peer): void {
     if (this.subToMember !== undefined) {
       this.subToMember.unsubscribe()
     }

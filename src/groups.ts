@@ -51,7 +51,7 @@ export class Group {
     this.members = new Set()
   }
 
-  get size() {
+  get size(): number {
     return this.members.size
   }
 
@@ -59,7 +59,7 @@ export class Group {
     return this.members.values().next().value
   }
 
-  hasMembersInCommon(members: number[]) {
+  hasMembersInCommon(members: number[]): boolean {
     if (members.length !== 0) {
       for (const m of this.members) {
         if (members.includes(m.netfluxId as number)) {
@@ -70,13 +70,12 @@ export class Group {
     return false
   }
 
-  addMember(peer: Peer, id: number): boolean {
+  addMember(peer: Peer, id: number): void {
     peer.becomeMember(this, id)
     this.members.add(peer)
-    return true
   }
 
-  removeMember(peer: Peer) {
+  removeMember(peer: Peer): void {
     peer.noLongerAMember()
     this.members.delete(peer)
     if (this.size === 0) {
