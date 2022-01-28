@@ -1,6 +1,5 @@
 import * as crypto from 'crypto'
 
-const MAX_ID = 2147483647
 const generatedIds = new Set<number>()
 
 export class SigError extends Error {
@@ -43,17 +42,17 @@ export function validateKey(key: string): void {
   }
 }
 
+function randomU31(): number {
+  return crypto.randomBytes(4).readUInt32BE(0) >>> 1
+}
+
 export function generateId(): number {
-  let id = crypto.randomBytes(4).readUInt32BE(0)
-  if (id > MAX_ID) {
-    id -= MAX_ID
-  }
-  if (id === 0 || generatedIds.has(id)) {
-    return generateId()
-  } else {
-    generatedIds.add(id)
-    return id
-  }
+  let id: number
+  do {
+    id = randomU31()
+  } while (id === 0 || generatedIds.has(id))
+  generatedIds.add(id)
+  return id
 }
 
 export function dismissId(id: number): void {
