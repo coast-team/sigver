@@ -11,6 +11,7 @@ esbuild.buildSync({
   format: 'cjs',
   outExtension: { '.js': '.cjs' },
   outfile: './dist/server.js',
+  sourcemap: process.env['NODE_ENV'] === 'development',
   external: ['bufferutil', 'commander', 'pino', 'protobufjs', 'rxjs', 'ws'],
   define: {
     SIGVER_VERSION: JSON.stringify(SIGVER_VERSION),
