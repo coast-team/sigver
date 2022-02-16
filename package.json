@@ -17,7 +17,7 @@
   "scripts": {
     "dev": "npm run build:dev && NODE_ENV=development node dist/server.js -- --port 8010",
     "build:dev": "NODE_ENV=development npm run build",
-    "build": "npm run proto && node ./esbuild.cjs",
+    "build": "tsc -b && npm run proto && node ./esbuild.cjs",
     "proto": "pbjs -t static-module --es6 -w es6 --no-verify --no-delimited --no-convert --no-create -o src/proto/index.js src/proto/index.proto && pbts src/proto/index.js -o src/proto/index.d.ts",
     "pretest": "npm run build && pm2 restart process.yml",
     "test": "karma start",
