@@ -62,14 +62,14 @@ setupWebSocketServer(httpServer)
 
 // Handle httpServer callbacks and start listen
 httpServer.on('clientError', (err, socket) => {
-  log.fatal('Client error: ', err)
+  log.error('Client error: ', err)
   socket.end()
 })
 
 httpServer.listen(port, host, () => {
   const address = httpServer.address()
   if (address == null) {
-    log.fatal('Signaling server has no address')
+    log.error('Signaling server has no address')
   } else if (typeof address === 'string') {
     log.info(`Signaling server is listening on ${address}`)
   } else {

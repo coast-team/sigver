@@ -14,7 +14,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
     server: httpServer,
   })
 
-  wss.on('error', (err) => log.fatal('WebSocketServer error', err))
+  wss.on('error', (err) => log.error('WebSocketServer error', err))
 
   wss.on('connection', (socket, request) => {
     try {

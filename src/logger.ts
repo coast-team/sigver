@@ -1,5 +1,8 @@
-import pino from 'pino'
+import * as logLevel from 'loglevel'
 
-const level = process.env['NODE_ENV'] === 'development' ? 'debug' : 'info'
-
-export const log = pino({ name: 'sigver', level })
+export const log = (function () {
+  const log = logLevel.getLogger('sigver')
+  const level = process.env['NODE_ENV'] === 'development' ? 'debug' : 'info'
+  log.setDefaultLevel(level)
+  return log
+})()
