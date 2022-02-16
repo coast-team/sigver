@@ -14,11 +14,12 @@ const heartBeatMsg = Message.encode({ heartbeat: true }).finish()
 const connectedTrueMsg = Message.encode({ connected: true }).finish()
 const connectedFalseMsg = Message.encode({ connected: false }).finish()
 
-export class Peer extends Subject<Message> {
+export class Peer {
   declare netfluxId: number | undefined
   declare group: Group | undefined
   declare triedMembers: number[]
   declare readonly favored: boolean
+  declare readonly msgs: Subject<Message>
 
   private declare readonly heartbeatInterval: NodeJS.Timer
   private declare subToMember: Subscription | undefined
@@ -33,16 +34,16 @@ export class Peer extends Subject<Message> {
     sendFunc: (msg: Uint8Array) => void,
     closeFunc: (code: number, reason: string) => void
   ) {
-    super()
     this.favored = favored
     this.triedMembers = []
     this.netfluxId = undefined
     this.signalingId = generateId()
     this.closeFunc = closeFunc
     this.sendFunc = sendFunc
+    this.msgs = new Subject()
 
     // Handle all incoming messages for this peer, but content which is handled in bindWith method.
-    this.subscribe((msg: Message) => {
+    this.msgs.subscribe((msg: Message) => {
       switch (msg.type) {
         case 'connect': {
           const { id, members } = msg.connect as GroupData
@@ -84,7 +85,7 @@ export class Peer extends Subject<Message> {
 
   onMessage(bytes: Uint8Array): void {
     try {
-      this.next(Message.decode(bytes))
+      this.msgs.next(Message.decode(bytes))
     } catch (err) {
       this.close(ERR_MESSAGE, err.message)
     }
@@ -106,7 +107,7 @@ export class Peer extends Subject<Message> {
     if (this.group !== undefined) {
       this.group.removeMember(this)
     }
-    this.complete()
+    this.msgs.complete()
     dismissId(this.signalingId)
   }
 
@@ -122,7 +123,7 @@ export class Peer extends Subject<Message> {
     this.triedMembers.push(member.netfluxId as number)
 
     // Joining subscribes to the group member.
-    this.subToMember = member
+    this.subToMember = member.msgs
       .pipe(
         filter(({ content }) => content != null && content.recipientId === this.signalingId),
         map((x) => x.content)
@@ -139,18 +140,20 @@ export class Peer extends Subject<Message> {
       })
 
     // Group member subscribes to the joining peer.
-    this.subToJoining = this.pipe(
-      filter(({ content }) => content != null),
-      map((x) => x.content)
-    ).subscribe({
-      next: ({ lastData, data }: any) => {
-        member.send({ content: { recipientId: 0, senderId: this.signalingId, data } })
-        if (lastData) {
-          ;(this.subToJoining as Subscription).unsubscribe()
-        }
-      },
-      error: () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
-      complete: () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
-    })
+    this.subToJoining = this.msgs
+      .pipe(
+        filter(({ content }) => content != null),
+        map((x) => x.content)
+      )
+      .subscribe({
+        next: ({ lastData, data }: any) => {
+          member.send({ content: { recipientId: 0, senderId: this.signalingId, data } })
+          if (lastData) {
+            ;(this.subToJoining as Subscription).unsubscribe()
+          }
+        },
+        error: () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
+        complete: () => member.send({ content: { recipientId: 0, senderId: this.signalingId } }),
+      })
   }
 }

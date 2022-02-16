@@ -49,7 +49,7 @@ export function setupWebSocketServer(httpServer: HttpServer | HttpsServer): WebS
           peer.close(ERR_MESSAGE, 'Wrong data type')
         }
       }
-      socket.onerror = (err) => peer.error(err)
+      socket.onerror = (err) => peer.msgs.error(err)
       socket.onclose = () => peer.onClose()
     } catch (err) {
       log.error('WebSocket connection error: ', err.message)
